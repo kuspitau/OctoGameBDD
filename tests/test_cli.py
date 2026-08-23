@@ -11,12 +11,12 @@ def test_status_command_smoke(tmp_path, capsys):
 
     output = capsys.readouterr().out
     assert f"Database: {db_path}" in output
-    assert "Schema version: 1" in output
-    assert "Applied migrations: 1" in output
+    assert "Schema version: 2" in output
+    assert "Applied migrations: 2" in output
     assert "Registered sources: 0" in output
     assert "Import batches: 0" in output
 
     with connect_database(db_path) as connection:
         assert connection.execute(
             "SELECT COUNT(*) FROM schema_migrations"
-        ).fetchone()[0] == 1
+        ).fetchone()[0] == 2

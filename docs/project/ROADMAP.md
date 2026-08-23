@@ -8,9 +8,9 @@ Goal: establish a trustworthy project-owned persistence/import/test foundation b
 
 ### P0-T01 — SQLite foundation and import metadata
 
-**Implemented — awaiting local validation.**
+**Validated.**
 
-Implemented:
+Implemented and present on GitHub `main` at the P0-T02 base revision:
 
 - SQLite connection/database-location handling;
 - versioned packaged SQL migration mechanism;
@@ -21,23 +21,30 @@ Implemented:
 - minimal `python -m octogamedb status` CLI;
 - deterministic tests for fresh DB creation, repeat initialization, constraints and CLI status.
 
-Do not mark this task validated or begin P0-T02 from a stale base. The human must first apply,
-validate, commit, and push the P0-T01 delta to GitHub `main`.
-
 ### P0-T02 — Provenance/conflict primitives
 
-**Next after P0-T01 validation.**
+**Implemented — awaiting local validation.**
 
-Define and implement project-owned primitives sufficient to preserve:
+Implemented in the current delta:
 
-- source observations;
-- provenance of scalar facts and relations;
-- competing values;
-- canonical-selection metadata.
+- generic evidence groups for scalar and relation fact slots;
+- relation-instance keys so multi-valued relations are not automatically conflicts;
+- stable source observations keyed by source revision, with per-run import-batch links;
+- deterministic/idempotent observation payload recording across repeated imports of the same revision;
+- preservation of competing scalar and relation observations;
+- explicit canonical-selection policy/reason metadata;
+- same-group foreign-key enforcement for canonical winners;
+- schema-v1 -> schema-v2 migration coverage and provenance/conflict tests.
 
-Do not over-generalize before representative domain cases exist.
+The generic structures in this task are evidence/provenance storage, not a replacement for explicit
+canonical gameplay relation tables.
+
+Do not begin P0-T03 until the human applies, validates, commits, and pushes the P0-T02 delta to
+GitHub `main`.
 
 ### P0-T03 — Fixture/golden-case and audit skeleton
+
+**Next after P0-T02 validation.**
 
 Add:
 
