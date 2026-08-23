@@ -8,22 +8,25 @@ Goal: establish a trustworthy project-owned persistence/import/test foundation b
 
 ### P0-T01 — SQLite foundation and import metadata
 
-**Next task.**
+**Implemented — awaiting local validation.**
 
-Implement:
+Implemented:
 
 - SQLite connection/database-location handling;
-- versioned migration mechanism;
+- versioned packaged SQL migration mechanism;
 - foundational metadata tables:
-  - schema metadata/version;
+  - schema migrations;
   - data source registry;
   - import batches/runs;
-- minimal CLI/status command;
-- deterministic tests for fresh DB creation and repeat initialization.
+- minimal `python -m octogamedb status` CLI;
+- deterministic tests for fresh DB creation, repeat initialization, constraints and CLI status.
 
-No gameplay tables, remote downloads, or UI in this task.
+Do not mark this task validated or begin P0-T02 from a stale base. The human must first apply,
+validate, commit, and push the P0-T01 delta to GitHub `main`.
 
 ### P0-T02 — Provenance/conflict primitives
+
+**Next after P0-T01 validation.**
 
 Define and implement project-owned primitives sufficient to preserve:
 
