@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+build/
+dist/
+*.egg-info/
+.venv/
+venv/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Secrets / local configuration
+.env
+.env.*
+!.env.example
+config.local.toml
+
+# Logs / temp
+*.log
+logs/
+tmp/
+temp/
+
+# Generated DBs and large/local data
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+data/raw/
+data/staging/
+data/derived/
+data/downloads/
+data/cache/
+data/generated/
+
+# Large client/server artifacts
+*.mpq
+*.MPQ
+*.wdb
+*.WDB
+
+# Generated handoff artifacts
+changes.zip
+delete_files.bat
+MANIFEST.txt
+delete.bat
+
+# Git bat
+update_push.bat
+initial_push.bat

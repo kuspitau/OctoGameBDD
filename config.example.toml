@@ -1,0 +1,11 @@
+# Copy to config.local.toml for machine-specific paths.
+# config.local.toml is intentionally ignored by Git.
+
+[paths]
+raw = "data/raw"
+staging = "data/staging"
+derived = "data/derived"
+generated = "data/generated"
+samples = "data/samples"
+
+# Add local client/server dump paths only in config.local.toml.
