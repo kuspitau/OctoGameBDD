@@ -112,16 +112,15 @@ def test_source_and_import_batch_constraints(tmp_path):
 def test_failed_transaction_is_rolled_back(tmp_path):
     db_path = tmp_path / "octogamedb.sqlite3"
 
-    with pytest.raises(RuntimeError):
-        with connect_database(db_path) as connection:
-            apply_migrations(connection)
-            connection.execute(
-                """
-                INSERT INTO data_sources(source_key, display_name, source_kind)
-                VALUES ('temp', 'Temporary', 'test')
-                """
-            )
-            raise RuntimeError("force rollback")
+    with pytest.raises(RuntimeError), connect_database(db_path) as connection:
+        apply_migrations(connection)
+        connection.execute(
+            """
+            INSERT INTO data_sources(source_key, display_name, source_kind)
+            VALUES ('temp', 'Temporary', 'test')
+            """
+        )
+        raise RuntimeError("force rollback")
 
     with connect_database(db_path) as connection:
         assert (

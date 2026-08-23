@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import argparse
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
 
 from octogamedb.db import DEFAULT_DB_PATH, apply_migrations, connect_database
 

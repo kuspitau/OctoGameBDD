@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from importlib import resources
 import re
 import sqlite3
+from dataclasses import dataclass
+from importlib import resources
 
 _MIGRATION_NAME_RE = re.compile(r"^(?P<version>[0-9]{4})_(?P<name>[a-z0-9_]+)\.sql$")
 _MIGRATION_TABLE_SQL = """
