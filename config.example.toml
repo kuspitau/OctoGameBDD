@@ -16,6 +16,7 @@ samples = "data/samples"
 # [source_paths]
 # wow_root = "C:/Games/OctoWow"
 # pfquest = "C:/Games/OctoWow/Interface/AddOns/pfQuest"
+# pfquest_turtle = "C:/Games/OctoWow/Interface/AddOns/pfQuest-turtle"
 # pfquest_octo = "C:/Games/OctoWow/Interface/AddOns/pfQuest-octo"
 # octo_wdb = "C:/Games/OctoWow/Cache/WDB/enUS"
 # octo_dbc = "C:/Games/OctoWow/Data/..."

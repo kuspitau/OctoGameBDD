@@ -1,9 +1,28 @@
 # Changelog
 
+## 2026-08-24 — P1-T03 local Turtle revision compatibility correction
+
+- Level-2 validation found that the launcher-installed `pfQuest-turtle` is not behavior-identical to the reviewed public Kameleon revision: local `overwrites.lua` lacks the public phantom-zone cleanup loop and therefore retains zone 5138 (`The Deadmines`).
+- Corrected the validation contract: supported overwrite loops are applied only when present in the loaded source; public-reference mutations are never synthesized into a differing local addon.
+- Added a regression test proving that absence of the phantom-zone cleanup leaves the corresponding overlay zone intact.
+
+## 2026-08-24 — P1-T03 Turtle/Octo effective world views
+
+- Confirmed P1-T02 is present on GitHub `main` at commit `3302785ba6ece92df6c45df379420484d4eacb23` and advanced normal routing to P1-T03.
+- Corrected the initial P1-T03 source assumption after local discovery showed the Octo launcher installation already contains `pfQuest-turtle`.
+- Inspected current `KameleonUK/pfQuest-turtle` revision `5b8eeeeb4119be9d075087f0f0e08c187b35ad61` and retained `paokkerkir/pfQuest-octo` revision `dd3dc1fb80afe7a71e5c8ca8c31ca2a3ef57af67` as a separate optional comparison source.
+- Stopped treating `pfQuest-octo` as automatically newer: its reviewed latest commit reverts its DB to 1.17.2 data, while the reviewed current Turtle fork is newer.
+- Added a shared Turtle-style world overlay loader for the existing P1 zones, units and objects slice.
+- Reproduced top-entry patch semantics, direct literal overwrite assignments and the reviewed Turtle phantom-zone cleanup without executing Lua.
+- Added fail-closed detection for unsupported indirect world-table mutations.
+- Added deterministic effective-view comparison reporting added/removed/changed IDs without choosing a canonical winner.
+- Updated local path handling so `pfquest` + `pfquest_turtle` are required and an existing `pfquest_octo` remains an optional comparison source.
+- Deferred SQLite/provenance reconciliation to P1-T04 so entry deletion and replaced spawn sets receive explicit durable semantics.
+- Marked P1-T03 `IMPLEMENTED_AWAITING_LOCAL_VALIDATION`.
+
 ## 2026-08-24 — P1-T02 Octo DBC map/area hierarchy slice
 
 - Added real-client compatibility for isolated unnamed `AreaTable.dbc` rows: skip without inventing a canonical name, report the skipped ID/count, and retain strict parent-reference validation.
-
 - Confirmed the P1-T01 implementation is present on GitHub `main` at commit `d4310762f1e00b2664cb6d39eadf3e9abd407c46` and advanced normal routing to P1-T02.
 - Defined P1-T02 as the bounded resolution of authoritative map/area hierarchy deliberately deferred by P1-T01.
 - Inspected the classic WDBC container and Map/AreaTable field semantics in `cmangos/mangos-classic` revision `9b682be617ac61c127c23aa60d7b4ffbc0ce37e6` instead of guessing the binary format.

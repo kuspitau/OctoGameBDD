@@ -85,9 +85,9 @@ P1-T01 intentionally did not infer authoritative map/parent-zone identity from p
 
 ### P1-T02 — Octo DBC map/area hierarchy vertical slice
 
-**Implemented — awaiting local validation.**
+**Present on GitHub `main`; closed for normal routing.**
 
-This delta resolves the main geography dependency intentionally deferred by P1-T01:
+Present at commit `3302785ba6ece92df6c45df379420484d4eacb23`:
 
 - dependency-free classic WDBC parsing for local Octo client `Map.dbc` and `AreaTable.dbc`;
 - deterministic SHA-256 revision identity for the exact DBC pair;
@@ -96,9 +96,33 @@ This delta resolves the main geography dependency intentionally deferred by P1-T
 - source-only preservation of additional Map/AreaTable fields not yet promoted to canonical columns;
 - derived map context for zone-only spawns through `zones.map_id`, without copying the map into the spawn row or changing `zone_percent` semantics;
 - synthetic WDBC fixtures and Level 1 parser/import/idempotency/provenance/query tests;
-- local-path handoff for `[source_paths].octo_dbc` and required Level-2 validation against the user's actual client files.
+- local-path handoff for `[source_paths].octo_dbc` and real-client compatibility for isolated unnamed AreaTable rows.
 
-P1-T02 deliberately does not implement MPQ extraction, world-coordinate conversion, full DBC ingestion, or pfQuest-octo reconciliation.
+P1-T02 deliberately does not implement MPQ extraction, world-coordinate conversion, full DBC ingestion, or overlay reconciliation.
+
+### P1-T03 — pfQuest Turtle/Octo effective world views and comparison
+
+**Implemented — awaiting local validation.**
+
+This task resolves the source-composition dependency before database reconciliation:
+
+- treats installed `pfQuest + pfQuest-turtle` as the primary current local overlay view to inspect;
+- uses reviewed public `KameleonUK/pfQuest-turtle` revision `5b8eeeeb4119be9d075087f0f0e08c187b35ad61` as format/behavior evidence while treating the installed addon as version-specific Level-2 input;
+- retains `pfQuest-octo` revision `dd3dc1fb80afe7a71e5c8ca8c31ca2a3ef57af67` as an optional Octo-specific comparison source rather than assuming it is globally newer;
+- reproduces top-entry Turtle patch semantics: `"_"` deletes and every other patch value replaces wholesale;
+- applies direct literal world-table overwrites and the reviewed Kameleon phantom-zone cleanup pattern when present, without inventing cleanup absent from the installed addon or executing Lua;
+- fails closed on unsupported indirect world-table mutations;
+- composes only the existing P1 zones/units/objects enUS world slice into the existing `PfQuestWorldSlice` model;
+- compares effective Turtle and Octo views by added/removed/changed entity IDs without selecting a winner;
+- requires Level-2 validation against configured local `pfquest` and `pfquest_turtle` roots, with `pfquest_octo` optional.
+
+P1-T03 intentionally does not write to SQLite. This prevents top-entry deletion and replaced spawn-list semantics from being silently forced into scalar canonical-selection behavior.
+
+### P1-T04 — overlay provenance/canonical reconciliation
+
+**Planned next bounded slice after P1-T03 validation.**
+
+Use the P1-T03 effective-view contract to preserve base pfQuest, current Turtle overlay and Octo-specific source identities while explicitly defining canonical behavior for changed entries. Before implementation, decide/document how top-entry deletion and replaced spawn sets are represented in provenance and how stale materialized rows are removed without losing source evidence.
 
 ## P2 — Items and acquisition
 
@@ -165,7 +189,8 @@ Example coverage metrics:
 Scale importers to full available data from:
 
 - pfQuest;
-- pfQuest-octo;
+- current pfQuest-turtle;
+- pfQuest-octo where it contributes distinct Octo evidence;
 - OctoDB;
 - client DBC/WDB;
 - selected Turtle/Vanilla enrichment sources.

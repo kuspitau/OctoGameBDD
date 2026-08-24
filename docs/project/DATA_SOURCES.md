@@ -10,7 +10,7 @@ Use source-aware and field/relation-aware resolution policies. As a default conc
 
 1. Octo-specific authoritative/maintained sources;
 2. data observed/extracted directly from the Octo client/server interaction;
-3. close Turtle 1.18.x sources;
+3. close/current Turtle sources;
 4. Vanilla VMaNGOS/CMaNGOS-style baselines;
 5. fallback/community data where explicitly approved.
 
@@ -57,12 +57,83 @@ The tracked P1-T01 source fixture mirrors those six file paths but is deliberate
 
 The upstream pfQuest repository uses the MIT license. The P1-T01 fixture contains only a very small representative structure/sample and test-owned reduced records.
 
+### pfQuest-turtle
+
+- Reviewed public repository: `https://github.com/KameleonUK/pfQuest-turtle`
+- P1-T03 reviewed revision: `5b8eeeeb4119be9d075087f0f0e08c187b35ad61`
+- Role: current Turtle-style pfQuest overlay present in the user's launcher-managed Octo installation; important source for custom/current world data.
+
+Relevant composition evidence:
+
+```text
+pfQuest-turtle.toc
+patchtable.lua
+overwrites.lua
+db/zones-turtle.lua
+db/enUS/zones-turtle.lua
+db/units-turtle.lua
+db/enUS/units-turtle.lua
+db/objects-turtle.lua
+db/enUS/objects-turtle.lua
+```
+
+The addon declares a dependency on pfQuest, loads Turtle data/localization tables, then runs `overwrites.lua` before `patchtable.lua`.
+
+The reviewed `patchtable.lua` applies the patch at **top-entry level**:
+
+- if a patch value is the string `"_"`, the base entry is removed;
+- otherwise the patch value replaces the corresponding base entry wholesale;
+- this is not a recursive merge.
+
+The reviewed Kameleon `overwrites.lua` also removes a documented set of phantom zone IDs from localized Turtle zone tables through a small loop. P1-T03 reproduces this known safe pattern without executing Lua **when the loaded source contains it**.
+
+The launcher-installed copy used for Level-2 validation can differ from the reviewed public revision. In the observed local copy, the phantom-zone cleanup loop is absent, so the effective local view correctly retains entries that the newer reviewed public `overwrites.lua` would remove. Public-revision behavior is never injected into a different installed source.
+
+Local validation key:
+
+```toml
+[source_paths]
+pfquest_turtle = "..."
+```
+
 ### pfQuest-octo
 
 - Repository: `https://github.com/paokkerkir/pfQuest-octo`
-- Role: Octo-specific additions/overwrites for pfQuest; especially valuable for custom content, coordinates, quest/object/unit corrections and relations.
+- Role: Octo-specific additions/overwrites for pfQuest; especially useful as comparison/enrichment for custom content, coordinates and unit/object corrections.
 
-When pfQuest base and pfQuest-octo differ, preserve both source identities and apply explicit Octo override semantics during normalization.
+P1-T03 review is pinned to:
+
+```text
+dd3dc1fb80afe7a71e5c8ca8c31ca2a3ef57af67
+```
+
+The reviewed latest commit is dated 2026-05-12 and is titled:
+
+```text
+db: revert to 1.17.2 data
+```
+
+Therefore P1-T03 does **not** assume `pfQuest-octo` is globally newer or automatically preferable to the currently maintained Turtle fork. It remains relevant because `overwrites.lua` contains explicit Octo-specific manual corrections, including unit name/faction/coordinate changes.
+
+When pfQuest base, current Turtle and pfQuest-octo differ, preserve source identities and compare them before defining canonical policy.
+
+Optional local key:
+
+```toml
+[source_paths]
+pfquest_octo = "..."
+```
+
+#### P1-T03 effective-view contract
+
+P1-T03 constructs independent effective views:
+
+```text
+pfQuest + pfQuest-turtle
+pfQuest + pfQuest-octo   (when available)
+```
+
+It compares zone/creature/gameobject IDs that are added, removed or changed. It does **not** choose a canonical winner and does not write either overlay into SQLite. Canonical/provenance reconciliation is deferred to P1-T04 because deletion and replaced spawn sets require explicit durable semantics.
 
 ### Octo client DBC
 

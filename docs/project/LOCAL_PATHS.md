@@ -5,7 +5,7 @@ This document defines how coding conversations handle files/directories that exi
 Examples include:
 
 - the local OctoWoW installation root;
-- installed addons such as pfQuest / pfQuest-octo;
+- installed addons such as pfQuest, pfQuest-turtle and optional pfQuest-octo;
 - WDB caches;
 - extracted DBC directories;
 - SavedVariables;
@@ -74,6 +74,8 @@ For each required target, use this order:
 7. Print a final summary of resolved/unresolved keys.
 8. Exit non-zero if a path required for the task remains unresolved.
 
+Optional comparison/enrichment sources may be reused or discovered without prompting and must not make a helper fail when they are absent.
+
 The user should be able to paste or drag/drop a Windows path into the prompt. Strip surrounding quotes safely.
 
 ## Validation
@@ -88,8 +90,11 @@ Examples:
 pfQuest directory
   -> expected addon files/subdirectories are present
 
+pfQuest-turtle directory
+  -> expected addon metadata/data/patch files are present
+
 pfQuest-octo directory
-  -> expected addon metadata/data files are present
+  -> expected addon metadata/data/patch files are present
 
 WDB directory
   -> expected .wdb files or known cache structure are present
@@ -99,6 +104,24 @@ SQL dump
 ```
 
 A future task should define the exact markers it needs.
+
+### P1-T03 path contract
+
+Required:
+
+```toml
+[source_paths]
+pfquest = "..."
+pfquest_turtle = "..."
+```
+
+Optional comparison source:
+
+```toml
+pfquest_octo = "..."
+```
+
+P1-T03 `get_path.bat` resolves and validates the required pfQuest + pfQuest-turtle pair. An existing `pfquest_octo` entry is unrelated configuration and must be preserved; its absence must not make the helper fail.
 
 ## Updating `config.local.toml`
 

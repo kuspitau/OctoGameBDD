@@ -1,0 +1,1 @@
+pfDB["units"]["enUS-turtle"][7] = "Octo Scout"

@@ -5,9 +5,9 @@
 GitHub `main` is the source-of-truth base for this delta:
 
 - branch: `main`
-- base commit: `d4310762f1e00b2664cb6d39eadf3e9abd407c46`
+- base commit: `3302785ba6ece92df6c45df379420484d4eacb23`
 
-That commit is `Implement P1-T01 world schema and pfQuest vertical slice`. P1-T01 is therefore confirmed on the project's validated source-of-truth branch and is closed for routing purposes.
+That commit is `Implement P1-T02 Octo DBC map hierarchy`. P1-T02 is therefore present on the validated source-of-truth branch and closed for normal routing.
 
 **Status:** `IMPLEMENTED_AWAITING_LOCAL_VALIDATION`
 
@@ -17,109 +17,102 @@ That commit is `Implement P1-T01 world schema and pfQuest vertical slice`. P1-T0
 
 ## Current task
 
-**P1-T02 — Octo DBC map/area hierarchy vertical slice**
+**P1-T03 — pfQuest Turtle/Octo effective world views and comparison**
 
 Detailed task specification:
 
-- `docs/project/tasks/P1-T02.md`
+- `docs/project/tasks/P1-T03.md`
 
-Implementation in this delta includes:
+## Why the task scope changed
 
-- dependency-free classic WDBC parsing for `Map.dbc` and `AreaTable.dbc`;
-- deterministic content-derived revision identity for the exact two-file DBC input;
-- canonical `maps` and `zones` materialization using the existing migration-3 schema;
-- authoritative zone -> map and subzone -> parent-zone hierarchy from direct Octo client DBC evidence;
-- an explicit field-specific canonical-selection policy for map/area identity and hierarchy, while retaining competing source observations;
-- source-only retention of selected AreaTable/Map metadata that is not yet promoted into canonical columns;
-- derived map context in world-location queries through `spawn.zone_id -> zones.map_id` when the spawn has no direct `map_id`;
-- preservation of `zone_percent` coordinate semantics with no coordinate conversion;
-- synthetic source-shaped WDBC fixtures and focused parser/import/provenance/query tests;
-- a task-specific `get_path.bat` handoff helper for `[source_paths].octo_dbc`.
+Initial investigation considered `pfQuest-octo` as the required Octo overlay. Local validation showed that the user's launcher installation already contains `pfQuest-turtle`.
 
-No schema migration is required for P1-T02; migration 3 already provides the necessary map/zone hierarchy columns.
+Primary-source verification then established:
 
-## Source verification for P1-T02
+- the launcher-provided Turtle addon belongs to the `pfQuest-turtle` line; `KameleonUK/pfQuest-turtle` is the current public maintained reference inspected for format/behavior;
+- reviewed revision `5b8eeeeb4119be9d075087f0f0e08c187b35ad61` is dated 2026-08-02;
+- it contains current Turtle 1.18.x world data and provides public format/behavior evidence, but the user's installed addon must be treated as version-specific local input;
+- reviewed `pfQuest-octo` revision `dd3dc1fb80afe7a71e5c8ca8c31ca2a3ef57af67` is dated 2026-05-12 and its commit explicitly reverts its database to 1.17.2 data;
+- `pfQuest-octo` still contains useful Octo-specific manual corrections, so it is retained as an optional comparison source rather than discarded.
 
-The DBC format was inspected rather than inferred.
+This does not establish a universal source priority. P1-T03 only constructs and compares effective source views.
 
-Pinned public format evidence:
+## Implementation in this delta
 
-- repository: `cmangos/mangos-classic`
-- revision: `9b682be617ac61c127c23aa60d7b4ffbc0ce37e6`
-- relevant files:
-  - `src/shared/Database/DBCFileLoader.cpp`;
-  - `src/game/Server/DBCStructure.h`;
-  - `src/game/Server/DBCEnums.h`;
-  - `src/game/Server/DBCStores.cpp`.
+- adds `pfquest_overlay_world.py`;
+- composes the existing P1 pfQuest world subset with Turtle-style patch tables;
+- reproduces `patchtable.lua` semantics: `"_"` deletes, otherwise replace the top-level entry wholesale;
+- applies direct literal world-table assignments from `overwrites.lua` without executing Lua;
+- reproduces the reviewed Kameleon phantom-zone cleanup loop when that supported pattern is actually present in the loaded overlay;
+- fails closed on unsupported indirect world-table mutation;
+- loads both:
+  - `pfQuest + pfQuest-turtle`;
+  - `pfQuest + pfQuest-octo`;
+- compares the two resulting views by added/removed/changed zone, creature and gameobject IDs without selecting a winner;
+- retains the existing P1 dataclasses and zone-percent coordinate validation;
+- introduces no schema migration and performs no SQLite writes.
 
-The public source is used only to establish the classic WDBC layout and field semantics. The actual canonical source for this task is the user's local Octo client `Map.dbc` / `AreaTable.dbc` pair, whose exact bytes are represented by a deterministic SHA-256 composite revision at import time.
+## Local path/config state
 
-The tracked WDBC fixture is synthetic/test-owned and does not redistribute Octo client data.
+Required:
 
-## Agent/sample validation for this delta
+```toml
+[source_paths]
+pfquest = "<installed pfQuest directory>"
+pfquest_turtle = "<installed pfQuest-turtle directory>"
+```
 
-The GitHub connector exposes repository contents but does not mount a checkout into the execution container. A focused agent workspace was therefore assembled from the GitHub `main` dependencies needed by P1-T02 plus this delta.
+Optional but supported:
+
+```toml
+pfquest_octo = "<installed pfQuest-octo directory>"
+```
+
+The task helper resolves the two required sources. A valid existing or auto-detected `pfquest_octo` is retained/recorded but is never required.
+
+## Agent/sample validation
+
+A focused workspace was assembled from the P1-T01 parser/dataclass subset exposed on GitHub `main` plus the new P1-T03 module/tests.
 
 Performed:
 
 ```bash
-PYTHONPATH=src python -m pytest -q
+PYTHONPATH=src python -m pytest -q tests/test_pfquest_overlay_world.py
 ```
 
-Focused P1-T02 result:
+Result:
 
 ```text
-6 passed
+5 passed
 ```
+
+Coverage includes:
+
+- Turtle top-entry replacement/deletion;
+- Turtle phantom-zone cleanup when present, plus non-invention when absent;
+- direct literal Octo overwrites;
+- cross-view comparison;
+- fail-closed behavior for unsupported indirect Lua mutation.
 
 Also performed:
 
 ```bash
-python -m compileall -q src tests
+python -m py_compile src/octogamedb/importers/pfquest_overlay_world.py tests/test_pfquest_overlay_world.py
 ```
 
-Python compilation succeeds.
+Result: success.
 
-Editable packaging was validated without network build isolation:
+The full existing repository suite and Ruff remain required locally because the execution environment does not expose a complete mounted checkout and does not provide the user's addon files.
 
-```bash
-python -m pip install -e . --no-deps --no-build-isolation
-```
+## Required local validation
 
-A fixture import against a fresh database also succeeded with:
-
-- schema version: `3`;
-- maps: `2`;
-- zones: `3`;
-- hierarchy links: `1`;
-- second unchanged import: `rows_inserted = 0`, `rows_updated = 0`.
-
-The agent container did not contain the `ruff` module, so Ruff could not be executed there.
-
-Because a complete Git checkout was not mountable in the execution environment, the pre-existing full repository suite was not re-executed by the agent. The focused tests exercise the new parser/importer, provenance-selection behavior, idempotency, and modified world-location query. The full repository suite remains required below.
-
-## Required local path/config step
-
-P1-T02 needs the user's extracted Octo client DBC directory.
-
-After extracting `changes.zip` over the project root, run from the project root:
+After extracting `changes.zip`, run:
 
 ```bat
 get_path.bat
 ```
 
-Successful resolution must leave a valid ignored `config.local.toml` entry:
-
-```toml
-[source_paths]
-octo_dbc = "<directory containing Map.dbc and AreaTable.dbc>"
-```
-
-The helper reuses a valid configured path, checks a small set of safe candidates, otherwise asks for the directory, validates both required files, and preserves unrelated configuration.
-
-## Required human/full-data validation
-
-From the project root, run:
+Then:
 
 ```bash
 git diff
@@ -129,61 +122,121 @@ python -m ruff check src tests
 python -m compileall -q src tests
 ```
 
-Then import the real local DBC pair twice into a disposable generated database. In PowerShell from the project root:
+Then, from PowerShell at the project root:
 
 ```powershell
 @'
+import re
 import tomllib
 from pathlib import Path
 
-from octogamedb.db import apply_migrations, connect_database
-from octogamedb.importers.octo_dbc_world import import_octodbc_world
+from octogamedb.importers.pfquest_overlay_world import (
+    compare_pfquest_world_slices,
+    load_pfquest_octo_world_slice,
+    load_pfquest_turtle_world_slice,
+)
+from octogamedb.importers.pfquest_world import parse_pfquest_assignment
 
 config = tomllib.loads(Path("config.local.toml").read_text(encoding="utf-8"))
-source_root = config["source_paths"]["octo_dbc"]
+paths = config["source_paths"]
+turtle_root = Path(paths["pfquest_turtle"])
 
-with connect_database("data/generated/p1_t02_validation.sqlite3") as connection:
-    apply_migrations(connection)
-    first = import_octodbc_world(connection, source_root=source_root)
-    second = import_octodbc_world(connection, source_root=source_root)
-    print("FIRST")
-    print(first.to_json())
-    print("SECOND")
-    print(second.to_json())
-    print("schema_version", connection.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0])
-    print("maps", connection.execute("SELECT COUNT(*) FROM maps").fetchone()[0])
-    print("zones", connection.execute("SELECT COUNT(*) FROM zones").fetchone()[0])
-    print("subzones", connection.execute("SELECT COUNT(*) FROM zones WHERE parent_zone_id IS NOT NULL").fetchone()[0])
+turtle = load_pfquest_turtle_world_slice(paths["pfquest"], turtle_root)
+print("TURTLE")
+print("zones", len(turtle.zones))
+print("creatures", len(turtle.creatures))
+print("gameobjects", len(turtle.gameobjects))
+print("creature_spawns", sum(len(row.spawns) for row in turtle.creatures))
+print("gameobject_spawns", sum(len(row.spawns) for row in turtle.gameobjects))
+
+turtle_zone_ids = {row.zone_id for row in turtle.zones}
+zone_patch_path = turtle_root / "db" / "enUS" / "zones-turtle.lua"
+zone_patch = parse_pfquest_assignment(
+    zone_patch_path.read_text(encoding="utf-8"),
+    domain="zones",
+    table_name="enUS-turtle",
+)
+explicit_zone_deletes = sorted(
+    key for key, value in zone_patch.items()
+    if isinstance(key, int) and value == "_"
+)
+assert not (set(explicit_zone_deletes) & turtle_zone_ids)
+print("explicit '_' zone deletions applied", len(explicit_zone_deletes))
+
+overwrite_text = (turtle_root / "overwrites.lua").read_text(encoding="utf-8")
+match = re.search(r"local\s+phantom_zones\s*=\s*\{(.*?)\}", overwrite_text, re.S)
+if match and "tbl[zid] = nil" in overwrite_text:
+    phantom_ids = [int(value) for value in re.findall(r"\d+", match.group(1))]
+    assert not (set(phantom_ids) & turtle_zone_ids)
+    print("installed phantom cleanup applied", phantom_ids)
+else:
+    print("installed phantom cleanup: not present")
+
+assert all(
+    0.0 <= spawn.x <= 100.0 and 0.0 <= spawn.y <= 100.0
+    for row in (*turtle.creatures, *turtle.gameobjects)
+    for spawn in row.spawns
+)
+print("Turtle installed-source invariants: OK")
+
+if paths.get("pfquest_octo"):
+    octo = load_pfquest_octo_world_slice(paths["pfquest"], paths["pfquest_octo"])
+    diff = compare_pfquest_world_slices(turtle, octo)
+    print("OCTO")
+    print("zones", len(octo.zones))
+    print("creatures", len(octo.creatures))
+    print("gameobjects", len(octo.gameobjects))
+    print("DIFF")
+    for label, result in (
+        ("zones", diff.zones),
+        ("creatures", diff.creatures),
+        ("gameobjects", diff.gameobjects),
+    ):
+        print(
+            label,
+            "added", len(result.added),
+            "removed", len(result.removed),
+            "changed", len(result.changed),
+        )
+        print("  added sample", result.added[:20])
+        print("  removed sample", result.removed[:20])
+        print("  changed sample", result.changed[:20])
 '@ | python -
 ```
-
 Expected invariants:
 
-- the complete repository test suite passes;
+- full tests pass;
 - Ruff reports no errors;
 - Python compilation succeeds;
-- the real DBC import reports `status = "succeeded"` and `source_key = "octo-client-dbc"`;
-- the automatically generated `source_revision` begins with `sha256:`;
-- `maps > 0`, `zones > 0`, and normal client data should yield `subzones > 0`;
-- schema version remains `3`;
-- the second unchanged import reports `rows_inserted = 0` and `rows_updated = 0`;
-- repeated import does not duplicate stable source observations for the same revision but does retain per-import-batch trace links;
-- no tracked file contains a user-specific absolute source path;
-- existing pfQuest spawn observations remain `coordinate_space = 'zone_percent'`;
-- map context returned for a zone-only spawn is derived from the canonical zone map and does not rewrite the spawn coordinate space.
+- the Turtle effective view loads successfully;
+- every top-level zone deletion (`"_"`) declared by the installed Turtle patch is absent from the effective view;
+- if the installed `overwrites.lua` contains the supported phantom-zone cleanup loop, those locally declared IDs are absent; if the loop is absent, no such deletion is invented;
+- all emitted spawn percentages remain within `[0, 100]`;
+- when `pfquest_octo` is configured, both views load and the comparison prints deterministic added/removed/changed ID sets;
+- no database or tracked data file is created.
 
-The disposable validation database may be removed afterward from the ignored generated-data area.
+## Level-2 source-version observation
 
-## Known limitation for local validation
+The user's installed `pfQuest-turtle` loaded successfully with:
 
-P1-T02 reads already extracted `Map.dbc` and `AreaTable.dbc`. It does not add MPQ extraction. If the user's client does not currently expose an extracted DBC directory containing those two files, `get_path.bat` will fail validation rather than invent a path; extraction must be handled before this Level-2 import can be completed.
+```text
+zones 773
+creatures 13802
+gameobjects 20965
+creature_spawns 110071
+gameobject_spawns 74994
+```
+
+Its local `overwrites.lua` does **not** contain the reviewed public `phantom_zones` / `tbl[zid] = nil` cleanup pattern. Zone `5138` therefore remains present as `The Deadmines`. This is accepted as local-source behavior rather than overwritten with semantics from another revision.
+
+## Known limitations
+
+P1-T03 handles only the static enUS P1 world subset. It is not a general Lua interpreter. A new upstream indirect mutation pattern touching zones/units/objects deliberately fails validation and must be reviewed before support is added.
+
+No source is declared canonical by this task.
 
 ## Next handoff rule
 
-After the human validates, commits, and pushes P1-T02 to GitHub `main`, the next conversation must confirm that new commit from `CURRENT_STATE.md` / `main` before advancing.
+After local validation, commit and push P1-T03 to `main`. The next conversation must confirm the resulting main commit before advancing.
 
-The next bounded P1 task should expand source coverage without jumping directly to full-world ingestion. The two most immediate remaining concerns are Octo-specific pfQuest-octo reconciliation/override semantics and adding a source with native world-coordinate spawn data; the next conversation should choose the smallest dependency-ordered slice from the updated source-of-truth state.
-
-### Real Octo DBC compatibility note
-
-Local Level-2 validation found one `AreaTable.dbc` row (area ID `3884`) whose localized-name fields 11-18 are all empty. It is unreferenced as a parent by every other area in the exported client DBC. P1-T02 therefore treats unnamed, unreferenced area rows as skipped source records: they are not given invented canonical names, are counted in `rows_skipped`/`warning_count`, and their IDs are reported in import details. A named area that references such a skipped parent still fails validation rather than silently breaking hierarchy.
+Next bounded task: **P1-T04 — overlay provenance/canonical reconciliation**, explicitly modeling deletion/existence evidence and stale replaced spawn sets before writing the overlay views into SQLite.
