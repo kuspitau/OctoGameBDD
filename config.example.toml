@@ -8,4 +8,17 @@ derived = "data/derived"
 generated = "data/generated"
 samples = "data/samples"
 
-# Add local client/server dump paths only in config.local.toml.
+# External/user-machine source locations belong under [source_paths] in
+# config.local.toml. Do not commit personal absolute paths.
+#
+# Add stable keys only when a project task actually needs them. Examples:
+#
+# [source_paths]
+# wow_root = "C:/Games/OctoWow"
+# pfquest = "C:/Games/OctoWow/Interface/AddOns/pfQuest"
+# pfquest_octo = "C:/Games/OctoWow/Interface/AddOns/pfQuest-octo"
+# octo_wdb = "C:/Games/OctoWow/Cache/WDB/enUS"
+# octo_dbc = "C:/Games/OctoWow/Data/..."
+#
+# Task-specific get_path.bat helpers may discover/request these paths and
+# update config.local.toml without changing unrelated configuration.

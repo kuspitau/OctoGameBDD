@@ -96,6 +96,31 @@ Useful for:
 Example ClassicDB repository:
 - `https://github.com/classicdb/database`
 
+## Research vs local extraction
+
+Distinguish two needs.
+
+### Understanding a public source
+
+When implementing an adapter/parser for a public addon or database:
+
+- inspect the current primary repository/source;
+- follow relevant code references;
+- consult docs/issues/discussions/history when the format or semantics are unclear;
+- do not infer field meaning from memory alone;
+- do not require the user's installed addon solely to learn a public format.
+
+### Accessing the user's local source data
+
+When the actual installed/local source is needed for extraction or Level 2 validation:
+
+- read `docs/project/LOCAL_PATHS.md`;
+- use `config.local.toml` for stable machine-specific paths;
+- generate `get_path.bat` when required paths are not already configured;
+- validate the located source/version before importing.
+
+This distinction allows coding agents to build correct adapters from public evidence while the human later validates against their exact Octo installation.
+
 ## Source registry requirements
 
 Every importer must register:

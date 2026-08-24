@@ -55,6 +55,7 @@ data/generated/
 # Generated handoff artifacts
 changes.zip
 delete_files.bat
+get_path.bat
 MANIFEST.txt
 delete.bat
 

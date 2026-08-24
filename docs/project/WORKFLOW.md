@@ -25,19 +25,24 @@ The human remains the only writer/pusher to GitHub.
 1. Human pushes validated main
 2. New conversation reads current GitHub main
 3. Conversation reads project memory + task-relevant files
-4. Conversation implements one bounded task
-5. Conversation runs sample/available tests
-6. Conversation updates project memory
-7. Conversation returns:
+4. Conversation inspects public upstream sources when external-format knowledge is needed
+5. Conversation implements one bounded task
+6. Conversation runs sample/available tests
+7. Conversation updates project memory
+8. Conversation returns:
       changes.zip
+        + optional delete_files.bat inside the ZIP
+        + optional get_path.bat inside the ZIP
       MANIFEST.txt
-      optional delete_files.bat
-8. Human extracts over local repo
-9. Human reviews git diff
-10. Human runs local/full-data validation
-11. Human fixes/reports failures as needed
-12. Human commits and pushes
-13. Next conversation starts from the new main
+9. Human extracts changes.zip over local repo
+10. Human reviews MANIFEST.txt
+11. Human runs delete_files.bat if present
+12. Human runs get_path.bat if present
+13. Human reviews git diff
+14. Human runs local/full-data validation
+15. Human fixes/reports failures as needed
+16. Human commits and pushes
+17. Next conversation starts from the new main
 ```
 
 ## Why a delta ZIP
@@ -52,17 +57,63 @@ tests/test_foo.py
 docs/project/CURRENT_STATE.md
 ```
 
-then only those project-relative paths belong in `changes.zip`.
+then only those project-relative paths belong in `changes.zip`, apart from required transient root-level handoff helpers.
 
-Unchanged files are intentionally absent.
+Unchanged tracked files are intentionally absent.
+
+## Transient handoff helpers
+
+Two root-level BAT helpers may accompany a delta **inside `changes.zip`**:
+
+### `delete_files.bat`
+
+Generated only when stale tracked/untracked project files must be removed because of the task.
+
+ZIP extraction cannot perform deletions, so the BAT carries explicit safe removal operations.
+
+### `get_path.bat`
+
+Generated only when the task or its Level 2 validation requires local source paths not already configured.
+
+It follows `docs/project/LOCAL_PATHS.md`:
+
+```text
+reuse configured path
+-> search/discover
+-> ask only if unresolved/ambiguous
+-> validate target
+-> update config.local.toml
+```
+
+Both helpers are ignored by Git by default.
 
 ## Deletion/rename handling
 
-ZIP extraction cannot remove stale files.
+Deletions are explicit in `MANIFEST.txt`.
 
-Therefore deletions are explicit in `MANIFEST.txt` and, when needed, an accompanying safe `delete_files.bat` is provided.
+When needed, `delete_files.bat` is included at the project root inside `changes.zip`.
 
-The human reads the BAT before executing it.
+The human reads the manifest/BAT before executing it.
+
+## Local path/config handling
+
+Personal absolute paths are never committed.
+
+Stable machine-specific source locations belong in ignored:
+
+```text
+config.local.toml
+```
+
+External source locations normally live under:
+
+```toml
+[source_paths]
+```
+
+Public addon/source formats should be researched from their current primary repositories/docs rather than inferred from local paths or memory.
+
+The local installed copy is used when version-specific/full-data validation requires it.
 
 ## Full-data testing
 
@@ -73,15 +124,19 @@ Agents work using:
 - code;
 - schemas;
 - project docs;
-- small fixtures.
+- small fixtures;
+- public primary source repositories/docs.
 
 The human validates against:
 
+- installed addons when relevant;
 - full SQL dumps;
 - actual Octo client DBC/WDB;
 - full scraped/cached OctoDB data;
 - generated full SQLite DB;
 - other heavy local sources.
+
+If the validation needs unknown local locations, the delta should contain `get_path.bat` so the user does not have to manually edit paths in source code.
 
 ## Audit-only conversations
 

@@ -166,6 +166,41 @@ Each source importer should:
 
 Importer summaries should use the shared machine-readable summary contract so the same deterministic counts/details can be consumed by tests, CLI audit surfaces, and saved artifacts.
 
+## Public source inspection
+
+Source adapters must be built from current source evidence rather than guessed formats.
+
+For public addons/projects:
+
+- inspect the primary repository and current implementation;
+- consult docs/issues/discussions/history when necessary to resolve material ambiguity;
+- capture representative source-shaped fixtures;
+- record revisions/versions where parser semantics depend on them.
+
+The user's installed copy is not required merely to understand a public format, but remains important for Octo/version-specific Level 2 validation.
+
+## Local source boundary
+
+Local user-machine paths are runtime/configuration concerns.
+
+Tracked project code must not depend on personal absolute paths.
+
+Use ignored:
+
+```text
+config.local.toml
+```
+
+for stable local source locations, normally under:
+
+```toml
+[source_paths]
+```
+
+When a coding handoff first needs missing local paths, provide task-specific discovery/configuration through `get_path.bat` as defined in `docs/project/LOCAL_PATHS.md`.
+
+This keeps parser/importer code portable while still making full local validation reproducible.
+
 ## Audit surface
 
 The CLI/audit layer is usable before gameplay-domain schemas are complete.

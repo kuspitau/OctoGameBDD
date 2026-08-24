@@ -135,3 +135,34 @@ Quest geography can differ by giver, finisher and objective. Recipe availability
 **Status:** accepted
 
 A local browser UI remains the target. NiceGUI is a strong candidate, but no UI framework becomes a hard dependency before the data/query layer demonstrates its requirements.
+
+## D-021 — Local source paths are runtime configuration
+
+**Status:** accepted
+
+User-machine absolute paths must not be hard-coded into tracked code or tracked configuration.
+
+Stable local source locations belong in ignored `config.local.toml`, normally under `[source_paths]`.
+
+When required locations are missing, coding handoffs provide task-specific discovery/configuration through `get_path.bat`.
+
+## D-022 — Handoff BAT helpers travel inside the delta ZIP
+
+**Status:** accepted
+
+Transient `delete_files.bat` and `get_path.bat` helpers are included at the project root inside `changes.zip` when needed.
+
+They are ignored by Git and are not separate delivery artifacts.
+
+- `delete_files.bat` handles explicit deletions/rename cleanup.
+- `get_path.bat` resolves required local source paths and updates `config.local.toml`.
+
+`MANIFEST.txt` remains outside the ZIP and documents whether each helper is present and how to use it.
+
+## D-023 — Public external formats are researched from primary sources
+
+**Status:** accepted
+
+When a parser/importer depends on a public addon/project/database, coding conversations inspect current primary source code/docs and relevant issues/discussions/history when necessary instead of guessing formats from memory.
+
+The user's local copy is reserved for version-specific extraction/Level 2 validation rather than being the only source of format knowledge.
