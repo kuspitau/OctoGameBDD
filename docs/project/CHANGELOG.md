@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-08-24 — P1-T02 Octo DBC map/area hierarchy slice
+
+- Added real-client compatibility for isolated unnamed `AreaTable.dbc` rows: skip without inventing a canonical name, report the skipped ID/count, and retain strict parent-reference validation.
+
+- Confirmed the P1-T01 implementation is present on GitHub `main` at commit `d4310762f1e00b2664cb6d39eadf3e9abd407c46` and advanced normal routing to P1-T02.
+- Defined P1-T02 as the bounded resolution of authoritative map/area hierarchy deliberately deferred by P1-T01.
+- Inspected the classic WDBC container and Map/AreaTable field semantics in `cmangos/mangos-classic` revision `9b682be617ac61c127c23aa60d7b4ffbc0ce37e6` instead of guessing the binary format.
+- Added a dependency-free local `Map.dbc` / `AreaTable.dbc` parser with deterministic content-derived source revision identity.
+- Added provenance-aware, idempotent canonical map/zone materialization using the existing migration-3 schema.
+- Recorded D-025: direct Octo client DBC evidence is authoritative for the bounded canonical map/area identity/hierarchy facts while lower-authority observations remain preserved.
+- Preserved extra Map/AreaTable fields as source observations rather than prematurely widening the canonical schema.
+- Updated world-location queries so a spawn without direct `map_id` can derive map context through its canonical zone, without altering the spawn row or `zone_percent` coordinate semantics.
+- Added synthetic source-shaped WDBC fixtures and focused tests for parsing, revision identity, invalid files, idempotency, provenance selection, and derived map context.
+- Added task-specific `get_path.bat` handoff support for `[source_paths].octo_dbc` and documented required validation against the user's real client DBC pair.
+- Marked P1-T02 `IMPLEMENTED_AWAITING_LOCAL_VALIDATION`.
+
 ## 2026-08-24 — P1-T01 world schema and pfQuest fixture slice
 
 - Closed the stale P0 router state after confirming the local-path/handoff workflow amendment is present on GitHub `main` at `fc0dbe0fc22610113bfc8bd9c1e07cb41d400a39`.

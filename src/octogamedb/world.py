@@ -39,7 +39,12 @@ def find_world_locations(
     connection: sqlite3.Connection,
     query: str,
 ) -> list[dict[str, Any]]:
-    """Find canonical creature/game-object spawns by case-insensitive name substring."""
+    """Find canonical creature/game-object spawns by case-insensitive name substring.
+
+    A spawn's directly sourced ``map_id`` takes precedence. When a zone-percent
+    spawn has no direct map, the canonical map relationship of its zone is used
+    as derived geographic context; the coordinate space remains unchanged.
+    """
 
     needle = query.strip()
     if not needle:
@@ -63,12 +68,12 @@ def find_world_locations(
             cs.respawn_seconds,
             z.zone_id,
             z.name AS zone_name,
-            m.map_id,
+            COALESCE(cs.map_id, z.map_id) AS map_id,
             m.name AS map_name
         FROM creatures AS c
         JOIN creature_spawns AS cs ON cs.creature_id = c.creature_id
         LEFT JOIN zones AS z ON z.zone_id = cs.zone_id
-        LEFT JOIN maps AS m ON m.map_id = cs.map_id
+        LEFT JOIN maps AS m ON m.map_id = COALESCE(cs.map_id, z.map_id)
         WHERE c.name LIKE ? COLLATE NOCASE
         ORDER BY c.name COLLATE NOCASE, c.creature_id, cs.spawn_key
         """,
@@ -118,12 +123,12 @@ def find_world_locations(
             gs.respawn_seconds,
             z.zone_id,
             z.name AS zone_name,
-            m.map_id,
+            COALESCE(gs.map_id, z.map_id) AS map_id,
             m.name AS map_name
         FROM gameobjects AS g
         JOIN gameobject_spawns AS gs ON gs.gameobject_id = g.gameobject_id
         LEFT JOIN zones AS z ON z.zone_id = gs.zone_id
-        LEFT JOIN maps AS m ON m.map_id = gs.map_id
+        LEFT JOIN maps AS m ON m.map_id = COALESCE(gs.map_id, z.map_id)
         WHERE g.name LIKE ? COLLATE NOCASE
         ORDER BY g.name COLLATE NOCASE, g.gameobject_id, gs.spawn_key
         """,

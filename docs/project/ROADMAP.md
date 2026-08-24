@@ -68,9 +68,9 @@ Build the first small end-to-end vertical slice from representative source fixtu
 
 ### P1-T01 — World schema and pfQuest fixture vertical slice
 
-**Implemented — awaiting local validation.**
+**Validated.**
 
-This delta establishes:
+Present on GitHub `main` at commit `d4310762f1e00b2664cb6d39eadf3e9abd407c46`:
 
 - schema migration 3 with the six P1 canonical world tables;
 - native template/zone/map IDs and template-vs-spawn separation;
@@ -81,7 +81,24 @@ This delta establishes:
 - a small creature/game-object location query with selected-source attribution;
 - Level 1 parser/schema/import/query tests.
 
-P1-T01 intentionally does not infer authoritative map/parent-zone identity from pfQuest source geometry and does not perform full-world ingestion.
+P1-T01 intentionally did not infer authoritative map/parent-zone identity from pfQuest source geometry and did not perform full-world ingestion.
+
+### P1-T02 — Octo DBC map/area hierarchy vertical slice
+
+**Implemented — awaiting local validation.**
+
+This delta resolves the main geography dependency intentionally deferred by P1-T01:
+
+- dependency-free classic WDBC parsing for local Octo client `Map.dbc` and `AreaTable.dbc`;
+- deterministic SHA-256 revision identity for the exact DBC pair;
+- canonical map identity/type and area -> map / subzone -> parent-area hierarchy using the existing migration-3 schema;
+- an explicit field-specific source-selection policy that allows direct Octo client DBC map/area facts to supersede lower-authority observations while preserving all evidence;
+- source-only preservation of additional Map/AreaTable fields not yet promoted to canonical columns;
+- derived map context for zone-only spawns through `zones.map_id`, without copying the map into the spawn row or changing `zone_percent` semantics;
+- synthetic WDBC fixtures and Level 1 parser/import/idempotency/provenance/query tests;
+- local-path handoff for `[source_paths].octo_dbc` and required Level-2 validation against the user's actual client files.
+
+P1-T02 deliberately does not implement MPQ extraction, world-coordinate conversion, full DBC ingestion, or pfQuest-octo reconciliation.
 
 ## P2 — Items and acquisition
 

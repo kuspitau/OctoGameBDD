@@ -161,6 +161,46 @@ with `coordinate_space = 'zone_percent'`. pfQuest zone geometry/context is prese
 
 The canonical world rows and generic source observations remain separate layers. A selected source observation may drive a canonical scalar/position, but competing observations remain in the P0 provenance tables.
 
+## P1-T02 map/area hierarchy semantics
+
+P1-T02 does not add a migration. It fills the nullable hierarchy columns that migration 3 already reserved.
+
+From the user's actual Octo client DBC pair:
+
+```text
+Map.dbc
+  MapID             -> maps.map_id
+  localized name    -> maps.name
+  map/instance type -> maps.map_kind (normalized)
+
+AreaTable.dbc
+  Area ID           -> zones.zone_id
+  localized name    -> zones.name
+  map/continent ID  -> zones.map_id
+  parent area ID    -> zones.parent_zone_id
+```
+
+The map/area DBC facts above use the explicit field-specific selection policy recorded by D-025. Lower-authority observations are not deleted when the DBC becomes canonical.
+
+Additional inspected DBC fields such as exploration flag, area flags, exploration level, faction-group mask, liquid override, and Map linked-area context remain source observations for now. They are not promoted into canonical columns without a demonstrated consumer and corresponding data-model decision.
+
+A spawn with a direct canonical `spawn.map_id` uses that value. If the spawn has only a canonical `zone_id`, query code may derive map context as:
+
+```text
+Spawn -> Zone -> Map
+```
+
+Direct spawn map identity takes precedence over derived zone map identity. This derived query context is not copied into the spawn row merely for convenience.
+
+Most importantly, map hierarchy resolution is independent from coordinate-space conversion:
+
+```text
+zone_percent spawn + canonical zone.map_id
+    != world-coordinate spawn
+```
+
+A pfQuest spawn remains `coordinate_space = 'zone_percent'` even after its zone has an authoritative map relationship.
+
 ## Important relation families
 
 Use dedicated domain tables (exact names may evolve):

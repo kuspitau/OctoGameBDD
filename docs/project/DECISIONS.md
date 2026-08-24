@@ -181,3 +181,27 @@ In particular:
 - source-specific zone/map frame fields are preserved as provenance until their canonical meaning is established from authoritative evidence.
 
 This prevents percentage coordinates from being silently mislabeled as world coordinates and keeps future map/area reconciliation explicit.
+
+## D-025 — Direct Octo DBC is authoritative for canonical map/area hierarchy facts
+
+**Status:** accepted
+
+For the bounded map/area fact family established in P1-T02, observations from the user's actual Octo client `Map.dbc` and `AreaTable.dbc` may supersede lower-authority canonical selections.
+
+This policy applies to:
+
+- map name and map kind/type normalization;
+- zone/area name;
+- area -> map identity;
+- subzone/area -> parent-area identity.
+
+Consequences:
+
+- competing pfQuest, Vanilla, Turtle, or other source observations remain preserved in the provenance layer under D-006;
+- the winning selection records the explicit `octo-client-dbc-geography` policy and reason;
+- this is field-specific source authority, not a universal rule that every DBC field outranks every other source;
+- the exact local DBC pair is identified by a deterministic content-derived revision when possible;
+- a spawn's map may be derived at query time from its canonical zone's `map_id` when no direct spawn map is present;
+- deriving that map context does not modify the spawn row and does not convert or relabel `zone_percent` coordinates.
+
+D-025 resolves the map/area authority deliberately deferred by P1-T01 while preserving D-005, D-006, D-008, and D-024.

@@ -79,6 +79,58 @@ Useful areas include:
 
 These files are local/large and normally remain outside Git.
 
+#### P1-T02 Map/Area vertical slice
+
+P1-T02 consumes only:
+
+```text
+Map.dbc
+AreaTable.dbc
+```
+
+from a local extracted DBC directory configured as:
+
+```toml
+[source_paths]
+octo_dbc = "..."
+```
+
+The user's actual local files are registered as source key:
+
+```text
+octo-client-dbc
+```
+
+When an explicit client build/revision is unavailable, the importer computes a deterministic SHA-256 composite revision from the exact `Map.dbc` / `AreaTable.dbc` bytes. Re-importing unchanged files therefore reuses stable source observations while still recording a new import-batch trace.
+
+The classic WDBC container and field semantics were checked against CMaNGOS Classic source revision:
+
+```text
+9b682be617ac61c127c23aa60d7b4ffbc0ce37e6
+```
+
+Relevant format-reference files:
+
+```text
+src/shared/Database/DBCFileLoader.cpp
+src/game/Server/DBCStructure.h
+src/game/Server/DBCEnums.h
+src/game/Server/DBCStores.cpp
+```
+
+This CMaNGOS source is a parser/semantic reference only. CMaNGOS rows are not imported as Octo truth by P1-T02.
+
+For the bounded facts defined by D-025, the direct Octo client DBC is authoritative for canonical map/area identity and hierarchy:
+
+- map name/type;
+- zone/area name;
+- area -> map relation;
+- subzone -> parent-area relation.
+
+This does not establish a universal DBC-over-everything rule. Other fields/relations continue to use explicit source-aware policies, and all competing observations remain preserved.
+
+The P1-T02 binary tests use small synthetic WDBC files. Real client DBC files are never committed.
+
 ### Octo client WDB cache
 
 Potential files include item/creature/gameobject/quest caches.

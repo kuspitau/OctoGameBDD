@@ -5,11 +5,9 @@
 GitHub `main` is the source-of-truth base for this delta:
 
 - branch: `main`
-- base commit: `fc0dbe0fc22610113bfc8bd9c1e07cb41d400a39`
+- base commit: `d4310762f1e00b2664cb6d39eadf3e9abd407c46`
 
-That commit contains the P0-T03 audit/golden-case foundation plus the local source-path and in-ZIP handoff-helper workflow amendment.
-
-Because those changes are now present on the project's validated source-of-truth branch, the stale `IMPLEMENTED_AWAITING_LOCAL_VALIDATION` wording carried by the previous router is closed for routing purposes and normal development advances into P1.
+That commit is `Implement P1-T01 world schema and pfQuest vertical slice`. P1-T01 is therefore confirmed on the project's validated source-of-truth branch and is closed for routing purposes.
 
 **Status:** `IMPLEMENTED_AWAITING_LOCAL_VALIDATION`
 
@@ -19,72 +17,107 @@ Because those changes are now present on the project's validated source-of-truth
 
 ## Current task
 
-**P1-T01 — World schema and pfQuest fixture vertical slice**
+**P1-T02 — Octo DBC map/area hierarchy vertical slice**
 
 Detailed task specification:
 
-- `docs/project/tasks/P1-T01.md`
+- `docs/project/tasks/P1-T02.md`
 
 Implementation in this delta includes:
 
-- schema migration 3 with canonical `maps`, `zones`, `creatures`, `creature_spawns`, `gameobjects`, and `gameobject_spawns`;
-- explicit spawn coordinate spaces so pfQuest zone-percentage coordinates are not mislabeled as world XYZ;
-- a dependency-free parser/importer for a deliberately small pfQuest-shaped six-file fixture slice;
-- source registration/import-batch accounting and provenance observations using the P0 primitives;
-- conservative canonical selection: first source evidence is selected only when the fact group has no existing selection;
-- idempotent template/spawn materialization with deterministic spawn keys;
-- a programmatic cross-entity location search that returns selected position-source attribution;
-- tests for parsing, schema constraints, migration upgrade, idempotency, provenance trace links, and location queries.
+- dependency-free classic WDBC parsing for `Map.dbc` and `AreaTable.dbc`;
+- deterministic content-derived revision identity for the exact two-file DBC input;
+- canonical `maps` and `zones` materialization using the existing migration-3 schema;
+- authoritative zone -> map and subzone -> parent-zone hierarchy from direct Octo client DBC evidence;
+- an explicit field-specific canonical-selection policy for map/area identity and hierarchy, while retaining competing source observations;
+- source-only retention of selected AreaTable/Map metadata that is not yet promoted into canonical columns;
+- derived map context in world-location queries through `spawn.zone_id -> zones.map_id` when the spawn has no direct `map_id`;
+- preservation of `zone_percent` coordinate semantics with no coordinate conversion;
+- synthetic source-shaped WDBC fixtures and focused parser/import/provenance/query tests;
+- a task-specific `get_path.bat` handoff helper for `[source_paths].octo_dbc`.
 
-## Source verification for P1-T01
+No schema migration is required for P1-T02; migration 3 already provides the necessary map/zone hierarchy columns.
 
-The public pfQuest format was inspected rather than inferred.
+## Source verification for P1-T02
 
-Pinned upstream evidence for the fixture/parser contract:
+The DBC format was inspected rather than inferred.
 
-- repository: `shagu/pfQuest`
-- revision: `104f35678ca39ab1fb78b655f815cc7016f5e0c8`
-- license: MIT
-- relevant files: `db/zones.lua`, `db/enUS/zones.lua`, `db/units.lua`, `db/enUS/units.lua`, `db/objects.lua`, `db/enUS/objects.lua`, plus pfQuest database lookup code for coordinate semantics.
+Pinned public format evidence:
 
-The first value in pfQuest zone geometry is retained only as source evidence (`pfquest.coordinate_frame`) in this task. It is not silently promoted to canonical map or zone-parent identity.
+- repository: `cmangos/mangos-classic`
+- revision: `9b682be617ac61c127c23aa60d7b4ffbc0ce37e6`
+- relevant files:
+  - `src/shared/Database/DBCFileLoader.cpp`;
+  - `src/game/Server/DBCStructure.h`;
+  - `src/game/Server/DBCEnums.h`;
+  - `src/game/Server/DBCStores.cpp`.
+
+The public source is used only to establish the classic WDBC layout and field semantics. The actual canonical source for this task is the user's local Octo client `Map.dbc` / `AreaTable.dbc` pair, whose exact bytes are represented by a deterministic SHA-256 composite revision at import time.
+
+The tracked WDBC fixture is synthetic/test-owned and does not redistribute Octo client data.
 
 ## Agent/sample validation for this delta
 
-Performed in an agent workspace assembled from GitHub `main` plus this delta:
+The GitHub connector exposes repository contents but does not mount a checkout into the execution container. A focused agent workspace was therefore assembled from the GitHub `main` dependencies needed by P1-T02 plus this delta.
+
+Performed:
 
 ```bash
 PYTHONPATH=src python -m pytest -q
 ```
 
-Expected/current agent result:
+Focused P1-T02 result:
 
 ```text
-34 passed
+6 passed
 ```
 
 Also performed:
 
 ```bash
-PYTHONPATH=src python -m compileall -q src tests
+python -m compileall -q src tests
 ```
 
 Python compilation succeeds.
 
-Editable packaging was also validated without network build isolation:
+Editable packaging was validated without network build isolation:
 
 ```bash
 python -m pip install -e . --no-deps --no-build-isolation
-python -m octogamedb status --db /tmp/p1_t01_status.sqlite3
 ```
 
-The packaged migration is discovered and status reports schema version `3` / three applied migrations.
+A fixture import against a fresh database also succeeded with:
 
-The agent environment did not contain the `ruff` module, so Ruff could not be executed there. The project dev dependency still includes Ruff and it remains part of required human validation.
+- schema version: `3`;
+- maps: `2`;
+- zones: `3`;
+- hierarchy links: `1`;
+- second unchanged import: `rows_inserted = 0`, `rows_updated = 0`.
 
-## Required human validation after applying this delta
+The agent container did not contain the `ruff` module, so Ruff could not be executed there.
 
-No full Octo/pfQuest local data or machine-specific source path is required for P1-T01. No `get_path.bat` is included.
+Because a complete Git checkout was not mountable in the execution environment, the pre-existing full repository suite was not re-executed by the agent. The focused tests exercise the new parser/importer, provenance-selection behavior, idempotency, and modified world-location query. The full repository suite remains required below.
+
+## Required local path/config step
+
+P1-T02 needs the user's extracted Octo client DBC directory.
+
+After extracting `changes.zip` over the project root, run from the project root:
+
+```bat
+get_path.bat
+```
+
+Successful resolution must leave a valid ignored `config.local.toml` entry:
+
+```toml
+[source_paths]
+octo_dbc = "<directory containing Map.dbc and AreaTable.dbc>"
+```
+
+The helper reuses a valid configured path, checks a small set of safe candidates, otherwise asks for the directory, validates both required files, and preserves unrelated configuration.
+
+## Required human/full-data validation
 
 From the project root, run:
 
@@ -94,7 +127,34 @@ python -m pip install -e ".[dev]"
 python -m pytest
 python -m ruff check src tests
 python -m compileall -q src tests
-python -m octogamedb status --db data/generated/p1_t01_validation.sqlite3
+```
+
+Then import the real local DBC pair twice into a disposable generated database. In PowerShell from the project root:
+
+```powershell
+@'
+import tomllib
+from pathlib import Path
+
+from octogamedb.db import apply_migrations, connect_database
+from octogamedb.importers.octo_dbc_world import import_octodbc_world
+
+config = tomllib.loads(Path("config.local.toml").read_text(encoding="utf-8"))
+source_root = config["source_paths"]["octo_dbc"]
+
+with connect_database("data/generated/p1_t02_validation.sqlite3") as connection:
+    apply_migrations(connection)
+    first = import_octodbc_world(connection, source_root=source_root)
+    second = import_octodbc_world(connection, source_root=source_root)
+    print("FIRST")
+    print(first.to_json())
+    print("SECOND")
+    print(second.to_json())
+    print("schema_version", connection.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0])
+    print("maps", connection.execute("SELECT COUNT(*) FROM maps").fetchone()[0])
+    print("zones", connection.execute("SELECT COUNT(*) FROM zones").fetchone()[0])
+    print("subzones", connection.execute("SELECT COUNT(*) FROM zones WHERE parent_zone_id IS NOT NULL").fetchone()[0])
+'@ | python -
 ```
 
 Expected invariants:
@@ -102,15 +162,28 @@ Expected invariants:
 - the complete repository test suite passes;
 - Ruff reports no errors;
 - Python compilation succeeds;
-- status reports schema version `3` and three applied migrations;
+- the real DBC import reports `status = "succeeded"` and `source_key = "octo-client-dbc"`;
+- the automatically generated `source_revision` begins with `sha256:`;
+- `maps > 0`, `zones > 0`, and normal client data should yield `subzones > 0`;
+- schema version remains `3`;
+- the second unchanged import reports `rows_inserted = 0` and `rows_updated = 0`;
+- repeated import does not duplicate stable source observations for the same revision but does retain per-import-batch trace links;
 - no tracked file contains a user-specific absolute source path;
-- repeated fixture import tests prove no duplicate canonical rows/observations for the same revision;
-- pfQuest percentage coordinates remain `coordinate_space = 'zone_percent'`.
+- existing pfQuest spawn observations remain `coordinate_space = 'zone_percent'`;
+- map context returned for a zone-only spawn is derived from the canonical zone map and does not rewrite the spawn coordinate space.
 
 The disposable validation database may be removed afterward from the ignored generated-data area.
 
+## Known limitation for local validation
+
+P1-T02 reads already extracted `Map.dbc` and `AreaTable.dbc`. It does not add MPQ extraction. If the user's client does not currently expose an extracted DBC directory containing those two files, `get_path.bat` will fail validation rather than invent a path; extraction must be handled before this Level-2 import can be completed.
+
 ## Next handoff rule
 
-After the human validates, commits, and pushes P1-T01 to GitHub `main`, the next conversation must confirm that commit from `CURRENT_STATE.md`/`main` before advancing.
+After the human validates, commits, and pushes P1-T02 to GitHub `main`, the next conversation must confirm that new commit from `CURRENT_STATE.md` / `main` before advancing.
 
-The next bounded P1 task should expand the world foundation from this fixture slice without jumping directly to full-world ingestion. In particular, authoritative map/area hierarchy and broader source coverage still need to be resolved before treating pfQuest's source-specific coordinate context as canonical geography.
+The next bounded P1 task should expand source coverage without jumping directly to full-world ingestion. The two most immediate remaining concerns are Octo-specific pfQuest-octo reconciliation/override semantics and adding a source with native world-coordinate spawn data; the next conversation should choose the smallest dependency-ordered slice from the updated source-of-truth state.
+
+### Real Octo DBC compatibility note
+
+Local Level-2 validation found one `AreaTable.dbc` row (area ID `3884`) whose localized-name fields 11-18 are all empty. It is unreferenced as a parent by every other area in the exported client DBC. P1-T02 therefore treats unnamed, unreferenced area rows as skipped source records: they are not given invented canonical names, are counted in `rows_skipped`/`warning_count`, and their IDs are reported in import details. A named area that references such a skipped parent still fails validation rather than silently breaking hierarchy.
