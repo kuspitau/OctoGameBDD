@@ -2,20 +2,18 @@
 
 ## Repository state
 
-GitHub `main` used as the base for P0-T02:
+GitHub `main` used as the base for P0-T03:
 
 - branch: `main`
-- base commit: `43159c33e76777af101ae957c1c5a7078a57ed53`
+- base commit: `587146435e44960aaebf7105979a79516102f26e`
 
-That commit contains the P0-T01 SQLite foundation. Per the prior handoff contract, its presence on
-validated `main` confirms P0-T01 as completed/validated and allows work to advance to P0-T02.
+That commit contains the P0-T02 provenance/conflict implementation. Its presence on validated `main` confirms P0-T02 as completed/validated and allows work to advance to P0-T03.
 
-P0-T02 has been implemented in the current delta and passed agent/sample validation.
+P0-T03 has been implemented in the current delta and passed agent/sample validation.
 
 **Status:** `IMPLEMENTED_AWAITING_LOCAL_VALIDATION`
 
-The P0-T02 implementation is not part of validated GitHub `main` until the human applies this delta,
-runs the required local validation, reviews the diff, commits, and pushes.
+The P0-T03 implementation is not part of validated GitHub `main` until the human applies this delta, runs the required local validation, reviews the diff, commits, and pushes.
 
 ## Current milestone
 
@@ -23,32 +21,28 @@ runs the required local validation, reviews the diff, commits, and pushes.
 
 ## Current task
 
-**P0-T02 — Provenance and conflict primitives**
+**P0-T03 — Fixture/golden-case and audit skeleton**
 
 Detailed task specification:
 
-- `docs/project/tasks/P0-T02.md`
+- `docs/project/tasks/P0-T03.md`
 
 Implementation now includes:
 
-- schema migration `0002_provenance_primitives.sql`;
-- `observation_groups` for stable scalar/relation evidence slots;
-- relation `fact_instance_key` support so legitimate multi-valued relations remain distinct;
-- stable `source_observations` keyed by source revision plus `observation_import_batches` links for
-  every import run that observed them;
-- deterministic canonical JSON payload serialization;
-- idempotent scalar and relation observation helpers;
-- explicit current canonical selection with policy/reason metadata;
-- database enforcement that a canonical selection references an observation from the same group;
-- tests covering conflicts, traceability, relation cardinality cases, constraints, and v1 -> v2 upgrade.
+- explicit conventions separating source-shaped fixtures from synthetic project golden cases;
+- initial provenance/audit golden case with resolved and unresolved conflicts plus legitimate multi-valued relations;
+- generic audit report functions for source, trace, conflict, and coverage inspection;
+- CLI commands `source`, `trace`, `conflict`, and `coverage`;
+- human-readable output plus deterministic `--json` output for every new audit command;
+- reusable machine-readable `ImportSummary` payloads derived from persisted import batches;
+- deterministic JSON/file serialization for import summaries;
+- tests covering golden coverage invariants, conflict classification/resolution state, traceability, source summaries, CLI text/JSON modes, and import-summary serialization.
 
-These generic tables are an evidence/provenance layer only. They do not replace the explicit
-canonical domain relation tables required by the architecture.
+No schema migration or gameplay-domain canonical tables were added. Generic coverage remains explicitly scoped to provenance/evidence until P1+ domain schemas exist.
 
-`CURRENT_STATE.md` remains the permanent task router. Do not advance to P0-T03 until this P0-T02
-delta has been locally validated and pushed to GitHub `main`.
+`CURRENT_STATE.md` remains the permanent task router. Do not advance into P1 until this P0-T03 delta has been locally validated and pushed to GitHub `main`.
 
-## Completed / validated before P0-T02
+## Completed / validated before P0-T03
 
 - project scope and multi-entity architecture defined;
 - source strategy defined;
@@ -58,9 +52,10 @@ delta has been locally validated and pushed to GitHub `main`.
 - initial Python package/test skeleton created;
 - large-data exclusion policy created;
 - roadmap and decision log created;
-- **P0-T01 — SQLite foundation and import metadata: VALIDATED on GitHub `main`**.
+- **P0-T01 — SQLite foundation and import metadata: VALIDATED on GitHub `main`;**
+- **P0-T02 — Provenance and conflict primitives: VALIDATED on GitHub `main` at commit `587146435e44960aaebf7105979a79516102f26e`.**
 
-## P0-T02 validation status
+## P0-T03 validation status
 
 Agent/sample validation completed:
 
@@ -69,20 +64,17 @@ PYTHONPATH=src pytest -q
 python -m compileall -q src tests
 python -m pip install -e . --no-build-isolation --no-deps
 pytest -q
-python -m octogamedb status --db <temporary-test-path>
-python -m octogamedb status --db <same-temporary-test-path>
 ```
 
 Results:
 
-- 19 tests passed both via `PYTHONPATH=src` and after editable package installation;
+- 27 tests passed both before and after editable package installation;
 - Python compilation passed;
-- SQLite integrity smoke check returned `ok` and `PRAGMA foreign_key_check` returned zero rows;
-- fresh status reported schema version `2` and two applied migrations;
-- repeated status remained at exactly two applied migrations;
+- the original 19 P0-T01/P0-T02 tests remain green;
+- 8 new P0-T03 tests cover audit/golden/summary/CLI behavior;
 - Ruff could not be executed in the agent environment because the executable is not installed.
 
-No full Octo data is required for P0-T02 validation.
+No full Octo data is required for P0-T03 validation.
 
 Required human validation after applying the delta:
 
@@ -90,24 +82,23 @@ Required human validation after applying the delta:
 python -m pip install -e ".[dev]"
 pytest
 ruff check src tests
-python -m octogamedb status --db data/generated/p0_t02_validation.sqlite3
-python -m octogamedb status --db data/generated/p0_t02_validation.sqlite3
+python -m compileall -q src tests
+python -m octogamedb status --db data/generated/p0_t03_validation.sqlite3
+python -m octogamedb coverage --db data/generated/p0_t03_validation.sqlite3 --json
+python -m octogamedb conflict --db data/generated/p0_t03_validation.sqlite3 --json
 ```
 
 Expected invariants:
 
-- all tests pass;
+- all 27 tests pass;
 - Ruff reports no errors;
-- the validation DB reports schema version `2`;
-- it reports exactly two applied migrations;
-- a fresh validation DB reports zero sources and zero import batches;
-- repeating `status` does not create a third migration record;
-- the test suite verifies upgrade from a schema-v1 database to schema v2 without recreating the DB;
-- repeating the same source revision in a new import batch reuses stable observations while recording
-  the additional batch link.
+- Python compilation succeeds;
+- the validation DB reports schema version `2` and exactly two applied migrations;
+- a fresh validation DB reports zero registered sources/import batches;
+- fresh `coverage --json` reports scope `generic-provenance` and zero sources, subjects, observations, canonical selections, and conflicts;
+- fresh `conflict --json` reports zero conflicts and zero unresolved conflicts;
+- no third schema migration is created by any P0-T03 command.
 
 ## Next handoff rule
 
-After the human validates, commits, and pushes this delta to GitHub `main`, the next conversation
-should confirm P0-T02 as `VALIDATED` and advance `CURRENT_STATE.md` to **P0-T03 — Fixture/golden-case
-and audit skeleton**.
+After the human validates, commits, and pushes this delta to GitHub `main`, the next conversation should confirm P0-T03 as `VALIDATED`, close P0, and define/take the first bounded P1 world-foundation vertical-slice task before adding broad full-world ingestion.

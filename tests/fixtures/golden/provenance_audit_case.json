@@ -1,0 +1,157 @@
+{
+  "sources": [
+    {
+      "key": "source-a",
+      "display_name": "Fixture Source A",
+      "kind": "fixture"
+    },
+    {
+      "key": "source-b",
+      "display_name": "Fixture Source B",
+      "kind": "fixture"
+    }
+  ],
+  "batches": [
+    {
+      "key": "batch-a",
+      "source": "source-a",
+      "revision": "rev-a",
+      "rows_read": 5,
+      "rows_accepted": 5,
+      "rows_inserted": 5,
+      "details": {"fixture_case": "provenance-audit"}
+    },
+    {
+      "key": "batch-b",
+      "source": "source-b",
+      "revision": "rev-b",
+      "rows_read": 2,
+      "rows_accepted": 2,
+      "rows_inserted": 2,
+      "details": {"fixture_case": "provenance-audit"}
+    }
+  ],
+  "observations": [
+    {
+      "key": "item-name-a",
+      "kind": "scalar",
+      "batch": "batch-a",
+      "subject_kind": "item",
+      "subject_key": "100",
+      "fact_key": "name",
+      "value": "Copper Widget",
+      "source_record_type": "item",
+      "raw_identifier": "100"
+    },
+    {
+      "key": "item-name-b",
+      "kind": "scalar",
+      "batch": "batch-b",
+      "subject_kind": "item",
+      "subject_key": "100",
+      "fact_key": "name",
+      "value": "Copper Gizmo",
+      "source_record_type": "item",
+      "raw_identifier": "100"
+    },
+    {
+      "key": "item-quality-a",
+      "kind": "scalar",
+      "batch": "batch-a",
+      "subject_kind": "item",
+      "subject_key": "100",
+      "fact_key": "quality",
+      "value": 2,
+      "source_record_type": "item",
+      "raw_identifier": "100"
+    },
+    {
+      "key": "quest-giver-a",
+      "kind": "relation",
+      "batch": "batch-a",
+      "subject_kind": "quest",
+      "subject_key": "99",
+      "fact_key": "giver",
+      "relation_instance_key": "giver-slot-1",
+      "target_kind": "creature",
+      "target_key": "10"
+    },
+    {
+      "key": "quest-giver-b",
+      "kind": "relation",
+      "batch": "batch-b",
+      "subject_kind": "quest",
+      "subject_key": "99",
+      "fact_key": "giver",
+      "relation_instance_key": "giver-slot-1",
+      "target_kind": "creature",
+      "target_key": "11"
+    },
+    {
+      "key": "loot-34",
+      "kind": "relation",
+      "batch": "batch-a",
+      "subject_kind": "creature",
+      "subject_key": "12",
+      "fact_key": "loot.item",
+      "target_kind": "item",
+      "target_key": "34",
+      "attributes": {"chance": 0.1}
+    },
+    {
+      "key": "loot-35",
+      "kind": "relation",
+      "batch": "batch-a",
+      "subject_kind": "creature",
+      "subject_key": "12",
+      "fact_key": "loot.item",
+      "target_kind": "item",
+      "target_key": "35",
+      "attributes": {"chance": 0.2}
+    }
+  ],
+  "canonical": [
+    {
+      "observation": "item-name-b",
+      "selection_policy": "fixture-source-priority/v1",
+      "selection_reason": "Golden case selects source B for the item name."
+    }
+  ],
+  "expected_coverage": {
+    "scope": "generic-provenance",
+    "source_count": 2,
+    "import_batch_count": 2,
+    "subject_count": 3,
+    "observation_group_count": 5,
+    "observation_count": 7,
+    "canonical_selection_count": 1,
+    "conflict_count": 2,
+    "unresolved_conflict_count": 1,
+    "subject_kinds": [
+      {
+        "subject_kind": "creature",
+        "subject_count": 1,
+        "observation_group_count": 2,
+        "observation_count": 2,
+        "canonical_selection_count": 0,
+        "conflict_count": 0
+      },
+      {
+        "subject_kind": "item",
+        "subject_count": 1,
+        "observation_group_count": 2,
+        "observation_count": 3,
+        "canonical_selection_count": 1,
+        "conflict_count": 1
+      },
+      {
+        "subject_kind": "quest",
+        "subject_count": 1,
+        "observation_group_count": 1,
+        "observation_count": 2,
+        "canonical_selection_count": 0,
+        "conflict_count": 1
+      }
+    ]
+  }
+}

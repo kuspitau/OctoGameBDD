@@ -164,6 +164,21 @@ Each source importer should:
 6. be testable using small fixtures;
 7. cache remote source artifacts when appropriate rather than repeatedly downloading/scraping them.
 
+Importer summaries should use the shared machine-readable summary contract so the same deterministic counts/details can be consumed by tests, CLI audit surfaces, and saved artifacts.
+
+## Audit surface
+
+The CLI/audit layer is usable before gameplay-domain schemas are complete.
+
+P0 audit commands operate on import metadata and provenance evidence:
+
+- `source` reports registered sources and import summaries;
+- `trace` follows evidence for a subject/fact back to source revision and import batches;
+- `conflict` identifies evidence groups with competing distinct values and whether a canonical winner exists;
+- `coverage` reports generic provenance/evidence counts.
+
+Audit commands provide human-readable output and deterministic JSON. Generic P0 coverage is not a substitute for later domain-specific completeness metrics; those are added as canonical domains become available.
+
 ## Existing projects
 
 Existing projects such as Tortoise-WoW Database Viewer may be studied and selectively reused/adapted where licensing permits, especially for difficult parsing/resolution logic.

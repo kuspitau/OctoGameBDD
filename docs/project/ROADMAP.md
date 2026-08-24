@@ -10,7 +10,7 @@ Goal: establish a trustworthy project-owned persistence/import/test foundation b
 
 **Validated.**
 
-Implemented and present on GitHub `main` at the P0-T02 base revision:
+Implemented and present on GitHub `main`:
 
 - SQLite connection/database-location handling;
 - versioned packaged SQL migration mechanism;
@@ -23,9 +23,9 @@ Implemented and present on GitHub `main` at the P0-T02 base revision:
 
 ### P0-T02 — Provenance/conflict primitives
 
-**Implemented — awaiting local validation.**
+**Validated.**
 
-Implemented in the current delta:
+Present on GitHub `main` at commit `587146435e44960aaebf7105979a79516102f26e`:
 
 - generic evidence groups for scalar and relation fact slots;
 - relation-instance keys so multi-valued relations are not automatically conflicts;
@@ -36,22 +36,22 @@ Implemented in the current delta:
 - same-group foreign-key enforcement for canonical winners;
 - schema-v1 -> schema-v2 migration coverage and provenance/conflict tests.
 
-The generic structures in this task are evidence/provenance storage, not a replacement for explicit
-canonical gameplay relation tables.
-
-Do not begin P0-T03 until the human applies, validates, commits, and pushes the P0-T02 delta to
-GitHub `main`.
+The generic structures are evidence/provenance storage, not a replacement for explicit canonical gameplay relation tables.
 
 ### P0-T03 — Fixture/golden-case and audit skeleton
 
-**Next after P0-T02 validation.**
+**Implemented — awaiting local validation.**
 
-Add:
+Implemented in the current delta:
 
-- fixture conventions;
-- initial golden cases;
-- CLI/audit scaffolding for source/trace/conflict/coverage commands;
-- machine-readable import summaries.
+- fixture conventions separating source-shaped parser samples from synthetic semantic golden cases;
+- initial provenance/audit golden case;
+- generic source/trace/conflict/coverage audit functions;
+- corresponding CLI commands with text and deterministic JSON output;
+- reusable machine-readable import summaries;
+- tests covering conflict semantics, traceability, coverage invariants, CLI output, and summary serialization.
+
+Do not begin P1 until the human applies, validates, commits, and pushes the P0-T03 delta to GitHub `main`.
 
 ## P1 — World foundation
 
