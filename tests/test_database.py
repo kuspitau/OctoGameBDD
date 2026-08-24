@@ -14,7 +14,7 @@ def test_fresh_initialization_creates_foundation_schema(tmp_path):
     with connect_database(db_path) as connection:
         applied = apply_migrations(connection)
 
-        assert [migration.version for migration in applied] == [1, 2]
+        assert [migration.version for migration in applied] == [1, 2, 3]
         tables = {
             row["name"]
             for row in connection.execute(
@@ -31,6 +31,12 @@ def test_fresh_initialization_creates_foundation_schema(tmp_path):
         "source_observations",
         "observation_import_batches",
         "canonical_selections",
+        "maps",
+        "zones",
+        "creatures",
+        "creature_spawns",
+        "gameobjects",
+        "gameobject_spawns",
     } <= tables
 
 
@@ -38,11 +44,12 @@ def test_repeat_initialization_is_idempotent(tmp_path):
     db_path = tmp_path / "octogamedb.sqlite3"
 
     with connect_database(db_path) as connection:
-        assert len(apply_migrations(connection)) == 2
+        assert len(apply_migrations(connection)) == 3
         assert apply_migrations(connection) == ()
         assert get_applied_migrations(connection) == (
             (1, "0001_import_metadata.sql"),
             (2, "0002_provenance_primitives.sql"),
+            (3, "0003_world_foundation.sql"),
         )
 
 
@@ -166,10 +173,10 @@ def test_failed_migration_is_not_recorded(tmp_path, monkeypatch):
         assert partial_table == 0
 
 
-def test_existing_version_one_database_upgrades_to_version_two(tmp_path, monkeypatch):
+def test_existing_version_one_database_upgrades_to_current_schema(tmp_path, monkeypatch):
     db_path = tmp_path / "upgrade.sqlite3"
     all_migrations = migration_module.discover_migrations()
-    assert [migration.version for migration in all_migrations] == [1, 2]
+    assert [migration.version for migration in all_migrations] == [1, 2, 3]
 
     monkeypatch.setattr(migration_module, "discover_migrations", lambda: (all_migrations[0],))
     with connect_database(db_path) as connection:
@@ -178,12 +185,17 @@ def test_existing_version_one_database_upgrades_to_version_two(tmp_path, monkeyp
 
     monkeypatch.setattr(migration_module, "discover_migrations", lambda: all_migrations)
     with connect_database(db_path) as connection:
-        assert [migration.version for migration in apply_migrations(connection)] == [2]
+        assert [migration.version for migration in apply_migrations(connection)] == [2, 3]
         assert get_applied_migrations(connection) == (
             (1, "0001_import_metadata.sql"),
             (2, "0002_provenance_primitives.sql"),
+            (3, "0003_world_foundation.sql"),
         )
         assert connection.execute(
             "SELECT COUNT(*) FROM sqlite_master "
             "WHERE type = 'table' AND name = 'source_observations'"
+        ).fetchone()[0] == 1
+        assert connection.execute(
+            "SELECT COUNT(*) FROM sqlite_master "
+            "WHERE type = 'table' AND name = 'creature_spawns'"
         ).fetchone()[0] == 1

@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-08-24 — P1-T01 world schema and pfQuest fixture slice
+
+- Closed the stale P0 router state after confirming the local-path/handoff workflow amendment is present on GitHub `main` at `fc0dbe0fc22610113bfc8bd9c1e07cb41d400a39`.
+- Defined P1-T01 as the first bounded world-foundation task.
+- Added schema migration 3 with canonical maps, zones, creature/game-object templates, and separate spawn tables.
+- Made spawn coordinate space explicit so pfQuest zone-percentage X/Y values are not mislabeled as world XYZ coordinates.
+- Recorded D-024: geographic coordinate spaces are explicit and cross-space conversion remains a traceable derived operation.
+- Inspected public pfQuest revision `104f35678ca39ab1fb78b655f815cc7016f5e0c8` and its MIT license before defining the source fixture/parser contract.
+- Added a reduced source-shaped pfQuest six-file world fixture and dependency-free Lua literal-table parser/importer.
+- Added provenance-aware, idempotent materialization that preserves existing explicit canonical selections.
+- Added deterministic spawn keys for source records without native spawn IDs.
+- Added a small creature/game-object location query with selected position-source attribution.
+- Added Level 1 parser, migration, schema-constraint, idempotency, provenance, and query tests.
+- Marked P1-T01 `IMPLEMENTED_AWAITING_LOCAL_VALIDATION`.
+
 ## 2026-08-24 — Local source-path and handoff-helper workflow
 
 - Confirmed the P0-T03 implementation is present on GitHub `main` at `780ccadee17a0015125c2ba4aada0d30e747edff`.

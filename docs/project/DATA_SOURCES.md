@@ -34,6 +34,29 @@ Preserve disagreements even when a canonical winner is selected.
 - Repository: `https://github.com/shagu/pfQuest`
 - Role: broad Vanilla-style structured Lua dataset; useful skeleton for units, objects, quests, items, zones, coordinates and relations.
 
+P1-T01 public-format inspection is pinned to upstream revision:
+
+```text
+104f35678ca39ab1fb78b655f815cc7016f5e0c8
+```
+
+The relevant world-slice files at that revision are:
+
+```text
+db/zones.lua
+db/enUS/zones.lua
+db/units.lua
+db/enUS/units.lua
+db/objects.lua
+db/enUS/objects.lua
+```
+
+The inspected pfQuest code consumes unit/object `coords` entries as positional `{x, y, zone, respawn}` records. X/Y are zone-percentage coordinates. Zone geometry records are also positional and carry pfQuest-specific coordinate/map context; P1-T01 preserves that context as source provenance instead of assigning canonical map/parent-zone semantics without an authoritative mapping.
+
+The tracked P1-T01 source fixture mirrors those six file paths but is deliberately reduced. The parser is a dependency-free Lua literal-table subset parser, not a general Lua interpreter. Full-source compatibility must be expanded and validated deliberately before P6 full ingestion.
+
+The upstream pfQuest repository uses the MIT license. The P1-T01 fixture contains only a very small representative structure/sample and test-owned reduced records.
+
 ### pfQuest-octo
 
 - Repository: `https://github.com/paokkerkir/pfQuest-octo`

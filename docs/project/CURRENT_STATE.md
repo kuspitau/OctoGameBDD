@@ -2,79 +2,115 @@
 
 ## Repository state
 
-GitHub `main` is the base for this workflow-hardening delta:
+GitHub `main` is the source-of-truth base for this delta:
 
 - branch: `main`
-- base commit: `780ccadee17a0015125c2ba4aada0d30e747edff`
+- base commit: `fc0dbe0fc22610113bfc8bd9c1e07cb41d400a39`
 
-That commit contains the P0-T03 fixture/golden-case and audit skeleton.
+That commit contains the P0-T03 audit/golden-case foundation plus the local source-path and in-ZIP handoff-helper workflow amendment.
 
-Because P0-T03 is now present on the validated source-of-truth branch, this delta treats P0-T03 as having reached GitHub `main` and closes the stale "not yet pushed" wording from the previous handoff.
-
-This delta implements a project-workflow amendment for local source discovery/configuration and handoff helper placement.
+Because those changes are now present on the project's validated source-of-truth branch, the stale `IMPLEMENTED_AWAITING_LOCAL_VALIDATION` wording carried by the previous router is closed for routing purposes and normal development advances into P1.
 
 **Status:** `IMPLEMENTED_AWAITING_LOCAL_VALIDATION`
 
 ## Current milestone
 
-**P0 — Repository and data foundation / workflow hardening before P1**
+**P1 — World foundation**
 
 ## Current task
 
-**Workflow amendment — local source paths and in-ZIP BAT helpers**
+**P1-T01 — World schema and pfQuest fixture vertical slice**
 
-Implementation in this delta defines:
+Detailed task specification:
 
-- public external addon/project formats must be researched from current primary sources rather than guessed;
-- user-specific absolute paths must not be hard-coded;
-- stable machine-specific locations belong in ignored `config.local.toml` under `[source_paths]`;
-- task-specific `get_path.bat` is generated when missing local paths are needed;
-- `get_path.bat` follows reuse -> discover -> ask -> validate -> config-update behavior;
-- `delete_files.bat` is generated only when deletions/renames are required;
-- both BAT helpers, when required, are placed at the project root **inside `changes.zip`**;
-- `MANIFEST.txt` remains outside the ZIP and documents helper usage;
-- `.gitignore` ignores `get_path.bat` alongside other handoff artifacts.
+- `docs/project/tasks/P1-T01.md`
 
-Detailed contract:
+Implementation in this delta includes:
 
-- `docs/project/LOCAL_PATHS.md`
-- `docs/project/AI_GUIDELINES.md`
-- `docs/project/WORKFLOW.md`
+- schema migration 3 with canonical `maps`, `zones`, `creatures`, `creature_spawns`, `gameobjects`, and `gameobject_spawns`;
+- explicit spawn coordinate spaces so pfQuest zone-percentage coordinates are not mislabeled as world XYZ;
+- a dependency-free parser/importer for a deliberately small pfQuest-shaped six-file fixture slice;
+- source registration/import-batch accounting and provenance observations using the P0 primitives;
+- conservative canonical selection: first source evidence is selected only when the fact group has no existing selection;
+- idempotent template/spawn materialization with deterministic spawn keys;
+- a programmatic cross-entity location search that returns selected position-source attribution;
+- tests for parsing, schema constraints, migration upgrade, idempotency, provenance trace links, and location queries.
 
-## Completed / validated on GitHub main before this delta
+## Source verification for P1-T01
 
-- project scope and multi-entity architecture;
-- source strategy;
-- raw/staging/canonical/derived separation;
-- provenance/conflict requirements;
-- GitHub read-only -> human-applied delta workflow;
-- P0-T01 — SQLite foundation and import metadata;
-- P0-T02 — provenance and conflict primitives;
-- P0-T03 — fixture/golden-case and audit skeleton, present on `main` at `780ccadee17a0015125c2ba4aada0d30e747edff`.
+The public pfQuest format was inspected rather than inferred.
 
-## Validation for this workflow delta
+Pinned upstream evidence for the fixture/parser contract:
 
-No gameplay schema/code behavior is changed.
+- repository: `shagu/pfQuest`
+- revision: `104f35678ca39ab1fb78b655f815cc7016f5e0c8`
+- license: MIT
+- relevant files: `db/zones.lua`, `db/enUS/zones.lua`, `db/units.lua`, `db/enUS/units.lua`, `db/objects.lua`, `db/enUS/objects.lua`, plus pfQuest database lookup code for coordinate semantics.
 
-Required human validation after applying the delta:
+The first value in pfQuest zone geometry is retained only as source evidence (`pfquest.coordinate_frame`) in this task. It is not silently promoted to canonical map or zone-parent identity.
+
+## Agent/sample validation for this delta
+
+Performed in an agent workspace assembled from GitHub `main` plus this delta:
+
+```bash
+PYTHONPATH=src python -m pytest -q
+```
+
+Expected/current agent result:
+
+```text
+34 passed
+```
+
+Also performed:
+
+```bash
+PYTHONPATH=src python -m compileall -q src tests
+```
+
+Python compilation succeeds.
+
+Editable packaging was also validated without network build isolation:
+
+```bash
+python -m pip install -e . --no-deps --no-build-isolation
+python -m octogamedb status --db /tmp/p1_t01_status.sqlite3
+```
+
+The packaged migration is discovered and status reports schema version `3` / three applied migrations.
+
+The agent environment did not contain the `ruff` module, so Ruff could not be executed there. The project dev dependency still includes Ruff and it remains part of required human validation.
+
+## Required human validation after applying this delta
+
+No full Octo/pfQuest local data or machine-specific source path is required for P1-T01. No `get_path.bat` is included.
+
+From the project root, run:
 
 ```bash
 git diff
 python -m pip install -e ".[dev]"
-pytest
-ruff check src tests
+python -m pytest
+python -m ruff check src tests
 python -m compileall -q src tests
+python -m octogamedb status --db data/generated/p1_t01_validation.sqlite3
 ```
 
 Expected invariants:
 
-- existing test suite remains green;
+- the complete repository test suite passes;
 - Ruff reports no errors;
 - Python compilation succeeds;
-- `config.local.toml` remains ignored by Git;
-- `get_path.bat` is ignored by Git;
-- future handoffs place required `delete_files.bat` / `get_path.bat` inside `changes.zip`, not beside it.
+- status reports schema version `3` and three applied migrations;
+- no tracked file contains a user-specific absolute source path;
+- repeated fixture import tests prove no duplicate canonical rows/observations for the same revision;
+- pfQuest percentage coordinates remain `coordinate_space = 'zone_percent'`.
+
+The disposable validation database may be removed afterward from the ignored generated-data area.
 
 ## Next handoff rule
 
-After the human validates, commits, and pushes this workflow amendment to GitHub `main`, the next normal coding conversation may close P0 and define/take the first bounded P1 world-foundation vertical-slice task before broad full-world ingestion.
+After the human validates, commits, and pushes P1-T01 to GitHub `main`, the next conversation must confirm that commit from `CURRENT_STATE.md`/`main` before advancing.
+
+The next bounded P1 task should expand the world foundation from this fixture slice without jumping directly to full-world ingestion. In particular, authoritative map/area hierarchy and broader source coverage still need to be resolved before treating pfQuest's source-specific coordinate context as canonical geography.

@@ -166,3 +166,18 @@ They are ignored by Git and are not separate delivery artifacts.
 When a parser/importer depends on a public addon/project/database, coding conversations inspect current primary source code/docs and relevant issues/discussions/history when necessary instead of guessing formats from memory.
 
 The user's local copy is reserved for version-specific extraction/Level 2 validation rather than being the only source of format knowledge.
+
+## D-024 — Geographic coordinate spaces are explicit
+
+**Status:** accepted
+
+Spawn/location coordinates must carry their coordinate-space semantics instead of being forced into a single generic X/Y/Z interpretation.
+
+In particular:
+
+- source coordinates expressed as percentages within a zone are stored as `zone_percent` and retain their zone identity;
+- world-coordinate sources may use `world` with X/Y and optional Z/orientation;
+- conversion between coordinate spaces is derived behavior and must be traceable to the coordinate-frame/map inputs used;
+- source-specific zone/map frame fields are preserved as provenance until their canonical meaning is established from authoritative evidence.
+
+This prevents percentage coordinates from being silently mislabeled as world coordinates and keeps future map/area reconciliation explicit.

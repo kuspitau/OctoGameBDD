@@ -125,6 +125,42 @@ First-class geographic content entity.
 
 World/map identity and coordinate context.
 
+## P1-T01 implemented world schema
+
+Migration 3 establishes the first concrete canonical world tables:
+
+```text
+maps
+zones
+creatures
+creature_spawns
+gameobjects
+gameobject_spawns
+```
+
+Identity and separation rules:
+
+- `maps.map_id`, `zones.zone_id`, `creatures.creature_id`, and `gameobjects.gameobject_id` preserve native/source-useful numeric identities;
+- creature and game-object templates remain separate from spawn rows;
+- spawn rows use a project-local integer `spawn_id` plus a stable deterministic `spawn_key` when the input source does not expose a native spawn identifier;
+- nullable map/zone hierarchy columns are preferable to inventing relationships from source-specific coordinate metadata.
+
+Spawn coordinate semantics are explicit:
+
+- `coordinate_space = 'zone_percent'` means X/Y are percentages in the referenced zone and are constrained to `0..100`;
+- `coordinate_space = 'world'` reserves the schema path for world-coordinate sources with X/Y and optional Z/orientation;
+- a zone-percentage source must not be relabeled as world XYZ merely to fit a generic spawn table.
+
+For the P1-T01 pfQuest fixture slice, unit/object coordinates are represented as:
+
+```text
+{x, y, zone_id, respawn_seconds}
+```
+
+with `coordinate_space = 'zone_percent'`. pfQuest zone geometry/context is preserved in provenance as `pfquest.coordinate_frame`; its first positional value is not treated as an authoritative canonical `map_id` or `parent_zone_id` in this task.
+
+The canonical world rows and generic source observations remain separate layers. A selected source observation may drive a canonical scalar/position, but competing observations remain in the P0 provenance tables.
+
 ## Important relation families
 
 Use dedicated domain tables (exact names may evolve):

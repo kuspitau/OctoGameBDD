@@ -1,0 +1,1 @@
+pfDB["zones"]["enUS"] = { [12] = "Elwynn Forest" }

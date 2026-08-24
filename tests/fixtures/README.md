@@ -24,6 +24,23 @@ As importers are added, use source directories such as:
 
 Large dumps belong under ignored local paths such as `data/raw/`.
 
+### P1-T01 pfQuest world slice
+
+`pfquest/world_slice/` mirrors the six-file world subset inspected in upstream pfQuest revision `104f35678ca39ab1fb78b655f815cc7016f5e0c8`:
+
+```text
+db/zones.lua
+db/enUS/zones.lua
+db/units.lua
+db/enUS/units.lua
+db/objects.lua
+db/enUS/objects.lua
+```
+
+The fixture is intentionally reduced. It preserves assignment/table/field shape and representative coordinate semantics while using only the minimum records needed by deterministic tests; it is not a bundled copy of the full pfQuest database.
+
+The P1-T01 parser supports the literal Lua table subset represented by these fixtures. Full-source ingestion requires separate compatibility validation before P6.
+
 ## Golden cases
 
 `golden/` is reserved for small project-owned synthetic cases that verify normalized/provenance/audit semantics across sources. These are not substitutes for source-shaped parser fixtures.

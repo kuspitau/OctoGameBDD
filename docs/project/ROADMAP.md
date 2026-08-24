@@ -40,9 +40,9 @@ The generic structures are evidence/provenance storage, not a replacement for ex
 
 ### P0-T03 — Fixture/golden-case and audit skeleton
 
-**Implemented — awaiting local validation.**
+**Validated.**
 
-Implemented in the current delta:
+Present on GitHub `main` at commit `780ccadee17a0015125c2ba4aada0d30e747edff`:
 
 - fixture conventions separating source-shaped parser samples from synthetic semantic golden cases;
 - initial provenance/audit golden case;
@@ -51,7 +51,7 @@ Implemented in the current delta:
 - reusable machine-readable import summaries;
 - tests covering conflict semantics, traceability, coverage invariants, CLI output, and summary serialization.
 
-Do not begin P1 until the human applies, validates, commits, and pushes the P0-T03 delta to GitHub `main`.
+The follow-up local-source path and in-ZIP handoff-helper workflow amendment is present on `main` at `fc0dbe0fc22610113bfc8bd9c1e07cb41d400a39`. With the full P0 foundation on the source-of-truth branch, P0 is closed for normal task routing.
 
 ## P1 — World foundation
 
@@ -65,6 +65,23 @@ Implement canonical:
 - game-object spawns.
 
 Build the first small end-to-end vertical slice from representative source fixtures before attempting full-world ingestion.
+
+### P1-T01 — World schema and pfQuest fixture vertical slice
+
+**Implemented — awaiting local validation.**
+
+This delta establishes:
+
+- schema migration 3 with the six P1 canonical world tables;
+- native template/zone/map IDs and template-vs-spawn separation;
+- explicit `zone_percent` vs future `world` spawn coordinate spaces;
+- a source-shaped pfQuest fixture parser/importer pinned to inspected upstream revision `104f35678ca39ab1fb78b655f815cc7016f5e0c8`;
+- provenance-aware, idempotent canonical materialization;
+- deterministic spawn identities where pfQuest provides no native spawn ID;
+- a small creature/game-object location query with selected-source attribution;
+- Level 1 parser/schema/import/query tests.
+
+P1-T01 intentionally does not infer authoritative map/parent-zone identity from pfQuest source geometry and does not perform full-world ingestion.
 
 ## P2 — Items and acquisition
 
