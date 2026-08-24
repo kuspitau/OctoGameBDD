@@ -99,7 +99,7 @@ P2-T02 additionally consumes:
 db/refloot.lua
 ```
 
-The deterministic P2 item-source revision now hashes the exact five files:
+The deterministic P2 item-source revision hashes the exact five files:
 
 ```text
 db/items.lua
@@ -144,8 +144,17 @@ explicit reason. A reference member that lacks both an existing canonical templa
 identity remains provenance evidence and is reported rather than being assigned a fabricated name or
 location. Direct target identity continues to use the stricter P2-T01 fail-closed rule.
 
-Vendor `V` remains detected/deferred by P2-T02; reference-loot semantics did not make it inseparable
-from `R` handling.
+#### P2-T03 vendor format
+
+At the pinned pfQuest revision, the extractor populates:
+
+```text
+pfDB["items"]["data"][item_id]["V"][vendor_creature_id] = maxcount
+```
+
+`V` therefore means a vendor creature relation and its source `maxcount`, not drop chance, buy price,
+restock duration, or a generalized stock policy. P2-T03 preserves `maxcount` in `vendor_source`
+provenance and materializes the explicit `vendor_items` relation.
 
 The P2 fixture under `tests/fixtures/pfquest/items_slice/` is a tiny source-shaped sample, not a
 redistribution of the full item/reference database.
@@ -156,10 +165,10 @@ representative structures/records.
 ### pfQuest-turtle
 
 - Reviewed public repository: `https://github.com/KameleonUK/pfQuest-turtle`
-- P1-T03 reviewed revision: `5b8eeeeb4119be9d075087f0f0e08c187b35ad61`
-- Role: current Turtle-style pfQuest overlay present in the user's launcher-managed Octo installation; important source for custom/current world data.
+- P1-T03/P2-T04 reviewed revision: `5b8eeeeb4119be9d075087f0f0e08c187b35ad61`
+- Role: current Turtle-style pfQuest overlay present in the user's launcher-managed Octo installation; important source for custom/current world and item/acquisition data.
 
-Relevant composition evidence:
+Relevant P1 composition evidence includes:
 
 ```text
 pfQuest-turtle.toc
@@ -173,7 +182,8 @@ db/objects-turtle.lua
 db/enUS/objects-turtle.lua
 ```
 
-The addon declares a dependency on pfQuest, loads Turtle data/localization tables, then runs `overwrites.lua` before `patchtable.lua`.
+The addon declares a dependency on pfQuest, loads Turtle data/localization tables, then runs
+`overwrites.lua` before `patchtable.lua`.
 
 The reviewed `patchtable.lua` applies the patch at **top-entry level**:
 
@@ -181,9 +191,14 @@ The reviewed `patchtable.lua` applies the patch at **top-entry level**:
 - otherwise the patch value replaces the corresponding base entry wholesale;
 - this is not a recursive merge.
 
-The reviewed Kameleon `overwrites.lua` also removes a documented set of phantom zone IDs from localized Turtle zone tables through a small loop. P1-T03 reproduces this known safe pattern without executing Lua **when the loaded source contains it**.
+The reviewed Kameleon `overwrites.lua` also removes a documented set of phantom zone IDs from
+localized Turtle zone tables through a small loop. P1-T03 reproduces this known safe pattern without
+executing Lua **when the loaded source contains it**.
 
-The launcher-installed copy used for Level-2 validation can differ from the reviewed public revision. In the observed local copy, the phantom-zone cleanup loop is absent, so the effective local view correctly retains entries that the newer reviewed public `overwrites.lua` would remove. Public-revision behavior is never injected into a different installed source.
+The launcher-installed copy used for Level-2 validation can differ from the reviewed public revision.
+In the previously observed local copy, the phantom-zone cleanup loop is absent, so the effective local
+view correctly retains entries that the newer reviewed public `overwrites.lua` would remove.
+Public-revision behavior is never injected into a different installed source.
 
 Local validation key:
 
@@ -192,8 +207,65 @@ Local validation key:
 pfquest_turtle = "..."
 ```
 
-P2 currently does not compose a Turtle item overlay. The Turtle path remains relevant to reconstruct/
-reconcile the canonical P1 world used to derive acquisition geography.
+#### P2-T04 effective item/acquisition view
+
+P2-T04 extends the bounded composition to the exact P2 fact family already implemented. The reviewed
+Turtle load lists contain:
+
+```text
+db/items-turtle.lua
+db/refloot-turtle.lua
+db/enUS/items-turtle.lua
+db/enUS/units-turtle.lua
+db/enUS/objects-turtle.lua
+overwrites.lua
+patchtable.lua
+```
+
+The public reviewed `items-turtle.lua` contains all three relevant top-entry shapes: ordinary whole
+replacements, empty tables that wipe base acquisition fields, and `"_"` removals. The reviewed
+`refloot-turtle.lua` also contains `"_"` removals and whole reference-definition replacements.
+`overwrites.lua` contains at least one direct nested assignment into
+`pfDB["items"]["data-turtle"]`; P2-T04 therefore applies supported direct literal mutations before
+top-entry composition instead of treating the patch files as immutable.
+
+The effective P2 view is intentionally limited to:
+
+```text
+item enUS identity/name
+item U direct creature loot
+item O direct game-object loot
+item R one-level reference loot
+item V vendor relation/maxcount
+refloot U/O membership
+unit/object enUS identity for relation-only targets
+```
+
+The project does **not** import Turtle item stats, quest/recipe implications, prices/economics, or a
+general arbitrary-Lua overlay in P2-T04.
+
+Item data membership and item localization membership are distinct. This matches pfQuest itself:
+`SearchItemID` aborts when `items[id]` is absent, while name lookup iterates the localized item table.
+Accordingly an `items-turtle.lua` `"_"` removal clears the managed acquisition set but does not by
+itself erase a still-present item name.
+
+P2-T04 stores the Turtle evidence under the distinct `pfquest-turtle` source identity. For patched
+entries it records complete source-view facts (`item_presence`, `item_acquisition_set`,
+`loot_reference_presence`, `loot_reference_member_set`) in addition to the existing individual
+relation observations. D-027 defines when those sets may supersede base pfQuest materialization and
+when stale managed relations may be removed. Explicit/custom selections are protected by policy,
+even when their selected observation uses the `pfquest` source key; a protected complete set never
+causes Turtle primitive relation provenance to be fabricated for relations absent from Turtle.
+
+Installed Turtle data may also contain a U/O/V target ID that has no matching canonical P1 identity
+and no usable effective enUS unit/object identity. Level-2 validation exposed such a case. P2-T04
+preserves that acquisition relation in provenance and reports it under
+`unresolved_acquisition_targets`; it does not invent a named creature/gameobject and therefore does
+not materialize the relation into an FK-backed domain table until an identity source exists.
+
+The deterministic P2 Turtle revision hashes the exact validated composition inputs above plus the
+toc/XML load-list files. A materially different local layout or unsupported indirect mutation of a bounded P2
+input table fails explicitly rather than being guessed.
 
 ### pfQuest-octo
 
@@ -212,9 +284,12 @@ The reviewed latest commit is dated 2026-05-12 and is titled:
 db: revert to 1.17.2 data
 ```
 
-Therefore P1-T03 does **not** assume `pfQuest-octo` is globally newer or automatically preferable to the currently maintained Turtle fork. It remains relevant because `overwrites.lua` contains explicit Octo-specific manual corrections, including unit name/faction/coordinate changes.
+Therefore P1-T03 does **not** assume `pfQuest-octo` is globally newer or automatically preferable to
+the currently maintained Turtle fork. It remains relevant because `overwrites.lua` contains explicit
+Octo-specific manual corrections, including unit name/faction/coordinate changes.
 
-When pfQuest base, current Turtle and pfQuest-octo differ, preserve source identities and compare them before defining canonical policy.
+When pfQuest base, current Turtle and pfQuest-octo differ, preserve source identities and compare them
+before defining canonical policy.
 
 Optional local key:
 
@@ -232,7 +307,9 @@ pfQuest + pfQuest-turtle
 pfQuest + pfQuest-octo   (when available)
 ```
 
-It compares zone/creature/gameobject IDs that are added, removed or changed. It does **not** choose a canonical winner and does not write either overlay into SQLite. Canonical/provenance reconciliation is handled by P1-T04 because deletion and replaced spawn sets require explicit durable semantics.
+It compares zone/creature/gameobject IDs that are added, removed or changed. It does **not** choose a
+canonical winner and does not write either overlay into SQLite. Canonical/provenance reconciliation
+is handled by P1-T04 because deletion and replaced spawn sets require explicit durable semantics.
 
 #### P1-T04 provenance/reconciliation contract
 
@@ -244,7 +321,10 @@ pfquest-turtle
 pfquest-octo
 ```
 
-For reproducible local validation it can derive content revisions from the exact six P1 pfQuest world files and the exact Turtle-style overlay input set (`*-turtle` files plus `overwrites.lua`). The content revision identifies the installed inputs; it does not claim equivalence with a reviewed public commit.
+For reproducible local validation it can derive content revisions from the exact six P1 pfQuest world
+files and the exact Turtle-style overlay input set (`*-turtle` files plus `overwrites.lua`). The
+content revision identifies the installed inputs; it does not claim equivalence with a reviewed
+public commit.
 
 Effective-source deletion is recorded as:
 
@@ -260,9 +340,14 @@ Creature/game-object top-entry replacement is also represented by a complete det
 spawn_set
 ```
 
-The installed `pfquest-turtle` view is the active pfQuest-family P1 view and may supersede only base/default pfQuest selections for this bounded fact family. It does not override explicit or non-pfQuest selections. Stale canonical spawn rows selected from the managed pfQuest family are removed when absent from the selected Turtle set, while all old source observations remain.
+The installed `pfquest-turtle` view is the active pfQuest-family P1 view and may supersede only
+base/default pfQuest selections for this bounded fact family. It does not override explicit or
+non-pfQuest selections. Stale canonical spawn rows selected from the managed pfQuest family are
+removed when absent from the selected Turtle set, while all old source observations remain.
 
-`pfquest-octo` remains comparison evidence in P1-T04: differences are recorded under its own source revision but do not automatically mutate canonical world rows. A future decision may introduce field/relation-specific Octo selection where justified; P1-T04 deliberately does not invent one.
+`pfquest-octo` remains comparison evidence in P1-T04: differences are recorded under its own source
+revision but do not automatically mutate canonical world rows. A future decision may introduce
+field/relation-specific Octo selection where justified; P1-T04 deliberately does not invent one.
 
 ### Octo client DBC
 
@@ -301,7 +386,9 @@ The user's actual local files are registered as source key:
 octo-client-dbc
 ```
 
-When an explicit client build/revision is unavailable, the importer computes a deterministic SHA-256 composite revision from the exact `Map.dbc` / `AreaTable.dbc` bytes. Re-importing unchanged files therefore reuses stable source observations while still recording a new import-batch trace.
+When an explicit client build/revision is unavailable, the importer computes a deterministic SHA-256
+composite revision from the exact `Map.dbc` / `AreaTable.dbc` bytes. Re-importing unchanged files
+therefore reuses stable source observations while still recording a new import-batch trace.
 
 The classic WDBC container and field semantics were checked against CMaNGOS Classic source revision:
 
@@ -318,16 +405,19 @@ src/game/Server/DBCEnums.h
 src/game/Server/DBCStores.cpp
 ```
 
-This CMaNGOS source is a parser/semantic reference only. CMaNGOS rows are not imported as Octo truth by P1-T02.
+This CMaNGOS source is a parser/semantic reference only. CMaNGOS rows are not imported as Octo truth
+by P1-T02.
 
-For the bounded facts defined by D-025, the direct Octo client DBC is authoritative for canonical map/area identity and hierarchy:
+For the bounded facts defined by D-025, the direct Octo client DBC is authoritative for canonical
+map/area identity and hierarchy:
 
 - map name/type;
 - zone/area name;
 - area -> map relation;
 - subzone -> parent-area relation.
 
-This does not establish a universal DBC-over-everything rule. Other fields/relations continue to use explicit source-aware policies, and all competing observations remain preserved.
+This does not establish a universal DBC-over-everything rule. Other fields/relations continue to use
+explicit source-aware policies, and all competing observations remain preserved.
 
 The P1-T02 binary tests use small synthetic WDBC files. Real client DBC files are never committed.
 
@@ -394,7 +484,8 @@ When the actual installed/local source is needed for extraction or Level 2 valid
 - generate `get_path.bat` when required paths are not already configured;
 - validate the located source/version before importing.
 
-This distinction allows coding agents to build correct adapters from public evidence while the human later validates against their exact Octo installation.
+This distinction allows coding agents to build correct adapters from public evidence while the human
+later validates against their exact Octo installation.
 
 ## Source registry requirements
 

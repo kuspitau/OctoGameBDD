@@ -218,16 +218,31 @@ second same-revision import. A real located path was resolved for item `85` thro
 
 ### P2-T04 — pfQuest-turtle effective item/acquisition reconciliation
 
-**Next bounded task.**
+**Validated.**
 
-Reconcile the P2-T03-supported item/acquisition facts against the active `pfQuest + pfQuest-turtle`
-effective item view before widening the item schema. The task is restricted to item identity/name and
-already-supported `U`/`O`/`R`/`V` acquisition semantics.
+P2-T04 reconciles the already-supported P2 fact family against the installed
+`pfQuest + pfQuest-turtle` effective view without widening the item schema:
 
-The task must verify Turtle item patch/load semantics from primary source, preserve base and Turtle
-provenance separately, and handle whole-entry replacement/deletion without leaving stale canonical
-relations. D-026 is currently bounded to P1 world reconciliation, so any extension of effective-view
-deletion/complete-set semantics to items must be made explicitly rather than assumed.
+- validates Turtle load order and top-entry patch semantics from the source inputs;
+- applies supported direct literal `overwrites.lua` mutations before composition;
+- records separate base and Turtle complete-source-view provenance for item presence, complete U/O/R/V
+  acquisition sets, reference presence and complete reference-member sets;
+- preserves the existing individual item/name/direct/reference/vendor/member provenance used by
+  audit and query surfaces;
+- removes stale canonical managed-pfQuest relations only when the selected complete set excludes them;
+- protects explicit/custom selections, including custom policies whose selected observation still
+  uses source key `pfquest`;
+- does not synthesize Turtle primitive-relation provenance when a protected complete set governs
+  membership;
+- materializes named relation-only Turtle targets without invented geography;
+- fails closed for ambiguous/unsupported mutations, while unidentified U/O/V targets are retained
+  as unresolved provenance without fabricated canonical identities;
+- requires no schema migration and remains same-revision idempotent in agent harness validation.
+
+Full Level-2 validation against the configured local pfQuest/pfQuest-turtle inputs completed on
+2026-08-24. The first run reconciled the effective source view; the second same-revision run produced
+zero canonical inserts, updates or deletions. Dangling source identities and missing refloot
+definitions remain explicit stable diagnostics rather than fabricated canonical data.
 
 Richer item stats/effects/requirements, new loot families, generalized economics, broad Octo item
 overlay reconciliation, P6 scaling and UI remain deferred.
@@ -244,6 +259,22 @@ Implement:
 - required items;
 - rewards (guaranteed vs choice);
 - derived quest geography.
+
+### P3-T01 — first quest identity/endpoints vertical slice
+
+**Ready.**
+
+Start P3 with a bounded source-shaped vertical slice rather than full quest ingestion:
+
+- inspect pfQuest's actual quest data and resolver/browser behavior before assigning field semantics;
+- add canonical quest identity;
+- add explicit giver/finisher relations for creature/game-object endpoints supported by the source;
+- reuse P1 creature/game-object templates and derive endpoint geography through P1 spawns/zones/maps;
+- preserve native IDs, source provenance, conflicts and same-revision idempotence;
+- defer prerequisites/follow-ups, objectives, required items and rewards unless source inspection shows
+  a smaller coherent first slice requires part of them.
+
+Detailed routing/specification: `docs/project/tasks/P3-T01.md`.
 
 ## P4 — Spells and crafting
 

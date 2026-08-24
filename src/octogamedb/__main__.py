@@ -10,6 +10,10 @@ from typing import Any
 
 from octogamedb.audit import conflict_report, coverage_report, source_report, trace_report
 from octogamedb.db import DEFAULT_DB_PATH, apply_migrations, connect_database
+from octogamedb.importers.pfquest_item_overlay_reconcile import (
+    compute_pfquest_turtle_items_revision,
+    reconcile_pfquest_turtle_items,
+)
 from octogamedb.importers.pfquest_items import (
     compute_pfquest_items_revision,
     import_pfquest_items,
@@ -92,6 +96,28 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     _add_db_argument(import_items_parser)
     _add_json_argument(import_items_parser)
+
+    reconcile_items_parser = subparsers.add_parser(
+        "reconcile-pfquest-turtle-items",
+        help=(
+            "Reconcile the bounded P2 canonical item/acquisition view against installed "
+            "pfQuest-turtle top-entry patches."
+        ),
+    )
+    reconcile_items_parser.add_argument("pfquest_root", type=Path, help="Installed pfQuest directory.")
+    reconcile_items_parser.add_argument(
+        "pfquest_turtle_root", type=Path, help="Installed pfQuest-turtle directory."
+    )
+    reconcile_items_parser.add_argument(
+        "--pfquest-revision",
+        help="Optional explicit base revision; otherwise hash the five bounded pfQuest P2 inputs.",
+    )
+    reconcile_items_parser.add_argument(
+        "--turtle-revision",
+        help="Optional explicit Turtle revision; otherwise hash the validated bounded P2 inputs.",
+    )
+    _add_db_argument(reconcile_items_parser)
+    _add_json_argument(reconcile_items_parser)
 
     item_sources_parser = subparsers.add_parser(
         "item-sources",
@@ -259,6 +285,39 @@ def _import_pfquest_items_command(args: argparse.Namespace) -> int:
     return 0
 
 
+def _reconcile_pfquest_turtle_items_command(args: argparse.Namespace) -> int:
+    pfquest_revision = args.pfquest_revision or compute_pfquest_items_revision(args.pfquest_root)
+    turtle_revision = args.turtle_revision or compute_pfquest_turtle_items_revision(
+        args.pfquest_turtle_root
+    )
+    with connect_database(args.db) as connection:
+        apply_migrations(connection)
+        summary = reconcile_pfquest_turtle_items(
+            connection,
+            pfquest_root=args.pfquest_root,
+            pfquest_turtle_root=args.pfquest_turtle_root,
+            pfquest_revision=pfquest_revision,
+            turtle_revision=turtle_revision,
+        )
+    payload = summary.to_dict()
+    if args.json:
+        _print_json(payload)
+    else:
+        print(f"Source: {payload['source_key']}@{payload['source_revision']}")
+        print(f"Status: {payload['status']}")
+        print(
+            f"Rows: read={payload['rows_read']}, accepted={payload['rows_accepted']}, "
+            f"warnings={payload['warning_count']}"
+        )
+        print(
+            f"Canonical changes: inserted={payload['rows_inserted']}, "
+            f"updated={payload['rows_updated']}, "
+            f"deleted={payload['details']['canonical_relations_or_identities_deleted']}"
+        )
+        print(json.dumps(payload["details"], ensure_ascii=False, sort_keys=True))
+    return 0
+
+
 def _print_item_sources(payload: list[dict[str, Any]]) -> None:
     if not payload:
         print("Item not found.")
@@ -308,6 +367,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _audit_command(args)
     if args.command == "import-pfquest-items":
         return _import_pfquest_items_command(args)
+    if args.command == "reconcile-pfquest-turtle-items":
+        return _reconcile_pfquest_turtle_items_command(args)
     if args.command == "item-sources":
         return _item_sources_command(args)
 

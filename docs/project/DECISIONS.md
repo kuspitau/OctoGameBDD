@@ -244,3 +244,51 @@ Consequences:
 - D-025 remains authoritative for its DBC geography fact family;
 - this decision is bounded to the current effective P1 world-view problem and is not yet a generic
   deletion framework for every future gameplay domain.
+
+## D-027 — Turtle item overlay uses bounded P2 complete-set reconciliation
+
+**Status:** accepted
+
+P2-T04 must reproduce the installed pfQuest-turtle item view without silently extending D-026 from
+P1 world entities to every future domain.
+
+For the currently supported P2 fact family only:
+
+- `item_presence` records whether an item has an effective usable enUS identity in the source view;
+- `item_acquisition_set` records the complete supported U/O/R/V acquisition set for a patched item
+  data entry;
+- `loot_reference_presence` records whether a patched refloot entry exists in the effective view;
+- `loot_reference_member_set` records the complete U/O membership set of a patched refloot entry;
+- existing individual `name`, `loot_source`, `loot_reference`, `vendor_source`, and
+  `loot_source_member` observations remain the attribute/relation evidence used by audit and query
+  surfaces.
+
+The active installed `pfquest-turtle` view may supersede only default/base pfQuest selections for
+these bounded facts. "Managed" is determined by the selection policy as well as the source key: an
+explicit/custom selection remains protected even when its observation comes from source key
+`pfquest`. A protected complete-set selection governs membership without synthesizing Turtle
+primitive relation evidence for rows that Turtle did not supply. A stale canonical P2 relation may
+be removed only when its selected relation provenance belongs to the replaceable managed policy and
+the selected complete set excludes it. Removing materialized rows never removes source observations.
+
+Top-entry composition follows the source itself: `"_"` removes the corresponding base table entry;
+all other patch values replace it wholesale; supported direct literal `overwrites.lua` mutations are
+applied before patching. Item data absence and item-name absence remain separate facts because
+pfQuest's `SearchItemID` gates acquisition lookup on the data table while name lookup uses the
+localization table.
+
+A relation-only creature/game-object target may still be materialized from its effective enUS
+identity without inventing a spawn. Level-2 validation demonstrated that real Turtle acquisition
+data can contain direct/vendor target IDs with no canonical P1 identity and no effective enUS
+identity. Those relations are retained as explicit source provenance and reported as unresolved, but
+they are not materialized into FK-backed domain tables and no placeholder identity is invented.
+Reference-only missing identity follows the same non-fabrication principle. An effective name
+removal while supported acquisition data remains is rejected as ambiguous under the current
+non-null canonical item-name model rather than guessed.
+
+Consequences:
+
+- no schema migration is required; generic scalar provenance already stores the complete-set facts;
+- P1 geography remains independent and is reused only to derive source locations;
+- this policy is limited to item name + U/O/R/V + one-level refloot membership and is not a generic
+  overlay/deletion rule for later item stats, quests, recipes, economics, or UI domains.

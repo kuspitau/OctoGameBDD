@@ -384,6 +384,56 @@ template and pfQuest enUS identity remains provenance evidence and is likewise r
 canonical template or geography is invented. Direct P2-T01 relations keep their stricter fail-closed
 identity behavior.
 
+## P2-T03 vendor acquisition semantics
+
+Migration 6 adds the explicit canonical vendor relation:
+
+```text
+vendor_items(vendor_creature_id, item_id)
+```
+
+The primitive relation is that a creature vendor sells an item. The pfQuest source value from
+`items[item_id]["V"][vendor_creature_id]` is preserved separately as `max_count` provenance on the
+`vendor_source` relation; it is not reinterpreted as price, restock time, drop chance, or a generalized
+stock policy.
+
+A named vendor absent from the static P1 world may be materialized as a relation-only creature
+template without a spawn. Vendor geography remains derived from P1 creature spawns when available.
+
+## P2-T04 Turtle effective item/acquisition semantics
+
+P2-T04 adds no schema migration. It uses generic scalar provenance to represent complete source-view
+membership for only the P2 facts already modeled by migrations 4–6:
+
+```text
+item_presence
+item_acquisition_set
+loot_reference_presence
+loot_reference_member_set
+```
+
+`item_acquisition_set` is the complete effective U/O/R/V membership for a patched item data entry.
+`loot_reference_member_set` is the complete effective U/O membership for a patched refloot entry.
+These complete-set facts govern membership; the existing individual `loot_source`, `loot_reference`,
+`vendor_source`, and `loot_source_member` observations remain the primitive attribute/relation
+evidence used by audit and item-source queries.
+
+The active Turtle view may replace only default/base managed selections. A selection is managed by
+its selection policy as well as its source key: an explicit/custom selection is protected even if its
+observation source key is `pfquest`. A protected complete-set selection does not cause Turtle
+primitive relation observations to be synthesized for relations Turtle did not provide.
+
+Materialized stale relations may be deleted only when the selected complete set excludes them and the
+individual selected relation is still under the replaceable managed policy. Source observations are
+never deleted. Item localization presence is tracked separately from item data/acquisition presence;
+removing acquisition data does not by itself erase a still-present item identity.
+
+A complete `item_acquisition_set` may name a creature/gameobject/vendor ID for which no canonical P1
+identity and no effective enUS identity exists. The complete-set fact and primitive source relation
+remain valid provenance in that case, but the relation is not materialized into `creature_loot`,
+`gameobject_loot`, or `vendor_items` because doing so would require inventing a target identity or
+violating a foreign key. Such members are reported in `unresolved_acquisition_targets`.
+
 ## Important relation families
 
 Use dedicated domain tables (exact names may evolve):
