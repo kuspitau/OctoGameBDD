@@ -341,3 +341,74 @@ fresh SQLite file using tracked code plus configured local sources. The canonica
 validated working baseline, not an irreplaceable source artifact.
 
 The operational details live in `docs/project/CANONICAL_DB.md`.
+
+## D-030 — P3 quest restrictions/dependencies preserve pfQuest set semantics
+
+**Status:** accepted
+
+P3-T03 is a separate bounded fact family from D-028. It covers only pfQuest quest fields:
+
+```text
+lvl
+min
+race
+class
+pre
+close
+```
+
+Primary-source inspection establishes the following contract at the pinned revisions:
+
+- `lvl` is quest level and `min` is minimum player level;
+- `race` and `class` are source bitmasks; extractor value `0` is omitted, so an absent field is
+  distinct from an explicitly supplied numeric `0`;
+- `pre` is the source's single alternative prerequisite set: pfQuest runtime accepts the quest when
+  **at least one** listed predecessor is complete;
+- `pre` combines source predecessors discovered from `PrevQuestId`, negative-exclusive `NextQuestId`
+  backlinks, and `NextQuestInChain` backlinks; no separate exported `next` fact survives;
+- follow-ups are therefore derived as the reverse of the selected prerequisite relation under D-008;
+- `close` is the complete per-quest member list generated for a positive `ExclusiveGroup` and may
+  include the quest itself; no stable source group ID survives in the exported table, so P3-T03 does
+  not invent one;
+- the pinned Turtle runtime extends race-bit names but the canonical P3-T03 schema keeps race/class
+  masks raw rather than baking server-specific labels into identity-independent truth.
+
+Migration 8 materializes the query-oriented projection with nullable scalar columns on `quests` plus
+explicit grouped-set tables:
+
+```text
+quest_prerequisite_sets
+quest_prerequisite_set_members
+quest_close_sets
+quest_close_set_members
+```
+
+The parent rows preserve set declaration/presence and selected member count. This intentionally keeps
+an explicit empty `pre = {}` distinguishable from an absent `pre` field. Member tables contain only
+referenced quests that already have canonical identities; missing IDs remain provenance and explicit
+`unresolved_progression_relations` diagnostics. No placeholder quest identity is fabricated.
+
+Source-shaped raw lists remain provenance facts alongside normalized complete-set facts and primitive
+member relations. Duplicate source members are reported deterministically before the canonical set is
+deduplicated. Self prerequisites, prerequisite cycles, unexpected missing-self `close` sets, and
+inconsistent materialized `close` peer sets are audit diagnostics; `close` self-membership itself is
+expected source behavior rather than an error.
+
+P3-T03 deliberately reuses the already validated P3-T02 quest compositor and therefore uses the same
+exact base/Turtle source revision inputs. Turtle top-entry replacement/deletion replaces the entire
+bounded progression view for a touched quest; omitted P3-T03 fields become absent rather than merging
+with base values. The pinned Turtle `overwrites.lua` does not currently mutate these six fields, but
+its contents remain revisioned/composed before patchtable replacement through the shared adapter.
+
+Managed selection policies are task-specific:
+
+```text
+pfquest-base-effective-quest-progression
+pfquest-turtle-effective-quest-progression
+```
+
+They may replace only managed/default selections. Explicit/custom scalar, complete-set, or primitive
+relation selections remain protected. Historical source observations are never deleted.
+
+D-030 is limited to restrictions/dependencies. Objectives, required items, rewards, item-started
+quests, skill/profession requirements and localized body text remain deferred.

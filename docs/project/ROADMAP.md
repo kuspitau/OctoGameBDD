@@ -82,36 +82,38 @@ Detailed record: `docs/project/tasks/P3-T02.md`.
 
 ### P3-T03 — quest restrictions and dependency graph
 
+**VALIDATED.**
+
+Adds D-030 and migration 8 for quest/minimum level, raw race/class masks, explicit any-of prerequisite
+sets, derived follow-ups and explicit per-quest close/exclusive member sets with task-specific
+base/Turtle effective-view provenance.
+
+Full local and canonical validation completed on 2026-08-24. The canonical DB now contains `3,533`
+prerequisite sets / `3,716` materialized prerequisite members and `303` close sets / `1,095`
+materialized close members. The second same-revision pass produced zero inserts, updates and deletes;
+FK/integrity checks passed. One self-prerequisite source diagnostic remains explicit audit evidence;
+there were no unresolved progression targets, duplicate members, cycles or close-set mismatches.
+
+Detailed record: `docs/project/tasks/P3-T03.md`.
+
+### P3-T04 — quest objectives and objective geography
+
 **READY_FOR_IMPLEMENTATION.**
 
 Next bounded scope:
 
-- quest level and minimum/required level;
-- race/class restrictions;
-- prerequisite relations;
-- derived follow-ups where appropriate;
-- exclusive/closing quest-group semantics;
-- explicit Turtle effective-view/reconciliation rules for this new fact family.
+- inspect and model pfQuest `obj.U`, `obj.O`, `obj.I`, `obj.IR`, `obj.A`, and `obj.Z` semantics;
+- inspect the auxiliary `quests-itemreq` contract needed to interpret item-use objective targets;
+- preserve source-shaped complete objective membership and Turtle effective-view replacement semantics;
+- resolve creature/game-object/item/zone identities through already canonical P1/P2/P3 identities
+  without fabricating targets;
+- derive objective geography from primitive objective targets and existing spawn/zone/map relations;
+- keep objective counts/quantities separate unless a reviewed source actually carries them.
 
-Primary-source inspection must confirm `lvl`, `min`, `race`, `class`, `pre`, and `close` semantics
-before schema/materialization decisions. Do not silently generalize D-028.
+Required-item quantities, guaranteed rewards, choice rewards and item-started quest acquisition remain
+later bounded P3 work.
 
-Objectives, required items and rewards remain deferred to later bounded P3 tasks.
-
-Detailed task: `docs/project/tasks/P3-T03.md`.
-
-### Later P3 tasks — to be numbered when bounded
-
-After P3-T03, choose the smallest coherent next vertical slice from:
-
-- objectives (creature/gameobject/item);
-- required item quantities/requirements;
-- guaranteed rewards;
-- choice rewards;
-- item-started quest acquisition;
-- additional restrictions/text needed by real source coherence.
-
-Do not bundle all remaining quest fields into one task merely to "finish P3".
+Detailed task: `docs/project/tasks/P3-T04.md`.
 
 ## P4 — Spells and crafting
 

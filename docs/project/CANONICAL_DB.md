@@ -31,14 +31,40 @@ Both files are generated/local artifacts and remain ignored by Git.
 
 ## Current baseline
 
-As of the P3-T02 closeout on 2026-08-24, the human rebuilt the database from a fresh SQLite file
-through the complete validated P1/P2 chain, P3-T01 and P3-T02. The resulting
-`data/generated/octogamedb.sqlite3` passed the required full-data validation and is the local
-canonical baseline for the next task.
+As of the P3-T03 closeout on 2026-08-24, the human has validated the cumulative database through the
+complete P1/P2 chain plus P3-T01, P3-T02 and P3-T03. The canonical local DB is therefore
+**validated through P3-T03**.
 
-The current task router (`docs/project/CURRENT_STATE.md`) records which project task the local
-canonical DB is expected to include. Future closeouts must update that statement when the canonical
-DB advances.
+P3-T03 applied migration 8 and successfully reconciled quest progression/restriction facts from the
+configured pfQuest and pfQuest-turtle trees. The final same-revision pass produced zero canonical
+inserts, updates or deletes; `PRAGMA foreign_key_check` and `PRAGMA integrity_check` both passed.
+
+Validated quest source revisions are:
+
+```text
+base pfQuest quests/progression
+sha256:667303b5507015b4039508e6a8f8afc0f6c086f285d5dc56afd0addb79cbe8e3
+
+pfQuest-turtle quests/progression
+sha256:234f8062f8006d5dc17c526b81772cf50f8591170781ae5af8b72a86b237d25a
+```
+
+P3-T03 validator-reported canonical counts are:
+
+```text
+quests                          6498
+quest_prerequisite_sets         3533
+quest_prerequisite_set_members  3716
+quest_close_sets                303
+quest_close_set_members         1095
+import_batches                  16
+observation_groups              1167121
+canonical_selections            1157241
+source_observations             2059171
+```
+
+The current task router (`docs/project/CURRENT_STATE.md`) records the next task that may consume this
+baseline.
 
 ## Before mutating the canonical DB
 
