@@ -1,4 +1,4 @@
-"""pfQuest item/direct-loot importer for the first P2 vertical slice."""
+"""pfQuest item/direct/reference-loot importer for the bounded P2 slice."""
 
 from __future__ import annotations
 
@@ -22,9 +22,10 @@ from octogamedb.importers.pfquest_world import (
 )
 from octogamedb.importers.summary import ImportSummary
 
-IMPORTER_VERSION = "pfquest-items/2"
+IMPORTER_VERSION = "pfquest-items/3"
 _ITEM_FILES = (
     "db/items.lua",
+    "db/refloot.lua",
     "db/enUS/items.lua",
     "db/enUS/units.lua",
     "db/enUS/objects.lua",
@@ -36,26 +37,35 @@ class PfQuestItemImportError(RuntimeError):
 
 
 @dataclass(frozen=True)
+class PfQuestReferenceLoot:
+    reference_loot_id: int
+    creature_memberships: tuple[tuple[int, float], ...]
+    gameobject_memberships: tuple[tuple[int, float], ...]
+
+
+@dataclass(frozen=True)
 class PfQuestItem:
     item_id: int
     name: str
     creature_loot: tuple[tuple[int, float], ...]
     gameobject_loot: tuple[tuple[int, float], ...]
-    reference_loot_count: int
+    reference_loot: tuple[tuple[int, float], ...]
     vendor_count: int
 
 
 @dataclass(frozen=True)
 class PfQuestItemSlice:
     items: tuple[PfQuestItem, ...]
+    reference_loot: tuple[PfQuestReferenceLoot, ...]
     rows_read: int
     rows_skipped: int
     creature_names: tuple[tuple[int, str], ...]
     gameobject_names: tuple[tuple[int, str], ...]
+    missing_reference_ids: tuple[int, ...]
 
 
 def compute_pfquest_items_revision(source_root: str | Path) -> str:
-    """Return a deterministic revision for item data plus referenced-source name inputs."""
+    """Return a deterministic revision for item/reference data plus source identity inputs."""
 
     root = Path(source_root)
     missing = [relative for relative in _ITEM_FILES if not (root / relative).is_file()]
@@ -72,6 +82,8 @@ def compute_pfquest_items_revision(source_root: str | Path) -> str:
 
 
 def _numeric_links(value: Any, *, label: str) -> tuple[tuple[int, float], ...]:
+    """Parse ``native_id -> percentage`` relations."""
+
     if value is None:
         return ()
     if not isinstance(value, dict):
@@ -91,6 +103,27 @@ def _numeric_links(value: Any, *, label: str) -> tuple[tuple[int, float], ...]:
     return tuple(links)
 
 
+def _numeric_memberships(value: Any, *, label: str) -> tuple[tuple[int, float], ...]:
+    """Parse a pfQuest refloot U/O membership map.
+
+    The numeric value is preserved for provenance only. At the pinned pfQuest revision the client
+    code iterates the keys and does not use this value as a probability or weight.
+    """
+
+    if value is None:
+        return ()
+    if not isinstance(value, dict):
+        raise PfQuestParseError(f"{label} must be a Lua table")
+
+    members: list[tuple[int, float]] = []
+    for source_id in sorted(key for key in value if isinstance(key, int)):
+        marker = value[source_id]
+        if isinstance(marker, bool) or not isinstance(marker, (int, float)):
+            raise PfQuestParseError(f"{label}[{source_id}] membership value must be numeric")
+        members.append((int(source_id), float(marker)))
+    return tuple(members)
+
+
 def _count_numeric_members(value: Any, *, label: str) -> int:
     if value is None:
         return 0
@@ -99,13 +132,41 @@ def _count_numeric_members(value: Any, *, label: str) -> int:
     return sum(1 for key in value if isinstance(key, int))
 
 
+def _parse_reference_definition(reference_id: int, value: Any) -> PfQuestReferenceLoot:
+    if not isinstance(value, dict):
+        raise PfQuestParseError(f"refloot[{reference_id}] must be a Lua table")
+
+    # The pinned pfQuest SearchItemID implementation performs exactly one expansion from item.R
+    # into refloot.U/refloot.O. A nested R is therefore unsupported source shape, not a recursive
+    # reference graph to guess at.
+    if "R" in value:
+        raise PfQuestParseError(
+            f"refloot[{reference_id}].R is unsupported: pinned pfQuest reference loot is one-level"
+        )
+
+    return PfQuestReferenceLoot(
+        reference_loot_id=reference_id,
+        creature_memberships=_numeric_memberships(
+            value.get("U"), label=f"refloot[{reference_id}].U"
+        ),
+        gameobject_memberships=_numeric_memberships(
+            value.get("O"), label=f"refloot[{reference_id}].O"
+        ),
+    )
+
+
 def load_pfquest_item_slice(source_root: str | Path) -> PfQuestItemSlice:
-    """Load item names plus direct creature/game-object loot relations from pfQuest."""
+    """Load item names, direct loot, and one-level pfQuest reference-loot relations."""
 
     root = Path(source_root)
     item_data = parse_pfquest_assignment(
         (root / "db" / "items.lua").read_text(encoding="utf-8"),
         domain="items",
+        table_name="data",
+    )
+    reference_data = parse_pfquest_assignment(
+        (root / "db" / "refloot.lua").read_text(encoding="utf-8"),
+        domain="refloot",
         table_name="data",
     )
     item_names = parse_pfquest_assignment(
@@ -144,35 +205,60 @@ def load_pfquest_item_slice(source_root: str | Path) -> PfQuestItemSlice:
                 name=name.strip(),
                 creature_loot=_numeric_links(record.get("U"), label=f"item[{item_id}].U"),
                 gameobject_loot=_numeric_links(record.get("O"), label=f"item[{item_id}].O"),
-                reference_loot_count=_count_numeric_members(
-                    record.get("R"), label=f"item[{item_id}].R"
-                ),
+                reference_loot=_numeric_links(record.get("R"), label=f"item[{item_id}].R"),
                 vendor_count=_count_numeric_members(record.get("V"), label=f"item[{item_id}].V"),
             )
         )
-    referenced_creature_ids = sorted(
-        {source_id for item in items for source_id, _ in item.creature_loot}
-    )
-    referenced_gameobject_ids = sorted(
-        {source_id for item in items for source_id, _ in item.gameobject_loot}
-    )
 
+    referenced_reference_ids = sorted(
+        {reference_id for item in items for reference_id, _ in item.reference_loot}
+    )
+    reference_loot: list[PfQuestReferenceLoot] = []
+    missing_reference_ids: list[int] = []
+    for reference_id in referenced_reference_ids:
+        raw = reference_data.get(reference_id)
+        if raw is None:
+            missing_reference_ids.append(reference_id)
+            continue
+        reference_loot.append(_parse_reference_definition(reference_id, raw))
+
+    reference_by_id = {entry.reference_loot_id: entry for entry in reference_loot}
+    direct_creatures = {source_id for item in items for source_id, _ in item.creature_loot}
+    direct_gameobjects = {source_id for item in items for source_id, _ in item.gameobject_loot}
+    referenced_creatures = {
+        source_id
+        for reference_id in referenced_reference_ids
+        if (definition := reference_by_id.get(reference_id)) is not None
+        for source_id, _ in definition.creature_memberships
+    }
+    referenced_gameobjects = {
+        source_id
+        for reference_id in referenced_reference_ids
+        if (definition := reference_by_id.get(reference_id)) is not None
+        for source_id, _ in definition.gameobject_memberships
+    }
+
+    all_creature_ids = sorted(direct_creatures | referenced_creatures)
+    all_gameobject_ids = sorted(direct_gameobjects | referenced_gameobjects)
     creature_names = tuple(
         (source_id, name.strip())
-        for source_id in referenced_creature_ids
+        for source_id in all_creature_ids
         if isinstance((name := unit_names.get(source_id)), str) and name.strip()
     )
     gameobject_names = tuple(
         (source_id, name.strip())
-        for source_id in referenced_gameobject_ids
+        for source_id in all_gameobject_ids
         if isinstance((name := object_names.get(source_id)), str) and name.strip()
     )
+
     return PfQuestItemSlice(
         items=tuple(items),
+        reference_loot=tuple(reference_loot),
         rows_read=len(item_ids),
         rows_skipped=skipped,
         creature_names=creature_names,
         gameobject_names=gameobject_names,
+        missing_reference_ids=tuple(missing_reference_ids),
     )
 
 
@@ -302,27 +388,99 @@ def _observe_loot_relation(
     return float(chance)
 
 
-def _missing_world_templates(
+def _observe_reference_relation(
     connection: sqlite3.Connection,
-    slice_data: PfQuestItemSlice,
-) -> tuple[list[int], list[int]]:
-    creature_ids = sorted(
-        {source_id for item in slice_data.items for source_id, _ in item.creature_loot}
+    *,
+    batch_id: int,
+    item_id: int,
+    reference_loot_id: int,
+    chance_percent: float,
+) -> float:
+    observation_id = record_relation_observation(
+        connection,
+        subject_kind="item",
+        subject_key=item_id,
+        fact_key="loot_reference",
+        import_batch_id=batch_id,
+        target_kind="loot_reference",
+        target_key=reference_loot_id,
+        relation_instance_key=f"reference:{reference_loot_id}",
+        attributes={"chance_percent": chance_percent},
+        source_record_type="item_reference_loot",
+        raw_identifier=f"{item_id}:R:{reference_loot_id}",
     )
-    gameobject_ids = sorted(
-        {source_id for item in slice_data.items for source_id, _ in item.gameobject_loot}
+    payload = _selected_value(
+        connection,
+        observation_id=observation_id,
+        selection_reason=(
+            "Selected automatically because this item reference-loot relation had no prior "
+            "selection."
+        ),
     )
-    existing_creatures = {
-        int(row[0])
-        for row in connection.execute("SELECT creature_id FROM creatures").fetchall()
-    }
-    existing_gameobjects = {
-        int(row[0])
-        for row in connection.execute("SELECT gameobject_id FROM gameobjects").fetchall()
-    }
+    target = payload.get("target", {})
+    if target.get("kind") != "loot_reference" or str(target.get("key")) != str(
+        reference_loot_id
+    ):
+        raise RuntimeError("selected reference-loot relation target does not match its instance")
+    chance = payload.get("attributes", {}).get("chance_percent")
+    if isinstance(chance, bool) or not isinstance(chance, (int, float)):
+        raise TypeError("selected reference-loot relation has no numeric chance_percent")
+    return float(chance)
+
+
+def _observe_reference_membership(
+    connection: sqlite3.Connection,
+    *,
+    batch_id: int,
+    reference_loot_id: int,
+    source_kind: str,
+    source_id: int,
+    membership_value: float,
+) -> None:
+    observation_id = record_relation_observation(
+        connection,
+        subject_kind="loot_reference",
+        subject_key=reference_loot_id,
+        fact_key="loot_source_member",
+        import_batch_id=batch_id,
+        target_kind=source_kind,
+        target_key=source_id,
+        relation_instance_key=f"{source_kind}:{source_id}",
+        attributes={"membership_value": membership_value},
+        source_record_type="refloot",
+        raw_identifier=f"{reference_loot_id}:{source_kind}:{source_id}",
+    )
+    payload = _selected_value(
+        connection,
+        observation_id=observation_id,
+        selection_reason=(
+            "Selected automatically because this reference-loot membership had no prior selection."
+        ),
+    )
+    target = payload.get("target", {})
+    if target.get("kind") != source_kind or str(target.get("key")) != str(source_id):
+        raise RuntimeError("selected reference-loot membership target does not match its instance")
+
+
+def _direct_target_ids(slice_data: PfQuestItemSlice) -> tuple[set[int], set[int]]:
     return (
-        [source_id for source_id in creature_ids if source_id not in existing_creatures],
-        [source_id for source_id in gameobject_ids if source_id not in existing_gameobjects],
+        {source_id for item in slice_data.items for source_id, _ in item.creature_loot},
+        {source_id for item in slice_data.items for source_id, _ in item.gameobject_loot},
+    )
+
+
+def _reference_target_ids(slice_data: PfQuestItemSlice) -> tuple[set[int], set[int]]:
+    return (
+        {
+            source_id
+            for definition in slice_data.reference_loot
+            for source_id, _ in definition.creature_memberships
+        },
+        {
+            source_id
+            for definition in slice_data.reference_loot
+            for source_id, _ in definition.gameobject_memberships
+        },
     )
 
 
@@ -361,53 +519,95 @@ def _materialize_relation_only_templates(
     *,
     batch_id: int,
     slice_data: PfQuestItemSlice,
-) -> tuple[int, int]:
-    """Create named source templates required by direct-loot relations, without inventing spawns."""
+) -> tuple[int, int, set[int], set[int]]:
+    """Create named source templates needed by direct/reference loot without inventing spawns.
 
-    missing_creatures, missing_gameobjects = _missing_world_templates(connection, slice_data)
+    Missing identity is fatal for a direct P2-T01 relation. A reference-only member can instead stay
+    as provenance evidence and is reported as unresolved, because flattening or inventing a name
+    would lose source semantics.
+    """
+
+    direct_creatures, direct_gameobjects = _direct_target_ids(slice_data)
+    ref_creatures, ref_gameobjects = _reference_target_ids(slice_data)
+    all_creatures = direct_creatures | ref_creatures
+    all_gameobjects = direct_gameobjects | ref_gameobjects
+
+    existing_creatures = {
+        int(row[0]) for row in connection.execute("SELECT creature_id FROM creatures").fetchall()
+    }
+    existing_gameobjects = {
+        int(row[0]) for row in connection.execute("SELECT gameobject_id FROM gameobjects").fetchall()
+    }
+    missing_creatures = sorted(all_creatures - existing_creatures)
+    missing_gameobjects = sorted(all_gameobjects - existing_gameobjects)
     creature_names = dict(slice_data.creature_names)
     gameobject_names = dict(slice_data.gameobject_names)
-    unresolved_creatures = [
-        source_id for source_id in missing_creatures if source_id not in creature_names
+
+    unresolved_direct_creatures = [
+        source_id
+        for source_id in missing_creatures
+        if source_id in direct_creatures and source_id not in creature_names
     ]
-    unresolved_gameobjects = [
-        source_id for source_id in missing_gameobjects if source_id not in gameobject_names
+    unresolved_direct_gameobjects = [
+        source_id
+        for source_id in missing_gameobjects
+        if source_id in direct_gameobjects and source_id not in gameobject_names
     ]
-    if unresolved_creatures or unresolved_gameobjects:
+    if unresolved_direct_creatures or unresolved_direct_gameobjects:
         raise PfQuestItemImportError(
             "pfQuest direct-loot targets are absent from the canonical P1 world and have no "
             "pfQuest enUS identity; "
-            f"missing creature IDs={unresolved_creatures}, "
-            f"missing gameobject IDs={unresolved_gameobjects}"
+            f"missing creature IDs={unresolved_direct_creatures}, "
+            f"missing gameobject IDs={unresolved_direct_gameobjects}"
         )
 
+    unresolved_ref_creatures: set[int] = set()
+    unresolved_ref_gameobjects: set[int] = set()
+    inserted_creatures = 0
+    inserted_gameobjects = 0
+
     for creature_id in missing_creatures:
+        name = creature_names.get(creature_id)
+        if name is None:
+            unresolved_ref_creatures.add(creature_id)
+            continue
         canonical_name = _observe_source_name(
             connection,
             batch_id=batch_id,
             subject_kind="creature",
             subject_id=creature_id,
-            name=creature_names[creature_id],
+            name=name,
         )
         connection.execute(
             "INSERT INTO creatures(creature_id, name) VALUES (?, ?)",
             (creature_id, canonical_name),
         )
+        inserted_creatures += 1
 
     for gameobject_id in missing_gameobjects:
+        name = gameobject_names.get(gameobject_id)
+        if name is None:
+            unresolved_ref_gameobjects.add(gameobject_id)
+            continue
         canonical_name = _observe_source_name(
             connection,
             batch_id=batch_id,
             subject_kind="gameobject",
             subject_id=gameobject_id,
-            name=gameobject_names[gameobject_id],
+            name=name,
         )
         connection.execute(
             "INSERT INTO gameobjects(gameobject_id, name) VALUES (?, ?)",
             (gameobject_id, canonical_name),
         )
+        inserted_gameobjects += 1
 
-    return len(missing_creatures), len(missing_gameobjects)
+    return (
+        inserted_creatures,
+        inserted_gameobjects,
+        unresolved_ref_creatures,
+        unresolved_ref_gameobjects,
+    )
 
 
 def _row_changed(row: sqlite3.Row | None, expected: dict[str, Any]) -> bool:
@@ -416,13 +616,24 @@ def _row_changed(row: sqlite3.Row | None, expected: dict[str, Any]) -> bool:
     return any(row[key] != value for key, value in expected.items())
 
 
+def _insert_reference_anchor(connection: sqlite3.Connection, reference_loot_id: int) -> bool:
+    existing = connection.execute(
+        "SELECT 1 FROM loot_references WHERE reference_loot_id = ?", (reference_loot_id,)
+    ).fetchone()
+    connection.execute(
+        "INSERT OR IGNORE INTO loot_references(reference_loot_id) VALUES (?)",
+        (reference_loot_id,),
+    )
+    return existing is None
+
+
 def import_pfquest_items(
     connection: sqlite3.Connection,
     *,
     source_root: str | Path,
     source_revision: str,
 ) -> ImportSummary:
-    """Import pfQuest item identity and direct U/O loot relations with provenance."""
+    """Import pfQuest item identity, direct loot, and one-level reference loot with provenance."""
 
     source_revision = source_revision.strip()
     if not source_revision:
@@ -444,17 +655,128 @@ def import_pfquest_items(
     updated = 0
 
     try:
-        relation_only_creatures, relation_only_gameobjects = _materialize_relation_only_templates(
+        (
+            relation_only_creatures,
+            relation_only_gameobjects,
+            unresolved_ref_creatures,
+            unresolved_ref_gameobjects,
+        ) = _materialize_relation_only_templates(
             connection,
             batch_id=batch_id,
             slice_data=slice_data,
         )
         inserted += relation_only_creatures + relation_only_gameobjects
 
+        reference_by_id = {
+            definition.reference_loot_id: definition for definition in slice_data.reference_loot
+        }
+        referenced_reference_ids = sorted(
+            {reference_id for item in slice_data.items for reference_id, _ in item.reference_loot}
+        )
+        for reference_id in referenced_reference_ids:
+            if _insert_reference_anchor(connection, reference_id):
+                inserted += 1
+
+        unresolved: list[dict[str, Any]] = [
+            {
+                "reference_loot_id": reference_id,
+                "reason": "missing_refloot_definition",
+            }
+            for reference_id in slice_data.missing_reference_ids
+        ]
+
+        reference_creature_memberships = 0
+        reference_gameobject_memberships = 0
+        for definition in slice_data.reference_loot:
+            if not definition.creature_memberships and not definition.gameobject_memberships:
+                unresolved.append(
+                    {
+                        "reference_loot_id": definition.reference_loot_id,
+                        "reason": "empty_refloot_definition",
+                    }
+                )
+
+            for creature_id, marker in definition.creature_memberships:
+                _observe_reference_membership(
+                    connection,
+                    batch_id=batch_id,
+                    reference_loot_id=definition.reference_loot_id,
+                    source_kind="creature",
+                    source_id=creature_id,
+                    membership_value=marker,
+                )
+                if creature_id in unresolved_ref_creatures:
+                    unresolved.append(
+                        {
+                            "reference_loot_id": definition.reference_loot_id,
+                            "source_kind": "creature",
+                            "source_id": creature_id,
+                            "reason": "missing_source_identity",
+                        }
+                    )
+                    continue
+                existing = connection.execute(
+                    """
+                    SELECT 1 FROM reference_loot_creatures
+                    WHERE reference_loot_id = ? AND creature_id = ?
+                    """,
+                    (definition.reference_loot_id, creature_id),
+                ).fetchone()
+                connection.execute(
+                    """
+                    INSERT OR IGNORE INTO reference_loot_creatures(reference_loot_id, creature_id)
+                    VALUES (?, ?)
+                    """,
+                    (definition.reference_loot_id, creature_id),
+                )
+                if existing is None:
+                    inserted += 1
+                reference_creature_memberships += 1
+
+            for gameobject_id, marker in definition.gameobject_memberships:
+                _observe_reference_membership(
+                    connection,
+                    batch_id=batch_id,
+                    reference_loot_id=definition.reference_loot_id,
+                    source_kind="gameobject",
+                    source_id=gameobject_id,
+                    membership_value=marker,
+                )
+                if gameobject_id in unresolved_ref_gameobjects:
+                    unresolved.append(
+                        {
+                            "reference_loot_id": definition.reference_loot_id,
+                            "source_kind": "gameobject",
+                            "source_id": gameobject_id,
+                            "reason": "missing_source_identity",
+                        }
+                    )
+                    continue
+                existing = connection.execute(
+                    """
+                    SELECT 1 FROM reference_loot_gameobjects
+                    WHERE reference_loot_id = ? AND gameobject_id = ?
+                    """,
+                    (definition.reference_loot_id, gameobject_id),
+                ).fetchone()
+                connection.execute(
+                    """
+                    INSERT OR IGNORE INTO reference_loot_gameobjects(
+                        reference_loot_id, gameobject_id
+                    ) VALUES (?, ?)
+                    """,
+                    (definition.reference_loot_id, gameobject_id),
+                )
+                if existing is None:
+                    inserted += 1
+                reference_gameobject_memberships += 1
+
         creature_links = 0
         gameobject_links = 0
-        deferred_reference_links = 0
+        reference_links = 0
+        resolved_reference_links = 0
         deferred_vendor_links = 0
+
         for item in slice_data.items:
             name = _observe_name(connection, batch_id=batch_id, item=item)
             existing_item = connection.execute(
@@ -536,20 +858,68 @@ def import_pfquest_items(
                 )
                 gameobject_links += 1
 
-            deferred_reference_links += item.reference_loot_count
+            for reference_id, chance_percent in item.reference_loot:
+                chance = _observe_reference_relation(
+                    connection,
+                    batch_id=batch_id,
+                    item_id=item.item_id,
+                    reference_loot_id=reference_id,
+                    chance_percent=chance_percent,
+                )
+                existing = connection.execute(
+                    """
+                    SELECT chance_percent FROM item_reference_loot
+                    WHERE item_id = ? AND reference_loot_id = ?
+                    """,
+                    (item.item_id, reference_id),
+                ).fetchone()
+                if existing is None:
+                    inserted += 1
+                elif _row_changed(existing, {"chance_percent": chance}):
+                    updated += 1
+                connection.execute(
+                    """
+                    INSERT INTO item_reference_loot(item_id, reference_loot_id, chance_percent)
+                    VALUES (?, ?, ?)
+                    ON CONFLICT(item_id, reference_loot_id) DO UPDATE SET
+                        chance_percent = excluded.chance_percent
+                    """,
+                    (item.item_id, reference_id, chance),
+                )
+                reference_links += 1
+                definition = reference_by_id.get(reference_id)
+                if definition and (
+                    definition.creature_memberships or definition.gameobject_memberships
+                ):
+                    resolved_reference_links += 1
+
             deferred_vendor_links += item.vendor_count
 
+        unresolved.sort(
+            key=lambda issue: (
+                int(issue["reference_loot_id"]),
+                str(issue.get("source_kind", "")),
+                int(issue.get("source_id", -1)),
+                str(issue["reason"]),
+            )
+        )
         accepted = len(slice_data.items)
         details = {
             "items": accepted,
             "creature_loot_links": creature_links,
             "gameobject_loot_links": gameobject_links,
-            "deferred_reference_loot_links": deferred_reference_links,
+            "reference_loot_links": reference_links,
+            "resolved_reference_loot_links": resolved_reference_links,
+            "reference_loot_definitions": len(slice_data.reference_loot),
+            "reference_creature_memberships": reference_creature_memberships,
+            "reference_gameobject_memberships": reference_gameobject_memberships,
+            "unresolved_reference_loot": unresolved,
             "deferred_vendor_links": deferred_vendor_links,
             "items_without_enus_name": slice_data.rows_skipped,
             "relation_only_creature_templates": relation_only_creatures,
             "relation_only_gameobject_templates": relation_only_gameobjects,
         }
+        warning_count = len(unresolved)
         connection.execute(
             """
             UPDATE import_batches
@@ -560,6 +930,7 @@ def import_pfquest_items(
                 rows_skipped = ?,
                 rows_inserted = ?,
                 rows_updated = ?,
+                warning_count = ?,
                 details_json = ?
             WHERE id = ?
             """,
@@ -569,6 +940,7 @@ def import_pfquest_items(
                 slice_data.rows_skipped,
                 inserted,
                 updated,
+                warning_count,
                 json.dumps(details, sort_keys=True, separators=(",", ":")),
                 batch_id,
             ),
@@ -603,7 +975,7 @@ def import_pfquest_items(
         rows_skipped=slice_data.rows_skipped,
         rows_inserted=inserted,
         rows_updated=updated,
-        warning_count=0,
+        warning_count=warning_count,
         error_count=0,
         details=details,
     )

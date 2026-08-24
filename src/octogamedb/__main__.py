@@ -80,19 +80,25 @@ def _build_parser() -> argparse.ArgumentParser:
 
     import_items_parser = subparsers.add_parser(
         "import-pfquest-items",
-        help="Import the bounded P2 pfQuest item/direct-loot slice.",
+        help="Import the bounded P2 pfQuest item/direct/reference-loot slice.",
     )
     import_items_parser.add_argument("source_root", type=Path, help="Installed pfQuest directory.")
     import_items_parser.add_argument(
         "--source-revision",
-        help="Optional explicit source revision; otherwise hash the two item input files.",
+        help=(
+            "Optional explicit source revision; otherwise hash the five item/reference/identity "
+            "input files."
+        ),
     )
     _add_db_argument(import_items_parser)
     _add_json_argument(import_items_parser)
 
     item_sources_parser = subparsers.add_parser(
         "item-sources",
-        help="Show direct creature/game-object loot sources and derived spawn geography.",
+        help=(
+            "Show direct/reference creature/game-object acquisition sources and derived spawn "
+            "geography."
+        ),
     )
     item_sources_parser.add_argument("item_id", type=int, help="Native item ID.")
     _add_db_argument(item_sources_parser)
@@ -268,9 +274,18 @@ def _print_item_sources(payload: list[dict[str, Any]]) -> None:
         if source["spawn_key"] is not None:
             zone = source["zone_name"] or source["zone_id"] or "unknown zone"
             location = f"{zone} @ {source['x']},{source['y']} ({source['coordinate_space']})"
+        chance = source["chance_percent"]
+        chance_text = f"{chance}%" if chance is not None else "path-specific chance"
+        path_labels = []
+        for path in source.get("acquisition_paths", []):
+            if path["path_kind"] == "reference":
+                path_labels.append(f"reference:{path['reference_loot_id']}")
+            else:
+                path_labels.append("direct")
+        path_text = ",".join(path_labels) if path_labels else "unknown"
         print(
             f"- {source['source_kind']}:{source['source_id']} {source['source_name']} — "
-            f"{source['chance_percent']}% — {location}"
+            f"{chance_text} — {location} — paths={path_text}"
         )
 
 

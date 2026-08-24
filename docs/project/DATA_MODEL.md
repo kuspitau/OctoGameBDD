@@ -303,7 +303,7 @@ attributes          = {chance_percent: P}
 
 Canonical loot materialization follows the selected observation for that relation instance. The first observation is selected only if no prior canonical selection exists; later competing observations remain preserved under D-006.
 
-The initial pfQuest adapter materializes only direct `U` and `O` relations. `R` reference-loot and `V` vendor relationships are detected/countable but remain deferred until their own relation semantics are implemented.
+P2-T01 originally deferred `R` reference-loot and still defers `V` vendor relationships. P2-T02 below resolves `R` without changing the direct tables.
 
 P2-T01 requires a canonical target identity before it can materialize a direct loot row. If a
 direct-loot target is absent from the P1 static-world materialization but pfQuest provides its enUS
@@ -311,6 +311,78 @@ name, the item importer may create that creature/game-object **template identity
 relation-supported canonical anchor. It does not create a spawn, zone, or coordinates. This handles
 legitimate non-static sources such as temporary/event gameobjects while preserving D-009. If neither
 the P1 world nor the pfQuest enUS identity table can identify the target, the import fails closed.
+
+## P2-T02 reference-loot schema and semantics
+
+Migration 5 adds the explicit reference-loot graph required by the pinned pfQuest source contract:
+
+```text
+loot_references(reference_loot_id)
+item_reference_loot(item_id, reference_loot_id, chance_percent)
+reference_loot_creatures(reference_loot_id, creature_id)
+reference_loot_gameobjects(reference_loot_id, gameobject_id)
+```
+
+Native pfQuest reference IDs are preserved. Reference expansion is **not** flattened into
+`creature_loot` or `gameobject_loot`; those tables continue to mean direct `U`/`O` evidence.
+
+The primitive P2-T02 relations are:
+
+```text
+Item I -> LootReference R with chance P
+LootReference R -> member Creature C
+LootReference R -> member GameObject G
+```
+
+For the pinned pfQuest revision, the item-side `R` numeric value is the drop chance percentage used
+by pfQuest for every member reached through that reference. The numeric values stored on
+`refloot[R].U/O` are membership markers: pfQuest iterates the member keys and does not interpret
+those values as probabilities or weights. The project therefore preserves a membership marker in
+provenance but does not add a meaningless canonical probability column to the membership tables.
+
+Provenance slots are:
+
+```text
+Item -> reference
+  subject_kind      = item
+  fact_key          = loot_reference
+  fact_instance_key = reference:<reference_loot_id>
+  target             = loot_reference:<reference_loot_id>
+  attributes          = {chance_percent: P}
+
+Reference -> source member
+  subject_kind      = loot_reference
+  subject_key       = reference_loot_id
+  fact_key          = loot_source_member
+  fact_instance_key = creature:<id> | gameobject:<id>
+  target             = creature/gameobject native ID
+  attributes          = {membership_value: source_marker}
+```
+
+The pinned pfQuest resolver performs one-level expansion only. A nested `R` in a refloot definition
+is therefore unsupported/malformed input for this adapter rather than a recursive graph to infer.
+Chains/cycles are not silently invented.
+
+The effective acquisition projection is derived:
+
+```text
+Item I
+  -> direct Creature/GameObject                      (P2-T01)
+  -> LootReference R -> Creature/GameObject member   (P2-T02)
+                         -> Spawn -> Zone -> Map      (P1)
+```
+
+When direct and reference paths reach the same source/spawn, `find_item_sources()` returns one source
+row with multiple `acquisition_paths`. Each path preserves its own chance and provenance. If those
+path chances differ, the source-level convenience `chance_percent` is `null`; the project does not
+invent an independence/exclusivity rule to combine them.
+
+Missing reference definitions are not silently discarded: the item -> reference relation and native
+reference identity remain canonical/provenanced, while the unresolved definition is reported with an
+ID/reason and yields no derived member source. A reference-only member lacking both a canonical P1
+template and pfQuest enUS identity remains provenance evidence and is likewise reported; no unnamed
+canonical template or geography is invented. Direct P2-T01 relations keep their stricter fail-closed
+identity behavior.
 
 ## Important relation families
 
@@ -329,7 +401,10 @@ fishing_loot
 skinning_loot
 pickpocket_loot
 disenchant_loot
-reference_loot
+loot_references
+item_reference_loot
+reference_loot_creatures
+reference_loot_gameobjects
 
 quest_givers
 quest_finishers
@@ -390,10 +465,13 @@ Examples of primitives:
 - NPC X has spawn Y at coordinate Z.
 - Quest Q is given by NPC X.
 - Creature C drops item I with source-listed chance P.
+- Item I refers to loot-reference R with source-listed chance P.
+- Loot-reference R contains creature/game-object source S.
 
 Examples of derivations:
 
 - Quest Q is given in zone A.
+- Item I is obtainable from reference member S.
 - Item I is obtainable in zone A.
 - Recipe R is obtainable in zone B.
 

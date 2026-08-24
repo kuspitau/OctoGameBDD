@@ -174,16 +174,38 @@ links, `10,209` deferred reference-loot links, and `13,860` deferred vendor link
 
 ### P2-T02 — pfQuest reference-loot resolution
 
+**Validated.**
+
+P2-T02 resolves the `R` family with an explicit provenance-preserving reference model:
+
+- migration 5 adds loot-reference identity plus item/reference and reference/source membership
+  relations;
+- the pinned pfQuest one-level `R -> refloot.U/O` behavior is preserved without inventing recursive
+  semantics;
+- item-side reference chance and refloot membership provenance remain distinct;
+- effective sources are derived at query time rather than flattened into direct loot truth;
+- direct/reference overlap preserves separate acquisition paths without inventing combined
+  probability;
+- missing definitions/source identities are explicitly reported;
+- same-revision full-data reimport is idempotent.
+
+Full local validation observed `10,209` item reference relations, `8,793` resolved reference links, a
+clean foreign-key check, and a real item `647` / reference `30082` query with `9,578` reference paths
+(`9,543` located) plus independently traceable item->reference and reference->member provenance.
+
+### P2-T03 — pfQuest vendor acquisition (`V`)
+
 **Next bounded task.**
 
-Resolve the `R` reference-loot family that P2-T01 deliberately counted but did not materialize. The
-task must first establish pfQuest's exact reference-loot representation and expansion semantics from
-primary source code, then add the smallest provenance-preserving canonical representation/query
-behavior needed to make referenced loot contribute correctly to item acquisition.
+Resolve the `V` vendor family that remains deferred after P2-T02. P2-T01 full-data validation
+observed `13,860` vendor relations. The task must establish exact pfQuest vendor semantics from
+primary source before choosing schema/field meanings, then add the smallest explicit
+provenance-preserving item/vendor relation and query behavior.
 
-P2-T02 must preserve direct `U`/`O` semantics, avoid duplicating derived source geography, remain
-idempotent, and use reduced source-shaped fixtures before full-data validation. Vendor `V` relations
-remain deferred unless reference-loot semantics prove they are inseparable.
+P2-T03 must reuse P1 vendor creature identity/geography where available, preserve unlocated but
+valid relation-only identity without inventing spawns, remain idempotent, and keep loot/reference
+semantics unchanged. Richer price/stock/economics fields may remain deferred if they are separable
+from the vendor relationship.
 
 ## P3 — Quests
 

@@ -1,5 +1,39 @@
 # Changelog
 
+## 2026-08-24 — P2-T02 full-data validation and P2-T03 routing
+
+- Completed P2-T02 Level-2 validation against the configured full pfQuest/pfQuest-turtle inputs.
+- Confirmed all repository tests pass, Ruff reports `All checks passed!`, and `compileall` succeeds.
+- Validated `10,209` item reference-loot relations and `8,793` resolved reference links.
+- Confirmed unresolved reference definitions remain explicit `missing_refloot_definition` records
+  with native IDs rather than silent data loss.
+- Confirmed same-revision re-import idempotence with zero canonical inserts/updates.
+- Confirmed `PRAGMA foreign_key_check` returns no violations.
+- Rejected an invalid cached validation DB after detecting that it lacked the P1 `maps` table; rebuilt
+  a fresh base pfQuest world + Turtle reconciliation before accepting geography validation.
+- Automated real-data acceptance selected item `647` / reference `30082`, returning `9,578`
+  reference paths (`9,543` located), including creature `12048` (`Alliance Sentinel`) in Alterac
+  Valley.
+- Confirmed separate pfQuest provenance at both primitive relation levels: `3` item->reference groups
+  and `336` reference->source-member groups for the selected reference.
+- Final automated acceptance result: `P2-T02 FINAL CHECKS PASSED`.
+- Marked P2-T02 `VALIDATED` and routed the next bounded task to P2-T03 pfQuest vendor acquisition.
+
+## 2026-08-24 — P2-T02 pfQuest reference-loot resolution
+
+- Confirmed P2-T01 is present and validated on GitHub `main` at `3dcc55369f821dcdc12cafa0a9ab2b2ebc7afa54`.
+- Inspected the project-pinned pfQuest revision `104f35678ca39ab1fb78b655f815cc7016f5e0c8` rather than inferring `R` semantics from numeric data shape.
+- Established that `items[item]["R"]` maps native reference-loot IDs to source-listed chance percentages, while `db/refloot.lua` maps those reference IDs to `U` creature and `O` game-object membership sets.
+- Established that the pinned pfQuest resolver expands references one level, applies the item-side `R` chance to each member, and does not interpret refloot membership values as probabilities/weights.
+- Added migration 5 with explicit `loot_references`, `item_reference_loot`, `reference_loot_creatures`, and `reference_loot_gameobjects` tables.
+- Expanded the deterministic pfQuest item revision to include `db/refloot.lua` in addition to the four P2-T01 item/identity inputs.
+- Added provenance for `item -> loot_reference` and `loot_reference -> creature/gameobject` membership while keeping direct `U`/`O` relations unchanged.
+- Kept reference expansion derived at query time; direct/reference overlap is folded into one source/spawn with separate acquisition paths and no invented probability combination.
+- Added explicit reporting for missing refloot definitions and reference-only members without materializable canonical source identity; direct unidentified targets remain fail-closed.
+- Added reduced source-shaped `refloot.lua` fixture coverage and focused tests for reference parsing, malformed nested references, missing references, idempotence, provenance, overlap deduplication, geography, relation-only sources, CLI output, migration/FK behavior, and direct-target compatibility.
+- Agent Level-1 focused result: `20 passed`; Python compilation passed. Ruff was unavailable in the agent runtime and remains required in local Level 2.
+- Marked P2-T02 `IMPLEMENTED_AWAITING_LOCAL_VALIDATION`; vendor `V` remains deferred.
+
 ## 2026-08-24 — P2-T01 full-data validation and P2-T02 routing
 
 - Completed P2-T01 Level-2 validation against the configured full pfQuest/pfQuest-turtle inputs.
@@ -9,7 +43,6 @@
 - Confirmed a real item-source query derives Turtle-selected Tanaris spawn geography while preserving separate pfQuest loot-relation provenance.
 - Recorded 10,209 deferred reference-loot links and 13,860 deferred vendor links.
 - Marked P2-T01 `VALIDATED` and routed the next bounded task to P2-T02 reference-loot resolution.
-
 
 ## 2026-08-24 — P2-T01 Level-2 relation-only source compatibility correction
 
@@ -44,7 +77,7 @@
 - Added Turtle reconciliation that may supersede only default/base pfQuest selections for the bounded P1 world fact family while preserving explicit/non-pfQuest selections and D-025 DBC geography authority.
 - Added complete-set stale-spawn cleanup: pfQuest-family canonical spawn rows absent from the selected Turtle set are removed while their historical source observations remain.
 - Added conservative template/zone deletion so non-pfQuest selected evidence and canonical FK dependencies retain identity anchors.
-- Kept `pfQuest-octo` comparison-only: its changed/removed/added effective-view evidence is stored without automatic canonical materialization.
+- Kept `pfQuest-octo` comparison-only: its changed/removed/added effective-view evidence is stored without automatic canonical mutation.
 - Added focused tests for complete-set replacement, historical provenance retention, repeat-run idempotence, negative presence with external support, and Octo comparison-only behavior.
 - Introduced no schema migration and reused the P1-T03 local path contract.
 - Marked P1-T04 `IMPLEMENTED_AWAITING_LOCAL_VALIDATION`.
@@ -115,8 +148,8 @@
 - Confirmed P0-T02 as validated after its implementation reached GitHub `main` at commit `587146435e44960aaebf7105979a79516102f26e`.
 - Formalized fixture conventions separating source-shaped importer samples from synthetic project-owned golden cases.
 - Added an initial provenance/audit golden case containing a resolved scalar conflict, an unresolved relation conflict, and legitimate multi-valued relations.
-- Added generic source, trace, conflict, and provenance-coverage audit reports.
-- Added `source`, `trace`, `conflict`, and `coverage` CLI commands with human-readable and deterministic JSON modes.
+- Added generic source/trace/conflict/coverage audit functions.
+- Added corresponding CLI commands with human-readable and deterministic JSON modes.
 - Added reusable machine-readable import summaries with deterministic JSON serialization/file output.
 - Added Level 1 tests for golden coverage invariants, conflict classification, traceability, source/import summaries, CLI text/JSON output, and summary serialization.
 - Kept P0-T03 schema-neutral: no new migration or gameplay-domain canonical tables were added.
@@ -127,7 +160,7 @@
 - Confirmed P0-T01 as validated after its implementation reached GitHub `main`.
 - Added schema migration 2 with provenance evidence groups, source observations, and canonical selection metadata.
 - Added relation-instance grouping so multiple legitimate relations of the same type are not automatically treated as conflicts.
-- Added deterministic canonical JSON serialization and idempotent scalar/relation observation helpers, including reuse across repeated import batches of the same source revision.
+- Added deterministic canonical JSON serialization and idempotent scalar/relation observation helpers, including reuse across repeated imports of the same revision.
 - Added `observation_import_batches` so repeated runs remain traceable without duplicating stable observations, with source/revision consistency enforced by SQLite.
 - Added explicit canonical selection policy/reason handling with same-group foreign-key enforcement.
 - Added Level 1 tests for schema-v1 upgrade, cross-run idempotency, revision separation, provenance link integrity, scalar conflicts, relation traceability, multi-valued relations, competing relation targets, constraints, and canonical selection behavior.

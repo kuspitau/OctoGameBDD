@@ -36,18 +36,16 @@ def _selected_source(
     }
 
 
-def _source_payload(
+def _location_payload(
     connection: sqlite3.Connection,
     row: sqlite3.Row,
 ) -> dict[str, Any]:
     source_kind = str(row["source_kind"])
-    source_id = int(row["source_id"])
     spawn_key = None if row["spawn_key"] is None else str(row["spawn_key"])
     return {
         "source_kind": source_kind,
-        "source_id": source_id,
+        "source_id": int(row["source_id"]),
         "source_name": str(row["source_name"]),
-        "chance_percent": float(row["chance_percent"]),
         "spawn_key": spawn_key,
         "coordinate_space": (
             None if row["coordinate_space"] is None else str(row["coordinate_space"])
@@ -63,13 +61,6 @@ def _source_payload(
         "zone_name": None if row["zone_name"] is None else str(row["zone_name"]),
         "map_id": None if row["map_id"] is None else int(row["map_id"]),
         "map_name": None if row["map_name"] is None else str(row["map_name"]),
-        "relation_source": _selected_source(
-            connection,
-            subject_kind="item",
-            subject_key=str(row["item_id"]),
-            fact_key="loot_source",
-            fact_instance_key=f"{source_kind}:{source_id}",
-        ),
         "location_source": (
             None
             if spawn_key is None
@@ -83,28 +74,61 @@ def _source_payload(
     }
 
 
-def find_item_sources(
+def _acquisition_path(
     connection: sqlite3.Connection,
-    item_id: int,
-) -> list[dict[str, Any]]:
-    """Return one item and its direct creature/game-object loot sources.
+    row: sqlite3.Row,
+) -> dict[str, Any]:
+    item_id = int(row["item_id"])
+    source_kind = str(row["source_kind"])
+    source_id = int(row["source_id"])
+    path_kind = str(row["path_kind"])
+    reference_loot_id = (
+        None if row["reference_loot_id"] is None else int(row["reference_loot_id"])
+    )
 
-    Source geography is derived from the existing P1 spawn/zone/map relations. It is not copied
-    into the loot tables. A source without a canonical spawn remains visible with null location
-    fields so acquisition evidence is not confused with geographic coverage.
-    """
+    if path_kind == "direct":
+        relation_source = _selected_source(
+            connection,
+            subject_kind="item",
+            subject_key=str(item_id),
+            fact_key="loot_source",
+            fact_instance_key=f"{source_kind}:{source_id}",
+        )
+        membership_source = None
+    elif path_kind == "reference" and reference_loot_id is not None:
+        relation_source = _selected_source(
+            connection,
+            subject_kind="item",
+            subject_key=str(item_id),
+            fact_key="loot_reference",
+            fact_instance_key=f"reference:{reference_loot_id}",
+        )
+        membership_source = _selected_source(
+            connection,
+            subject_kind="loot_reference",
+            subject_key=str(reference_loot_id),
+            fact_key="loot_source_member",
+            fact_instance_key=f"{source_kind}:{source_id}",
+        )
+    else:
+        raise RuntimeError("invalid item acquisition path row")
 
-    item = connection.execute(
-        "SELECT item_id, name FROM items WHERE item_id = ?",
-        (item_id,),
-    ).fetchone()
-    if item is None:
-        return []
+    return {
+        "path_kind": path_kind,
+        "chance_percent": float(row["chance_percent"]),
+        "reference_loot_id": reference_loot_id,
+        "relation_source": relation_source,
+        "reference_membership_source": membership_source,
+    }
 
-    rows = connection.execute(
+
+def _query_source_rows(connection: sqlite3.Connection, item_id: int) -> list[sqlite3.Row]:
+    return connection.execute(
         """
         SELECT
             i.item_id,
+            'direct' AS path_kind,
+            NULL AS reference_loot_id,
             'creature' AS source_kind,
             c.creature_id AS source_id,
             c.name AS source_name,
@@ -132,6 +156,8 @@ def find_item_sources(
 
         SELECT
             i.item_id,
+            'direct' AS path_kind,
+            NULL AS reference_loot_id,
             'gameobject' AS source_kind,
             g.gameobject_id AS source_id,
             g.name AS source_name,
@@ -154,11 +180,138 @@ def find_item_sources(
         LEFT JOIN zones AS z ON z.zone_id = gs.zone_id
         LEFT JOIN maps AS m ON m.map_id = COALESCE(gs.map_id, z.map_id)
         WHERE i.item_id = ?
+
+        UNION ALL
+
+        SELECT
+            i.item_id,
+            'reference' AS path_kind,
+            irl.reference_loot_id,
+            'creature' AS source_kind,
+            c.creature_id AS source_id,
+            c.name AS source_name,
+            irl.chance_percent,
+            cs.spawn_key,
+            cs.coordinate_space,
+            cs.x,
+            cs.y,
+            cs.z,
+            cs.orientation,
+            cs.respawn_seconds,
+            z.zone_id,
+            z.name AS zone_name,
+            COALESCE(cs.map_id, z.map_id) AS map_id,
+            m.name AS map_name
+        FROM items AS i
+        JOIN item_reference_loot AS irl ON irl.item_id = i.item_id
+        JOIN reference_loot_creatures AS rlc
+          ON rlc.reference_loot_id = irl.reference_loot_id
+        JOIN creatures AS c ON c.creature_id = rlc.creature_id
+        LEFT JOIN creature_spawns AS cs ON cs.creature_id = c.creature_id
+        LEFT JOIN zones AS z ON z.zone_id = cs.zone_id
+        LEFT JOIN maps AS m ON m.map_id = COALESCE(cs.map_id, z.map_id)
+        WHERE i.item_id = ?
+
+        UNION ALL
+
+        SELECT
+            i.item_id,
+            'reference' AS path_kind,
+            irl.reference_loot_id,
+            'gameobject' AS source_kind,
+            g.gameobject_id AS source_id,
+            g.name AS source_name,
+            irl.chance_percent,
+            gs.spawn_key,
+            gs.coordinate_space,
+            gs.x,
+            gs.y,
+            gs.z,
+            gs.orientation,
+            gs.respawn_seconds,
+            z.zone_id,
+            z.name AS zone_name,
+            COALESCE(gs.map_id, z.map_id) AS map_id,
+            m.name AS map_name
+        FROM items AS i
+        JOIN item_reference_loot AS irl ON irl.item_id = i.item_id
+        JOIN reference_loot_gameobjects AS rlg
+          ON rlg.reference_loot_id = irl.reference_loot_id
+        JOIN gameobjects AS g ON g.gameobject_id = rlg.gameobject_id
+        LEFT JOIN gameobject_spawns AS gs ON gs.gameobject_id = g.gameobject_id
+        LEFT JOIN zones AS z ON z.zone_id = gs.zone_id
+        LEFT JOIN maps AS m ON m.map_id = COALESCE(gs.map_id, z.map_id)
+        WHERE i.item_id = ?
         """,
-        (item_id, item_id),
+        (item_id, item_id, item_id, item_id),
     ).fetchall()
 
-    sources = [_source_payload(connection, row) for row in rows]
+
+def find_item_sources(
+    connection: sqlite3.Connection,
+    item_id: int,
+) -> list[dict[str, Any]]:
+    """Return one item and its direct/reference creature/game-object acquisition sources.
+
+    Reference expansion is a derived query over explicit ``item -> reference -> source`` canonical
+    relations. Direct and reference paths that reach the same source/spawn are folded into one source
+    row with multiple ``acquisition_paths`` so callers do not double-count locations. No probability
+    is mathematically combined: if overlapping paths carry different source-listed chances, the
+    source-level ``chance_percent`` is ``None`` and each path retains its own chance.
+
+    Geography remains derived from P1 spawn/zone/map relations. A source without a canonical spawn
+    remains visible with null location fields.
+    """
+
+    item = connection.execute(
+        "SELECT item_id, name FROM items WHERE item_id = ?",
+        (item_id,),
+    ).fetchone()
+    if item is None:
+        return []
+
+    grouped: dict[tuple[str, int, str | None], dict[str, Any]] = {}
+    seen_paths: dict[tuple[str, int, str | None], set[tuple[str, int | None, float]]] = {}
+
+    for row in _query_source_rows(connection, item_id):
+        source_kind = str(row["source_kind"])
+        source_id = int(row["source_id"])
+        spawn_key = None if row["spawn_key"] is None else str(row["spawn_key"])
+        key = (source_kind, source_id, spawn_key)
+        if key not in grouped:
+            grouped[key] = _location_payload(connection, row)
+            grouped[key]["acquisition_paths"] = []
+            seen_paths[key] = set()
+
+        path = _acquisition_path(connection, row)
+        path_identity = (
+            str(path["path_kind"]),
+            path["reference_loot_id"],
+            float(path["chance_percent"]),
+        )
+        if path_identity not in seen_paths[key]:
+            grouped[key]["acquisition_paths"].append(path)
+            seen_paths[key].add(path_identity)
+
+    sources = list(grouped.values())
+    for source in sources:
+        source["acquisition_paths"].sort(
+            key=lambda path: (
+                0 if path["path_kind"] == "direct" else 1,
+                -1 if path["reference_loot_id"] is None else int(path["reference_loot_id"]),
+                float(path["chance_percent"]),
+            )
+        )
+        distinct_chances = sorted(
+            {float(path["chance_percent"]) for path in source["acquisition_paths"]}
+        )
+        source["chance_percent"] = distinct_chances[0] if len(distinct_chances) == 1 else None
+        source["relation_source"] = (
+            None
+            if not source["acquisition_paths"]
+            else source["acquisition_paths"][0]["relation_source"]
+        )
+
     sources.sort(
         key=lambda source: (
             str(source["source_kind"]),

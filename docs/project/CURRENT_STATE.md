@@ -2,107 +2,117 @@
 
 ## Repository state
 
-GitHub `main` is the source-of-truth base for the current local handoff:
+GitHub `main` is the source-of-truth base for this validated local handoff:
 
 - branch: `main`
-- base commit before P2-T01 local changes: `582810dfe6ae41e4eec9af303d6f98a772830ef8`
-- base commit message: `Implement P1-T04 overlay reconciliation and pfQuest compatibility fix`
+- implementation base commit: `3dcc55369f821dcdc12cafa0a9ab2b2ebc7afa54`
+- base commit message: `Implement and validate P2-T01 item acquisition`
 
-P2-T01 has been implemented and validated against the user's full local pfQuest/Turtle data.
-The local P2-T01 delta must be committed and pushed before a new coding conversation starts.
+The P2-T02 implementation delta has now passed both Level-1 and full local Level-2 validation.
+It must be committed and pushed before the next coding conversation starts.
 
-**P2-T01 status:** `VALIDATED`
+**P2-T02 status:** `VALIDATED`
 
 ## Current milestone
 
 **P2 — Items and acquisition**
 
-## Current task after the P2-T01 push
+## Current task after the P2-T02 push
 
-**P2-T02 — pfQuest reference-loot resolution**
+**P2-T03 — pfQuest vendor acquisition (`V`)**
 
 Detailed task specification:
 
-- `docs/project/tasks/P2-T02.md`
+- `docs/project/tasks/P2-T03.md`
 
-The next conversation must first confirm that the P2-T01 commit is present on GitHub `main`, then
-implement P2-T02 from that task file. It must not redo P2-T01 and must not jump to full P6 ingestion.
+The next conversation must first confirm that the validated P2-T02 commit is present on GitHub
+`main`, then implement P2-T03 from that task file. It must not redo P2-T02 and must not jump to
+full P6 ingestion.
 
-## P2-T01 validated result
+## P2-T02 validated result
 
-P2-T01 establishes the first end-to-end item/acquisition path:
-
-- migration 4 adds canonical `items`, `creature_loot`, and `gameobject_loot`;
-- pfQuest item identity and direct `U`/`O` loot relations are imported with provenance;
-- direct drop chances are preserved as percentages;
-- geography is derived through canonical P1 templates/spawns/zones/maps;
-- direct-loot targets missing from the static P1 materialization may be retained as named
-  relation-only templates when pfQuest supplies their identity, without inventing spawns;
-- repeated same-revision import is idempotent;
-- reference-loot (`R`) and vendor (`V`) relations remain intentionally deferred.
-
-Full-data validation revisions:
+Primary-source inspection remains pinned to pfQuest revision:
 
 ```text
-base_revision   sha256:5087d2d0a5b1c2706b7fc7ccb5ffd447c91aa24d91a23f102f2c7ac1d7440147
-turtle_revision sha256:7fd719cac7a7a26e80c6865fa62b6100ccfa2301dabe3b2a399c0f1551372d8c
-item_revision   sha256:e645f75f9c6fe8bca86b3ddb3c4dfde76a167f89f3d344d5937bf0e4b98dfd11
+104f35678ca39ab1fb78b655f815cc7016f5e0c8
 ```
 
-Observed full-data counts:
-
-- pfQuest base world rows accepted: `19,899`;
-- Turtle effective-world rows accepted: `26,637`;
-- items accepted: `17,712`;
-- direct creature-loot links: `198,811`;
-- direct game-object-loot links: `8,298`;
-- deferred reference-loot links: `10,209`;
-- deferred vendor links: `13,860`;
-- relation-only creature templates: `0`;
-- relation-only game-object templates: `2` (`180523`, `180671`).
-
-The second item import of the exact same revision returned:
+Established reference-loot contract:
 
 ```text
-rows_inserted = 0
-rows_updated = 0
+items[item_id]["R"][reference_loot_id] = chance_percent
+refloot[reference_loot_id]["U"][creature_id] = membership_marker
+refloot[reference_loot_id]["O"][gameobject_id] = membership_marker
 ```
 
-A real derived query also resolved item `45` (`Squire's Shirt`) through creature `5623`
-(`Wastewander Assassin`) to canonical Turtle-selected spawns in Tanaris, with separate pfQuest
-loot-relation provenance and pfQuest-turtle location provenance.
+P2-T02 adds explicit reference identity/relations, preserves item-side chance and two-stage
+provenance, and derives effective acquisition sources without flattening them into direct loot
+truth.
 
-No foreign-key assertion failed in the Level-2 validation flow.
+Full local validation on 2026-08-24 confirmed:
 
-## Local path/config state
+- full repository test suite passed with the user's configured environment;
+- `python -m ruff check src tests` -> `All checks passed!`;
+- `python -m compileall -q src tests` -> success;
+- real pfQuest `R` relations imported: `10,209`;
+- resolved reference-loot links: `8,793`;
+- unresolved definitions are explicitly reported as `missing_refloot_definition` with native IDs;
+- same-revision second import: `rows_inserted = 0`, `rows_updated = 0`;
+- `PRAGMA foreign_key_check` -> `[]`;
+- a fresh P1 + Turtle + P2-T02 validation database successfully resolved a real located reference
+  acquisition;
+- validation item: `647`;
+- validation reference-loot ID: `30082`;
+- returned reference acquisition paths: `9,578`;
+- located reference paths: `9,543`;
+- example located member: creature `12048` (`Alliance Sentinel`) in Alterac Valley;
+- item -> reference provenance groups: `3`, all with pfQuest observations;
+- reference -> source-member provenance groups for reference `30082`: `336`, all with pfQuest
+  observations;
+- automated final check ended with `P2-T02 FINAL CHECKS PASSED`.
 
-No new local path key is needed for P2-T02 at task start. Existing configuration remains:
+The example path's source-listed chance is `0.0`; P2-T02 preserves that source value verbatim and
+does not reinterpret it or combine it mathematically with other paths.
 
-```toml
-[source_paths]
-pfquest = "<installed pfQuest directory>"
-pfquest_turtle = "<installed pfQuest-turtle directory>"
-```
+## Important validation correction
 
-P2-T02 should inspect public pfQuest reference-loot semantics before deciding whether any additional
-local source path is required.
+The initially suggested reuse of `data/generated/octogamedb.sqlite3` was not valid on the user's
+machine because that file was not the previously validated complete P1 database and did not even
+contain the `maps` table.
+
+The successful Level-2 validation therefore rebuilt a fresh validation database in the intended
+order:
+
+1. apply current migrations;
+2. import the base pfQuest P1 world;
+3. reconcile the configured pfQuest-turtle effective world;
+4. import P2-T02 items/reference loot;
+5. repeat the exact item import for idempotence;
+6. validate foreign keys, real located reference acquisition, and both provenance layers.
+
+Future validation instructions should prefer rebuilding the required bounded dependency chain when
+the provenance/state of a cached generated DB is not guaranteed.
 
 ## Known limitations carried forward
 
+- vendor (`V`) acquisition is not yet materialized and is the next bounded P2 task;
 - item stats/effects/requirements and richer item identity are not yet imported;
-- pfQuest reference-loot (`R`) is counted but not resolved;
-- vendor (`V`) relations are counted but not imported;
 - specialized loot and item/container loot remain deferred;
 - item/Turtle/Octo overlay reconciliation is not implemented;
+- reference-loot expansion follows the pinned pfQuest one-level contract and deliberately rejects a
+  nested `R` inside `refloot` rather than inventing recursion semantics;
 - item geography exists only where canonical P1 source spawns exist;
 - relation-only source templates legitimately have null geography until another source supplies a
   canonical spawn.
 
 ## Next handoff rule
 
-1. Apply this documentation-only handoff on top of the completed P2-T01 local changes.
-2. Review `git diff` / `git status`.
-3. Commit the entire P2-T01 change set plus this handoff documentation.
-4. Push `main`.
-5. Start a new conversation against the pushed `main`.
-6. That conversation confirms the new commit, reads `docs/project/tasks/P2-T02.md`, and proceeds.
+1. Apply the P2-T02 implementation delta and this validation-closeout documentation over the local
+   worktree based on `3dcc55369f821dcdc12cafa0a9ab2b2ebc7afa54`.
+2. Review `MANIFEST.txt`, `git diff` and `git status`.
+3. The Level-2 validation is complete; do not rerun it solely to change status unless the tree is
+   modified after this point.
+4. Commit the full P2-T02 implementation plus validation-closeout docs and push `main`.
+5. Start the next conversation from the pushed `main`.
+6. That conversation confirms P2-T02 is present and `VALIDATED`, then reads
+   `docs/project/tasks/P2-T03.md` and proceeds.

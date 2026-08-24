@@ -34,7 +34,7 @@ Preserve disagreements even when a canonical winner is selected.
 - Repository: `https://github.com/shagu/pfQuest`
 - Role: broad Vanilla-style structured Lua dataset; useful skeleton for units, objects, quests, items, zones, coordinates and relations.
 
-P1-T01 public-format inspection is pinned to upstream revision:
+P1/P2 public-format inspection is pinned to upstream revision:
 
 ```text
 104f35678ca39ab1fb78b655f815cc7016f5e0c8
@@ -57,8 +57,8 @@ The tracked P1-T01 source fixture mirrors those six file paths but is deliberate
 
 #### P2-T01 item/direct-loot format
 
-P2-T01 reuses the same literal-Lua parser and inspects the item tables at the same pinned upstream
-revision. The bounded inputs are:
+P2-T01 reuses the same literal-Lua parser and inspects the item tables at the pinned upstream
+revision. Direct item/source identity inputs are:
 
 ```text
 db/items.lua
@@ -67,37 +67,88 @@ db/enUS/units.lua
 db/enUS/objects.lua
 ```
 
-Relevant source shape:
+Relevant direct source shape:
 
 ```text
 pfDB["items"]["data"][item_id]["U"][creature_id] = chance_percent
 pfDB["items"]["data"][item_id]["O"][gameobject_id] = chance_percent
-pfDB["items"]["data"][item_id]["R"] = ...
-pfDB["items"]["data"][item_id]["V"] = ...
 pfDB["items"]["enUS"][item_id] = item_name
 pfDB["units"]["enUS"][creature_id] = creature_name
 pfDB["objects"]["enUS"][gameobject_id] = gameobject_name
 ```
 
-For P2-T01:
+For direct P2 loot:
 
 - `U` is direct creature-loot evidence;
 - `O` is direct game-object-loot evidence;
 - the numeric value is preserved as the source-listed drop chance percentage;
-- `R` reference-loot and `V` vendor memberships are detected/countable but deliberately not
-  materialized yet;
 - item identity/name and direct relations carry pfQuest source/revision/import-batch provenance;
-- the unit/object enUS tables supply source identity for legitimate direct-loot targets that have no
-  static P1 world record or spawn;
-- the exact local four-file input set can be identified by a deterministic SHA-256 content revision.
+- the unit/object enUS tables supply source identity for legitimate loot targets that have no static
+  P1 world record or spawn.
 
-A referenced direct `U`/`O` target may therefore exist as a relation-only canonical template with
-no spawn. The importer records the pfQuest-provided name and leaves geography unknown. If the target
-is absent both from the P1 world and from the corresponding pfQuest enUS name table, the import
-fails closed rather than inventing a placeholder identity.
+A referenced direct `U`/`O` target may therefore exist as a relation-only canonical template with no
+spawn. The importer records the pfQuest-provided name and leaves geography unknown. If a direct
+target is absent both from the P1 world and from the corresponding pfQuest enUS name table, the
+import fails closed rather than inventing a placeholder identity.
+
+#### P2-T02 reference-loot format
+
+P2-T02 additionally consumes:
+
+```text
+db/refloot.lua
+```
+
+The deterministic P2 item-source revision now hashes the exact five files:
+
+```text
+db/items.lua
+db/refloot.lua
+db/enUS/items.lua
+db/enUS/units.lua
+db/enUS/objects.lua
+```
+
+Primary-source inspection of `database.lua` (`SearchItemID`) and `db/refloot.lua` at the pinned
+revision establishes this contract:
+
+```text
+pfDB["items"]["data"][item_id]["R"][reference_loot_id] = chance_percent
+
+pfDB["refloot"]["data"][reference_loot_id]["U"][creature_id] = membership_marker
+pfDB["refloot"]["data"][reference_loot_id]["O"][gameobject_id] = membership_marker
+```
+
+pfQuest itself resolves an item `R` by:
+
+1. reading the item-side `reference_loot_id -> chance` relation;
+2. looking up that ID in `pfDB["refloot"]["data"]`;
+3. iterating each `U` and `O` member key;
+4. exposing each resulting creature/game-object using the **item-side R chance** as droprate.
+
+The refloot member values are not used by this resolution code; they are membership markers in this
+pinned source contract, not probabilities or weights. P2-T02 preserves those numeric markers only as
+source provenance.
+
+The pinned resolver performs one-level expansion. It does not recursively resolve `R` fields inside
+`refloot`, and the reviewed data/search contract provides no chain/cycle semantics to infer. The P2
+adapter therefore treats nested `R` in a refloot definition as unsupported/malformed instead of
+inventing recursive behavior.
+
+Direct `U`/`O` and `R` are parallel acquisition paths. The project does not assume independence,
+mutual exclusion, or another probability-combination rule when they overlap. Query code deduplicates
+the resulting source/spawn while retaining each path/chance separately.
+
+A missing refloot definition is preserved as a native item -> reference relation and reported with an
+explicit reason. A reference member that lacks both an existing canonical template and a pfQuest enUS
+identity remains provenance evidence and is reported rather than being assigned a fabricated name or
+location. Direct target identity continues to use the stricter P2-T01 fail-closed rule.
+
+Vendor `V` remains detected/deferred by P2-T02; reference-loot semantics did not make it inseparable
+from `R` handling.
 
 The P2 fixture under `tests/fixtures/pfquest/items_slice/` is a tiny source-shaped sample, not a
-redistribution of the full item database.
+redistribution of the full item/reference database.
 
 The upstream pfQuest repository uses the MIT license. Tracked fixtures contain only minimal
 representative structures/records.
@@ -141,9 +192,8 @@ Local validation key:
 pfquest_turtle = "..."
 ```
 
-P2-T01 does not yet compose a Turtle item overlay. The Turtle path is used during Level-2 validation
-to reconstruct/reconcile the canonical P1 world before base pfQuest direct-loot relations are
-materialized.
+P2 currently does not compose a Turtle item overlay. The Turtle path remains relevant to reconstruct/
+reconcile the canonical P1 world used to derive acquisition geography.
 
 ### pfQuest-octo
 
