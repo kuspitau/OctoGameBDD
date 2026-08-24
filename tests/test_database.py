@@ -7,12 +7,22 @@ import pytest
 import octogamedb.db.migrations as migration_module
 from octogamedb.db import Migration, apply_migrations, connect_database, get_applied_migrations
 
+CURRENT_MIGRATIONS = (
+    (1, "0001_import_metadata.sql"),
+    (2, "0002_provenance_primitives.sql"),
+    (3, "0003_world_foundation.sql"),
+    (4, "0004_items_acquisition.sql"),
+    (5, "0005_reference_loot.sql"),
+    (6, "0006_vendor_items.sql"),
+    (7, "0007_quests.sql"),
+)
+
 
 def test_fresh_initialization_creates_foundation_schema(tmp_path):
     db_path = tmp_path / "nested" / "octogamedb.sqlite3"
     with connect_database(db_path) as connection:
         applied = apply_migrations(connection)
-        assert [migration.version for migration in applied] == [1, 2, 3, 4, 5, 6]
+        assert [migration.version for migration in applied] == list(range(1, 8))
         tables = {
             row["name"]
             for row in connection.execute(
@@ -42,22 +52,18 @@ def test_fresh_initialization_creates_foundation_schema(tmp_path):
         "reference_loot_creatures",
         "reference_loot_gameobjects",
         "vendor_items",
+        "quests",
+        "quest_creature_endpoints",
+        "quest_gameobject_endpoints",
     } <= tables
 
 
 def test_repeat_initialization_is_idempotent(tmp_path):
     db_path = tmp_path / "octogamedb.sqlite3"
     with connect_database(db_path) as connection:
-        assert len(apply_migrations(connection)) == 6
+        assert len(apply_migrations(connection)) == 7
         assert apply_migrations(connection) == ()
-        assert get_applied_migrations(connection) == (
-            (1, "0001_import_metadata.sql"),
-            (2, "0002_provenance_primitives.sql"),
-            (3, "0003_world_foundation.sql"),
-            (4, "0004_items_acquisition.sql"),
-            (5, "0005_reference_loot.sql"),
-            (6, "0006_vendor_items.sql"),
-        )
+        assert get_applied_migrations(connection) == CURRENT_MIGRATIONS
 
 
 def test_foreign_keys_are_enforced(tmp_path):
@@ -84,6 +90,35 @@ def test_foreign_keys_are_enforced(tmp_path):
                 """
                 INSERT INTO vendor_items(vendor_creature_id, item_id)
                 VALUES (1, 1)
+                """
+            )
+        with pytest.raises(sqlite3.IntegrityError):
+            connection.execute(
+                """
+                INSERT INTO quest_creature_endpoints(quest_id, endpoint_kind, creature_id)
+                VALUES (1, 'giver', 1)
+                """
+            )
+        with pytest.raises(sqlite3.IntegrityError):
+            connection.execute(
+                """
+                INSERT INTO quest_gameobject_endpoints(quest_id, endpoint_kind, gameobject_id)
+                VALUES (1, 'finisher', 1)
+                """
+            )
+
+
+def test_quest_endpoint_kind_constraint(tmp_path):
+    db_path = tmp_path / "quest-constraint.sqlite3"
+    with connect_database(db_path) as connection:
+        apply_migrations(connection)
+        connection.execute("INSERT INTO quests(quest_id, name) VALUES (1, 'Quest')")
+        connection.execute("INSERT INTO creatures(creature_id, name) VALUES (2, 'Creature')")
+        with pytest.raises(sqlite3.IntegrityError):
+            connection.execute(
+                """
+                INSERT INTO quest_creature_endpoints(quest_id, endpoint_kind, creature_id)
+                VALUES (1, 'objective', 2)
                 """
             )
 
@@ -184,22 +219,17 @@ def test_failed_migration_is_not_recorded(tmp_path, monkeypatch):
 def test_existing_version_one_database_upgrades_to_current_schema(tmp_path, monkeypatch):
     db_path = tmp_path / "upgrade.sqlite3"
     all_migrations = migration_module.discover_migrations()
-    assert [migration.version for migration in all_migrations] == [1, 2, 3, 4, 5, 6]
+    assert [migration.version for migration in all_migrations] == list(range(1, 8))
     monkeypatch.setattr(migration_module, "discover_migrations", lambda: (all_migrations[0],))
     with connect_database(db_path) as connection:
         assert [migration.version for migration in apply_migrations(connection)] == [1]
         assert get_applied_migrations(connection) == ((1, "0001_import_metadata.sql"),)
     monkeypatch.setattr(migration_module, "discover_migrations", lambda: all_migrations)
     with connect_database(db_path) as connection:
-        assert [migration.version for migration in apply_migrations(connection)] == [2, 3, 4, 5, 6]
-        assert get_applied_migrations(connection) == (
-            (1, "0001_import_metadata.sql"),
-            (2, "0002_provenance_primitives.sql"),
-            (3, "0003_world_foundation.sql"),
-            (4, "0004_items_acquisition.sql"),
-            (5, "0005_reference_loot.sql"),
-            (6, "0006_vendor_items.sql"),
-        )
+        assert [migration.version for migration in apply_migrations(connection)] == [
+            2, 3, 4, 5, 6, 7
+        ]
+        assert get_applied_migrations(connection) == CURRENT_MIGRATIONS
         for table in (
             "source_observations",
             "creature_spawns",
@@ -207,6 +237,9 @@ def test_existing_version_one_database_upgrades_to_current_schema(tmp_path, monk
             "loot_references",
             "item_reference_loot",
             "vendor_items",
+            "quests",
+            "quest_creature_endpoints",
+            "quest_gameobject_endpoints",
         ):
             assert connection.execute(
                 "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = ?",
@@ -214,7 +247,7 @@ def test_existing_version_one_database_upgrades_to_current_schema(tmp_path, monk
             ).fetchone()[0] == 1
 
 
-def test_existing_version_four_database_upgrades_reference_and_vendor_schema(
+def test_existing_version_four_database_upgrades_reference_vendor_and_quest_schema(
     tmp_path, monkeypatch
 ):
     db_path = tmp_path / "upgrade-v4.sqlite3"
@@ -224,19 +257,16 @@ def test_existing_version_four_database_upgrades_reference_and_vendor_schema(
         assert [migration.version for migration in apply_migrations(connection)] == [1, 2, 3, 4]
     monkeypatch.setattr(migration_module, "discover_migrations", lambda: all_migrations)
     with connect_database(db_path) as connection:
-        assert [migration.version for migration in apply_migrations(connection)] == [5, 6]
-        assert connection.execute(
-            "SELECT COUNT(*) FROM sqlite_master "
-            "WHERE type = 'table' AND name = 'reference_loot_creatures'"
-        ).fetchone()[0] == 1
-        assert connection.execute(
-            "SELECT COUNT(*) FROM sqlite_master "
-            "WHERE type = 'table' AND name = 'vendor_items'"
-        ).fetchone()[0] == 1
+        assert [migration.version for migration in apply_migrations(connection)] == [5, 6, 7]
+        for table in ("reference_loot_creatures", "vendor_items", "quests"):
+            assert connection.execute(
+                "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = ?",
+                (table,),
+            ).fetchone()[0] == 1
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
 
 
-def test_existing_version_five_database_upgrades_vendor_schema(tmp_path, monkeypatch):
+def test_existing_version_five_database_upgrades_vendor_and_quest_schema(tmp_path, monkeypatch):
     db_path = tmp_path / "upgrade-v5.sqlite3"
     all_migrations = migration_module.discover_migrations()
     monkeypatch.setattr(migration_module, "discover_migrations", lambda: all_migrations[:5])
@@ -247,9 +277,34 @@ def test_existing_version_five_database_upgrades_vendor_schema(tmp_path, monkeyp
         ).fetchone()[0] == 0
     monkeypatch.setattr(migration_module, "discover_migrations", lambda: all_migrations)
     with connect_database(db_path) as connection:
-        assert [migration.version for migration in apply_migrations(connection)] == [6]
-        assert get_applied_migrations(connection)[-1] == (6, "0006_vendor_items.sql")
+        assert [migration.version for migration in apply_migrations(connection)] == [6, 7]
+        assert get_applied_migrations(connection)[-1] == (7, "0007_quests.sql")
+        for table in ("vendor_items", "quests", "quest_creature_endpoints"):
+            assert connection.execute(
+                "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = ?",
+                (table,),
+            ).fetchone()[0] == 1
+        assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
+
+
+def test_existing_version_six_database_upgrades_quest_schema(tmp_path, monkeypatch):
+    db_path = tmp_path / "upgrade-v6.sqlite3"
+    all_migrations = migration_module.discover_migrations()
+    monkeypatch.setattr(migration_module, "discover_migrations", lambda: all_migrations[:6])
+    with connect_database(db_path) as connection:
+        assert [migration.version for migration in apply_migrations(connection)] == [
+            1, 2, 3, 4, 5, 6
+        ]
         assert connection.execute(
-            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'vendor_items'"
-        ).fetchone()[0] == 1
+            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'quests'"
+        ).fetchone()[0] == 0
+    monkeypatch.setattr(migration_module, "discover_migrations", lambda: all_migrations)
+    with connect_database(db_path) as connection:
+        assert [migration.version for migration in apply_migrations(connection)] == [7]
+        assert get_applied_migrations(connection)[-1] == (7, "0007_quests.sql")
+        for table in ("quests", "quest_creature_endpoints", "quest_gameobject_endpoints"):
+            assert connection.execute(
+                "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = ?",
+                (table,),
+            ).fetchone()[0] == 1
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []

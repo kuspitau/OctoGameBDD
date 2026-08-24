@@ -43,27 +43,38 @@ test suite, Ruff, Python compilation and foreign-key validation.
 
 ### P3-T01 — first quest identity/endpoints vertical slice
 
-**Status: READY**
+**Status: IMPLEMENTED_AWAITING_LOCAL_VALIDATION**
 
-Goal: establish the first bounded quest-domain vertical slice on top of the validated P0-P2 and P1
-world foundations.
+P3-T01 is implemented against GitHub `main` base commit
+`a515ac68b80e3ebba9f600beeccddd760e160e27` and now requires Level-2 validation against the
+configured full local pfQuest source and the validated P1/P2 database foundation before it can be
+marked `VALIDATED`.
 
-The next coding conversation must begin by reading `docs/project/tasks/P3-T01.md`, then inspect the
-actual pfQuest quest schema and relevant upstream behavior before committing to field semantics.
+Implemented bounded scope:
 
-Initial bounded intent:
+- migration 7 adds canonical `quests` plus explicit creature/game-object giver/finisher endpoint
+  tables;
+- base pfQuest quest identity is read from `db/quests.lua` plus `db/enUS/quests.lua` field `T`;
+- `start.U` / `start.O` are creature/game-object giver endpoints and `end.U` / `end.O` are
+  creature/game-object finisher endpoints;
+- item-started quests (`start.I`) and all prerequisites/objectives/rewards remain deferred rather than
+  being coerced into endpoint semantics;
+- quest names and each endpoint relation retain pfQuest provenance and preserve existing explicit
+  canonical selections;
+- endpoints whose P1 target identity is absent remain explicit provenance/diagnostics and are not
+  fabricated into canonical templates;
+- `quest_by_id()` derives endpoint geography from P1 template -> spawn -> zone/map relations and does
+  not store `quest -> zone` primary truth;
+- deterministic quest revisions hash exactly `db/quests.lua` and `db/enUS/quests.lua`;
+- Turtle quest overlays were inspected and are known to affect quest data/localization, but effective
+  Turtle quest reconciliation is deliberately deferred instead of silently generalizing P2 D-027.
 
-- canonical quest identity;
-- explicit quest giver and finisher relations where the source supports them;
-- creature/game-object endpoint identities linked to existing P1 world templates;
-- quest geography derived through P1 spawns/zones/maps rather than duplicated as primary truth;
-- native IDs, provenance, conflicts and same-revision idempotence preserved.
-
-Prerequisites/follow-ups, objectives, required items and rewards remain later P3 work unless primary
-source inspection proves that a smaller coherent first slice requires part of them.
+Agent Level-1 focused validation: `15 passed`; Python compilation succeeds. Ruff was unavailable in
+the agent runtime and remains required in Level 2.
 
 ## Routing guard
 
-Do not skip directly to broad quest ingestion, item stats/effects, economics, P6 scaling or UI work.
-P3-T01 should remain a small source-shaped vertical slice with deterministic fixtures and explicit
-provenance, following the same expansion discipline used in P1 and P2.
+Do not advance P3-T01 to `VALIDATED` or route to the next P3 task until the prescribed full local
+validation succeeds. After successful validation, record the observed counts/revision/idempotence,
+foreign-key result and at least one located real quest endpoint with traceable provenance, then route
+the next bounded P3 task.

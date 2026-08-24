@@ -262,19 +262,28 @@ Implement:
 
 ### P3-T01 — first quest identity/endpoints vertical slice
 
-**Ready.**
+**Implemented — awaiting local validation.**
 
-Start P3 with a bounded source-shaped vertical slice rather than full quest ingestion:
+P3-T01 establishes the bounded base-pfQuest identity/endpoints slice:
 
-- inspect pfQuest's actual quest data and resolver/browser behavior before assigning field semantics;
-- add canonical quest identity;
-- add explicit giver/finisher relations for creature/game-object endpoints supported by the source;
-- reuse P1 creature/game-object templates and derive endpoint geography through P1 spawns/zones/maps;
-- preserve native IDs, source provenance, conflicts and same-revision idempotence;
-- defer prerequisites/follow-ups, objectives, required items and rewards unless source inspection shows
-  a smaller coherent first slice requires part of them.
+- migration 7 adds native-ID `quests` plus explicit creature/game-object endpoint tables with
+  `giver` / `finisher` kinds;
+- primary-source inspection maps quest title field `T` and `start/end × U/O` endpoint semantics;
+- item-started quests and broader quest restrictions/objectives/rewards remain deferred;
+- names and endpoint relations retain generic provenance and preserve prior explicit canonical
+  selections;
+- endpoint targets absent from canonical P1 identity remain explicit unresolved provenance without
+  fabricated templates/spawns;
+- `quest_by_id()` derives endpoint spawn/zone/map geography through P1 rather than persisting
+  `quest -> zone` truth;
+- deterministic base quest revisions hash exactly the quest data and enUS localization files;
+- Turtle quest overlay influence was inspected, but quest effective-view reconciliation is deferred
+  rather than silently extending P2 D-027.
 
-Detailed routing/specification: `docs/project/tasks/P3-T01.md`.
+Agent Level-1 focused result: `15 passed`; Python compilation succeeds. Ruff and full installed-pfQuest
+validation remain required before P3-T01 can be marked validated or routing advances.
+
+Detailed task/validation contract: `docs/project/tasks/P3-T01.md`.
 
 ## P4 — Spells and crafting
 

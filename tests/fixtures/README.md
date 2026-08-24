@@ -64,6 +64,29 @@ It contains project-selected synthetic IDs and only enough source-shaped structu
 
 The fixture is not a copy of the full pfQuest item database.
 
+### P3-T01 pfQuest quest identity/endpoints slice
+
+`pfquest/quests_slice/` mirrors the two bounded base-pfQuest quest inputs used by P3-T01:
+
+```text
+db/quests.lua
+db/enUS/quests.lua
+```
+
+It contains project-selected synthetic IDs and only enough source-shaped structure to test:
+
+- localized quest title field `T`;
+- multiple `start.U` creature givers;
+- `start.O` game-object givers;
+- `end.U` creature finishers;
+- `end.O` game-object finishers;
+- a referenced endpoint absent from the P1 canonical world;
+- a data quest without an enUS title;
+- an enUS locale-only quest;
+- an item-started `start.I` relation that remains explicitly outside P3-T01 endpoint scope.
+
+The fixture is not a copy of the full pfQuest quest database.
+
 ## Golden cases
 
 `golden/` is reserved for small project-owned synthetic cases that verify normalized/provenance/audit semantics across sources. These are not substitutes for source-shaped parser fixtures.

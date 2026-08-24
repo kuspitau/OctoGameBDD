@@ -34,7 +34,7 @@ Preserve disagreements even when a canonical winner is selected.
 - Repository: `https://github.com/shagu/pfQuest`
 - Role: broad Vanilla-style structured Lua dataset; useful skeleton for units, objects, quests, items, zones, coordinates and relations.
 
-P1/P2 public-format inspection is pinned to upstream revision:
+P1/P2/P3 public-format inspection is pinned to upstream revision:
 
 ```text
 104f35678ca39ab1fb78b655f815cc7016f5e0c8
@@ -159,6 +159,56 @@ provenance and materializes the explicit `vendor_items` relation.
 The P2 fixture under `tests/fixtures/pfquest/items_slice/` is a tiny source-shaped sample, not a
 redistribution of the full item/reference database.
 
+#### P3-T01 quest identity/endpoints format
+
+P3-T01 inspects the quest tables and pfQuest runtime lookup behavior at the same pinned revision.
+The bounded base inputs are exactly:
+
+```text
+db/quests.lua
+db/enUS/quests.lua
+```
+
+Relevant source shape:
+
+```text
+pfDB["quests"]["data"][quest_id]["start"]["U"] = { creature_id, ... }
+pfDB["quests"]["data"][quest_id]["start"]["O"] = { gameobject_id, ... }
+pfDB["quests"]["data"][quest_id]["end"]["U"]   = { creature_id, ... }
+pfDB["quests"]["data"][quest_id]["end"]["O"]   = { gameobject_id, ... }
+
+pfDB["quests"]["enUS"][quest_id]["T"] = quest_title
+```
+
+The pfQuest runtime uses its active locale table with enUS fallback and reads quest title field `T`.
+The endpoint field families are explicit:
+
+- `start.U` -> creature giver;
+- `start.O` -> game-object giver;
+- `end.U` -> creature finisher;
+- `end.O` -> game-object finisher.
+
+Endpoint lists may contain multiple IDs. Omitted/empty supported lists mean there is no endpoint of
+that family. pfQuest also supports other start shapes such as `start.I` for an item-started quest;
+P3-T01 deliberately leaves those semantics for later work instead of coercing the item into a
+creature/game-object endpoint.
+
+Quest identity scans the union of numeric IDs in the data and enUS tables. A valid locale-only `T`
+therefore remains a canonical identity with no inferred endpoints; a row without a usable enUS title
+is explicitly reported and skipped rather than receiving a fabricated name.
+
+The deterministic base P3-T01 source revision hashes exactly the two files above. Quest title and each
+supported endpoint relation are stored as independent pfQuest provenance observations.
+
+A supported endpoint whose native creature/game-object ID is absent from the canonical P1 world is
+retained as source relation evidence and reported under `unresolved_endpoints`. P3-T01 does not invent
+a placeholder target or location and does not widen the input set solely to manufacture a relation-only
+identity.
+
+The P3 fixture under `tests/fixtures/pfquest/quests_slice/` is a tiny project-selected source-shaped
+sample covering multiple giver/finisher endpoints, a missing P1 target, a missing enUS title and an
+explicitly deferred item-start relation.
+
 The upstream pfQuest repository uses the MIT license. Tracked fixtures contain only minimal
 representative structures/records.
 
@@ -266,6 +316,19 @@ not materialize the relation into an FK-backed domain table until an identity so
 The deterministic P2 Turtle revision hashes the exact validated composition inputs above plus the
 toc/XML load-list files. A materially different local layout or unsupported indirect mutation of a bounded P2
 input table fails explicitly rather than being guessed.
+
+#### P3-T01 quest overlay observation
+
+The reviewed Turtle addon also contains quest data/localization patch inputs, including
+`db/quests-turtle.lua` and `db/enUS/quests-turtle.lua`, so the effective Turtle view can change quest
+identity and endpoint-bearing records. The same top-entry patch mechanism matters to that future
+composition.
+
+P3-T01 does **not** implement this reconciliation. D-027 explicitly states that its complete-set
+policy is limited to the P2 item fact family and is not a generic quests rule. Base pfQuest quest
+identity/endpoints are therefore implemented and validated first; a later bounded P3 task must define
+quest-specific effective-view membership/deletion semantics before Turtle is allowed to mutate the
+canonical quest slice.
 
 ### pfQuest-octo
 

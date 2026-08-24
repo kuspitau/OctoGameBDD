@@ -1,5 +1,34 @@
 # Changelog
 
+## 2026-08-24 — P3-T01 first quest identity/endpoints vertical slice
+
+- Confirmed GitHub `main` base `a515ac68b80e3ebba9f600beeccddd760e160e27` and normal routing to
+  P3-T01.
+- Inspected the pinned pfQuest quest data/runtime behavior before assigning semantics: quest title is
+  localization field `T`; `start.U/O` are creature/game-object givers and `end.U/O` are
+  creature/game-object finishers.
+- Confirmed item-started quests such as `start.I` exist and kept them outside the bounded endpoint
+  model rather than coercing them into creature/game-object relations.
+- Inspected Turtle quest patch inputs and kept effective Turtle quest reconciliation deferred because
+  D-027 is explicitly bounded to P2 and must not be generalized silently.
+- Added migration 7 with canonical `quests`, `quest_creature_endpoints`, and
+  `quest_gameobject_endpoints` while preserving native IDs and P1 template foreign keys.
+- Added deterministic base-pfQuest quest revisions over exactly `db/quests.lua` and
+  `db/enUS/quests.lua`.
+- Added provenance-aware quest-name and endpoint import with preservation of prior explicit canonical
+  selections and same-revision idempotence.
+- Missing P1 endpoint identities remain explicit provenance/`unresolved_endpoints` diagnostics; no
+  placeholder template, spawn or geography is fabricated.
+- Added `quest_by_id()` deriving endpoint spawn/zone/map context from the P1 world model without
+  persisting `quest -> zone` truth.
+- Added a reduced source-shaped quest fixture and migration/import/query tests covering U/O giver and
+  finisher endpoints, multiple endpoints, deferred `start.I`, missing title/target behavior,
+  provenance, idempotence, prior-selection preservation, geography and FK integrity.
+- Agent Level-1 focused result: `15 passed`; Python compilation succeeds. Ruff was unavailable in the
+  agent runtime and remains required in local Level 2.
+- Marked P3-T01 `IMPLEMENTED_AWAITING_LOCAL_VALIDATION` and kept it as the active router task until
+  full installed-pfQuest validation succeeds.
+
 ## 2026-08-24 — P2-T03 full-data validation and P2-T04 routing
 
 - Completed P2-T03 Level-2 validation against the configured full pfQuest/pfQuest-turtle inputs.

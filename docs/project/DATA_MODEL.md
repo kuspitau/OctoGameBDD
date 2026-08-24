@@ -434,6 +434,83 @@ remain valid provenance in that case, but the relation is not materialized into 
 `gameobject_loot`, or `vendor_items` because doing so would require inventing a target identity or
 violating a foreign key. Such members are reported in `unresolved_acquisition_targets`.
 
+## P3-T01 quest identity/endpoints schema and semantics
+
+Migration 7 establishes the first concrete quest tables:
+
+```text
+quests(quest_id, name)
+quest_creature_endpoints(quest_id, endpoint_kind, creature_id)
+quest_gameobject_endpoints(quest_id, endpoint_kind, gameobject_id)
+```
+
+Identity and relation rules:
+
+- `quests.quest_id` preserves the native quest ID;
+- `endpoint_kind` is constrained to `giver | finisher`;
+- creature and game-object endpoint relations remain distinct FK-backed domain relations rather than
+  a generic polymorphic graph;
+- endpoint targets reuse canonical P1 creature/game-object **template** identities, never spawn IDs;
+- endpoint rows do not duplicate zone/map/location columns.
+
+For the bounded base-pfQuest adapter, primitive relation evidence is:
+
+```text
+Quest Q -> giver Creature C
+Quest Q -> giver GameObject G
+Quest Q -> finisher Creature C
+Quest Q -> finisher GameObject G
+```
+
+Provenance is represented as:
+
+```text
+quest name
+  subject_kind      = quest
+  subject_key       = quest_id
+  fact_key          = name
+
+quest endpoint
+  subject_kind      = quest
+  subject_key       = quest_id
+  fact_key          = endpoint
+  fact_instance_key = <giver|finisher>:<creature|gameobject>:<native_id>
+  target             = creature/gameobject native ID
+  attributes          = {endpoint_kind: giver|finisher}
+```
+
+As in earlier domains, the first observation is selected only when no prior canonical selection
+exists. Later competing name/relation evidence remains available in the generic provenance layer.
+
+The base adapter considers numeric quest IDs from both the data and enUS localization tables. A
+locale-only quest with a valid title may therefore exist canonically with no endpoints; a quest with
+no usable title is reported/skipped rather than given a placeholder name.
+
+A source endpoint whose P1 target identity is absent is not silently discarded and is not materialized
+against a fabricated template. Its relation observation is retained and the importer reports an
+`unresolved_endpoints` diagnostic with native IDs. P3-T01 deliberately does not create relation-only
+endpoint templates from additional name sources; a later task may widen identity resolution when a
+concrete source contract justifies it.
+
+Quest endpoint geography is derived:
+
+```text
+Quest
+  -> creature/gameobject endpoint template
+       -> P1 spawn
+          -> zone
+             -> map
+```
+
+`quest_by_id()` uses direct `spawn.map_id` when present and otherwise derives map context from
+`zones.map_id`, preserving the P1 coordinate space. No `quest_zones` table or quest-level zone column
+is introduced.
+
+Item-started quest paths (`start.I`), prerequisites/follow-ups, objectives, required items, rewards and
+restrictions remain outside this first slice. Turtle quest overlays are also known to affect the
+bounded source view, but D-027 is explicitly P2-only; P3-T01 does not generalize its complete-set
+reconciliation policy without a quest-specific follow-up decision/task.
+
 ## Important relation families
 
 Use dedicated domain tables (exact names may evolve):
