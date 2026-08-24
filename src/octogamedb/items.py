@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sqlite3
 from typing import Any
 
@@ -34,6 +35,35 @@ def _selected_source(
         "source_key": str(row["source_key"]),
         "source_revision": str(row["source_revision"]),
     }
+
+
+def _selected_payload(
+    connection: sqlite3.Connection,
+    *,
+    subject_kind: str,
+    subject_key: str,
+    fact_key: str,
+    fact_instance_key: str,
+) -> dict[str, Any] | None:
+    row = connection.execute(
+        """
+        SELECT so.value_json
+        FROM observation_groups AS og
+        JOIN canonical_selections AS cs ON cs.observation_group_id = og.id
+        JOIN source_observations AS so ON so.id = cs.observation_id
+        WHERE og.subject_kind = ?
+          AND og.subject_key = ?
+          AND og.fact_key = ?
+          AND og.fact_instance_key = ?
+        """,
+        (subject_kind, subject_key, fact_key, fact_instance_key),
+    ).fetchone()
+    if row is None:
+        return None
+    payload = json.loads(str(row["value_json"]))
+    if not isinstance(payload, dict):
+        raise TypeError("selected relation payload must be an object")
+    return payload
 
 
 def _location_payload(
@@ -74,6 +104,30 @@ def _location_payload(
     }
 
 
+def _vendor_max_count(
+    connection: sqlite3.Connection,
+    *,
+    item_id: int,
+    vendor_id: int,
+) -> int:
+    payload = _selected_payload(
+        connection,
+        subject_kind="item",
+        subject_key=str(item_id),
+        fact_key="vendor_source",
+        fact_instance_key=f"creature:{vendor_id}",
+    )
+    if payload is None:
+        raise RuntimeError("canonical vendor relation has no selected provenance payload")
+    target = payload.get("target", {})
+    if target.get("kind") != "creature" or str(target.get("key")) != str(vendor_id):
+        raise RuntimeError("selected vendor relation target does not match canonical vendor")
+    max_count = payload.get("attributes", {}).get("max_count")
+    if isinstance(max_count, bool) or not isinstance(max_count, int) or max_count < 0:
+        raise TypeError("selected vendor relation has no non-negative integer max_count")
+    return max_count
+
+
 def _acquisition_path(
     connection: sqlite3.Connection,
     row: sqlite3.Row,
@@ -85,6 +139,10 @@ def _acquisition_path(
     reference_loot_id = (
         None if row["reference_loot_id"] is None else int(row["reference_loot_id"])
     )
+    chance_percent = (
+        None if row["chance_percent"] is None else float(row["chance_percent"])
+    )
+    vendor_max_count = None
 
     if path_kind == "direct":
         relation_source = _selected_source(
@@ -110,13 +168,28 @@ def _acquisition_path(
             fact_key="loot_source_member",
             fact_instance_key=f"{source_kind}:{source_id}",
         )
+    elif path_kind == "vendor" and source_kind == "creature":
+        relation_source = _selected_source(
+            connection,
+            subject_kind="item",
+            subject_key=str(item_id),
+            fact_key="vendor_source",
+            fact_instance_key=f"creature:{source_id}",
+        )
+        membership_source = None
+        vendor_max_count = _vendor_max_count(
+            connection,
+            item_id=item_id,
+            vendor_id=source_id,
+        )
     else:
         raise RuntimeError("invalid item acquisition path row")
 
     return {
         "path_kind": path_kind,
-        "chance_percent": float(row["chance_percent"]),
+        "chance_percent": chance_percent,
         "reference_loot_id": reference_loot_id,
+        "vendor_max_count": vendor_max_count,
         "relation_source": relation_source,
         "reference_membership_source": membership_source,
     }
@@ -242,8 +315,37 @@ def _query_source_rows(connection: sqlite3.Connection, item_id: int) -> list[sql
         LEFT JOIN zones AS z ON z.zone_id = gs.zone_id
         LEFT JOIN maps AS m ON m.map_id = COALESCE(gs.map_id, z.map_id)
         WHERE i.item_id = ?
+
+        UNION ALL
+
+        SELECT
+            i.item_id,
+            'vendor' AS path_kind,
+            NULL AS reference_loot_id,
+            'creature' AS source_kind,
+            c.creature_id AS source_id,
+            c.name AS source_name,
+            NULL AS chance_percent,
+            cs.spawn_key,
+            cs.coordinate_space,
+            cs.x,
+            cs.y,
+            cs.z,
+            cs.orientation,
+            cs.respawn_seconds,
+            z.zone_id,
+            z.name AS zone_name,
+            COALESCE(cs.map_id, z.map_id) AS map_id,
+            m.name AS map_name
+        FROM items AS i
+        JOIN vendor_items AS vi ON vi.item_id = i.item_id
+        JOIN creatures AS c ON c.creature_id = vi.vendor_creature_id
+        LEFT JOIN creature_spawns AS cs ON cs.creature_id = c.creature_id
+        LEFT JOIN zones AS z ON z.zone_id = cs.zone_id
+        LEFT JOIN maps AS m ON m.map_id = COALESCE(cs.map_id, z.map_id)
+        WHERE i.item_id = ?
         """,
-        (item_id, item_id, item_id, item_id),
+        (item_id, item_id, item_id, item_id, item_id),
     ).fetchall()
 
 
@@ -251,16 +353,17 @@ def find_item_sources(
     connection: sqlite3.Connection,
     item_id: int,
 ) -> list[dict[str, Any]]:
-    """Return one item and its direct/reference creature/game-object acquisition sources.
+    """Return one item and its canonical loot/reference/vendor acquisition sources.
 
     Reference expansion is a derived query over explicit ``item -> reference -> source`` canonical
-    relations. Direct and reference paths that reach the same source/spawn are folded into one source
-    row with multiple ``acquisition_paths`` so callers do not double-count locations. No probability
-    is mathematically combined: if overlapping paths carry different source-listed chances, the
-    source-level ``chance_percent`` is ``None`` and each path retains its own chance.
+    relations. Vendor paths remain distinct from loot paths and do not carry a drop chance. Paths
+    that reach the same source/spawn are folded into one source row with multiple
+    ``acquisition_paths`` so callers do not double-count locations.
 
-    Geography remains derived from P1 spawn/zone/map relations. A source without a canonical spawn
-    remains visible with null location fields.
+    No probability is mathematically combined: if overlapping loot paths carry different
+    source-listed chances, the source-level ``chance_percent`` is ``None`` and each path retains its
+    own chance. Geography remains derived from P1 spawn/zone/map relations. A source without a
+    canonical spawn remains visible with null location fields.
     """
 
     item = connection.execute(
@@ -271,7 +374,10 @@ def find_item_sources(
         return []
 
     grouped: dict[tuple[str, int, str | None], dict[str, Any]] = {}
-    seen_paths: dict[tuple[str, int, str | None], set[tuple[str, int | None, float]]] = {}
+    seen_paths: dict[
+        tuple[str, int, str | None],
+        set[tuple[str, int | None, float | None, int | None]],
+    ] = {}
 
     for row in _query_source_rows(connection, item_id):
         source_kind = str(row["source_kind"])
@@ -287,23 +393,30 @@ def find_item_sources(
         path_identity = (
             str(path["path_kind"]),
             path["reference_loot_id"],
-            float(path["chance_percent"]),
+            path["chance_percent"],
+            path["vendor_max_count"],
         )
         if path_identity not in seen_paths[key]:
             grouped[key]["acquisition_paths"].append(path)
             seen_paths[key].add(path_identity)
 
     sources = list(grouped.values())
+    path_order = {"direct": 0, "reference": 1, "vendor": 2}
     for source in sources:
         source["acquisition_paths"].sort(
             key=lambda path: (
-                0 if path["path_kind"] == "direct" else 1,
+                path_order[str(path["path_kind"])],
                 -1 if path["reference_loot_id"] is None else int(path["reference_loot_id"]),
-                float(path["chance_percent"]),
+                -1.0 if path["chance_percent"] is None else float(path["chance_percent"]),
+                -1 if path["vendor_max_count"] is None else int(path["vendor_max_count"]),
             )
         )
         distinct_chances = sorted(
-            {float(path["chance_percent"]) for path in source["acquisition_paths"]}
+            {
+                float(path["chance_percent"])
+                for path in source["acquisition_paths"]
+                if path["chance_percent"] is not None
+            }
         )
         source["chance_percent"] = distinct_chances[0] if len(distinct_chances) == 1 else None
         source["relation_source"] = (

@@ -1,4 +1,4 @@
-"""pfQuest item/direct/reference-loot importer for the bounded P2 slice."""
+"""pfQuest item/loot/vendor importer for the bounded P2 acquisition slice."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ from octogamedb.importers.pfquest_world import (
 )
 from octogamedb.importers.summary import ImportSummary
 
-IMPORTER_VERSION = "pfquest-items/3"
+IMPORTER_VERSION = "pfquest-items/4"
 _ITEM_FILES = (
     "db/items.lua",
     "db/refloot.lua",
@@ -33,7 +33,7 @@ _ITEM_FILES = (
 
 
 class PfQuestItemImportError(RuntimeError):
-    """Raised when item evidence cannot be materialized without inventing source identity."""
+    """Raised when item acquisition evidence lacks a materializable source identity."""
 
 
 @dataclass(frozen=True)
@@ -50,7 +50,7 @@ class PfQuestItem:
     creature_loot: tuple[tuple[int, float], ...]
     gameobject_loot: tuple[tuple[int, float], ...]
     reference_loot: tuple[tuple[int, float], ...]
-    vendor_count: int
+    vendors: tuple[tuple[int, int], ...]
 
 
 @dataclass(frozen=True)
@@ -103,6 +103,34 @@ def _numeric_links(value: Any, *, label: str) -> tuple[tuple[int, float], ...]:
     return tuple(links)
 
 
+def _numeric_vendor_links(value: Any, *, label: str) -> tuple[tuple[int, int], ...]:
+    """Parse pfQuest ``V`` as ``vendor creature ID -> source maxcount``.
+
+    At the pinned pfQuest revision the extractor copies ``npc_vendor.maxcount`` (and vendor-template
+    ``maxcount``) directly into ``V``. The value is preserved without interpreting zero or positive
+    values as a project-level stock/restock policy.
+    """
+
+    if value is None:
+        return ()
+    if not isinstance(value, dict):
+        raise PfQuestParseError(f"{label} must be a Lua table")
+
+    links: list[tuple[int, int]] = []
+    for vendor_id in sorted(key for key in value if isinstance(key, int)):
+        max_count = value[vendor_id]
+        if isinstance(max_count, bool):
+            raise PfQuestParseError(f"{label}[{vendor_id}] maxcount must be an integer")
+        if isinstance(max_count, float) and max_count.is_integer():
+            max_count = int(max_count)
+        if not isinstance(max_count, int):
+            raise PfQuestParseError(f"{label}[{vendor_id}] maxcount must be an integer")
+        if max_count < 0:
+            raise PfQuestParseError(f"{label}[{vendor_id}] maxcount must be non-negative")
+        links.append((int(vendor_id), int(max_count)))
+    return tuple(links)
+
+
 def _numeric_memberships(value: Any, *, label: str) -> tuple[tuple[int, float], ...]:
     """Parse a pfQuest refloot U/O membership map.
 
@@ -122,14 +150,6 @@ def _numeric_memberships(value: Any, *, label: str) -> tuple[tuple[int, float], 
             raise PfQuestParseError(f"{label}[{source_id}] membership value must be numeric")
         members.append((int(source_id), float(marker)))
     return tuple(members)
-
-
-def _count_numeric_members(value: Any, *, label: str) -> int:
-    if value is None:
-        return 0
-    if not isinstance(value, dict):
-        raise PfQuestParseError(f"{label} must be a Lua table")
-    return sum(1 for key in value if isinstance(key, int))
 
 
 def _parse_reference_definition(reference_id: int, value: Any) -> PfQuestReferenceLoot:
@@ -156,7 +176,7 @@ def _parse_reference_definition(reference_id: int, value: Any) -> PfQuestReferen
 
 
 def load_pfquest_item_slice(source_root: str | Path) -> PfQuestItemSlice:
-    """Load item names, direct loot, and one-level pfQuest reference-loot relations."""
+    """Load item names plus direct, reference-loot, and vendor acquisition relations."""
 
     root = Path(source_root)
     item_data = parse_pfquest_assignment(
@@ -206,7 +226,7 @@ def load_pfquest_item_slice(source_root: str | Path) -> PfQuestItemSlice:
                 creature_loot=_numeric_links(record.get("U"), label=f"item[{item_id}].U"),
                 gameobject_loot=_numeric_links(record.get("O"), label=f"item[{item_id}].O"),
                 reference_loot=_numeric_links(record.get("R"), label=f"item[{item_id}].R"),
-                vendor_count=_count_numeric_members(record.get("V"), label=f"item[{item_id}].V"),
+                vendors=_numeric_vendor_links(record.get("V"), label=f"item[{item_id}].V"),
             )
         )
 
@@ -225,6 +245,7 @@ def load_pfquest_item_slice(source_root: str | Path) -> PfQuestItemSlice:
     reference_by_id = {entry.reference_loot_id: entry for entry in reference_loot}
     direct_creatures = {source_id for item in items for source_id, _ in item.creature_loot}
     direct_gameobjects = {source_id for item in items for source_id, _ in item.gameobject_loot}
+    vendor_creatures = {vendor_id for item in items for vendor_id, _ in item.vendors}
     referenced_creatures = {
         source_id
         for reference_id in referenced_reference_ids
@@ -238,7 +259,7 @@ def load_pfquest_item_slice(source_root: str | Path) -> PfQuestItemSlice:
         for source_id, _ in definition.gameobject_memberships
     }
 
-    all_creature_ids = sorted(direct_creatures | referenced_creatures)
+    all_creature_ids = sorted(direct_creatures | referenced_creatures | vendor_creatures)
     all_gameobject_ids = sorted(direct_gameobjects | referenced_gameobjects)
     creature_names = tuple(
         (source_id, name.strip())
@@ -428,6 +449,47 @@ def _observe_reference_relation(
     return float(chance)
 
 
+def _observe_vendor_relation(
+    connection: sqlite3.Connection,
+    *,
+    batch_id: int,
+    item_id: int,
+    vendor_id: int,
+    max_count: int,
+) -> int:
+    observation_id = record_relation_observation(
+        connection,
+        subject_kind="item",
+        subject_key=item_id,
+        fact_key="vendor_source",
+        import_batch_id=batch_id,
+        target_kind="creature",
+        target_key=vendor_id,
+        relation_instance_key=f"creature:{vendor_id}",
+        attributes={"max_count": max_count},
+        source_record_type="item_vendor",
+        raw_identifier=f"{item_id}:V:{vendor_id}",
+    )
+    payload = _selected_value(
+        connection,
+        observation_id=observation_id,
+        selection_reason=(
+            "Selected automatically because this item/vendor relation had no prior selection."
+        ),
+    )
+    target = payload.get("target", {})
+    if target.get("kind") != "creature" or str(target.get("key")) != str(vendor_id):
+        raise RuntimeError("selected vendor relation target does not match its relation instance")
+    selected_max_count = payload.get("attributes", {}).get("max_count")
+    if (
+        isinstance(selected_max_count, bool)
+        or not isinstance(selected_max_count, int)
+        or selected_max_count < 0
+    ):
+        raise TypeError("selected vendor relation has no non-negative integer max_count")
+    return selected_max_count
+
+
 def _observe_reference_membership(
     connection: sqlite3.Connection,
     *,
@@ -469,6 +531,10 @@ def _direct_target_ids(slice_data: PfQuestItemSlice) -> tuple[set[int], set[int]
     )
 
 
+def _vendor_target_ids(slice_data: PfQuestItemSlice) -> set[int]:
+    return {vendor_id for item in slice_data.items for vendor_id, _ in item.vendors}
+
+
 def _reference_target_ids(slice_data: PfQuestItemSlice) -> tuple[set[int], set[int]]:
     return (
         {
@@ -507,8 +573,8 @@ def _observe_source_name(
             connection,
             observation_id=observation_id,
             selection_reason=(
-                "Selected automatically because this loot-source template name had no prior "
-                "canonical selection."
+                "Selected automatically because this acquisition-source template name had no "
+                "prior canonical selection."
             ),
         )
     )
@@ -520,23 +586,25 @@ def _materialize_relation_only_templates(
     batch_id: int,
     slice_data: PfQuestItemSlice,
 ) -> tuple[int, int, set[int], set[int]]:
-    """Create named source templates needed by direct/reference loot without inventing spawns.
+    """Create named acquisition-source templates without inventing spawns.
 
-    Missing identity is fatal for a direct P2-T01 relation. A reference-only member can instead stay
-    as provenance evidence and is reported as unresolved, because flattening or inventing a name
-    would lose source semantics.
+    Missing identity is fatal for direct P2-T01 loot and P2-T03 vendor relations. A reference-only
+    member can instead stay as provenance evidence and is reported as unresolved, because flattening
+    or inventing a name would lose source semantics.
     """
 
     direct_creatures, direct_gameobjects = _direct_target_ids(slice_data)
+    vendor_creatures = _vendor_target_ids(slice_data)
     ref_creatures, ref_gameobjects = _reference_target_ids(slice_data)
-    all_creatures = direct_creatures | ref_creatures
+    all_creatures = direct_creatures | vendor_creatures | ref_creatures
     all_gameobjects = direct_gameobjects | ref_gameobjects
 
     existing_creatures = {
         int(row[0]) for row in connection.execute("SELECT creature_id FROM creatures").fetchall()
     }
     existing_gameobjects = {
-        int(row[0]) for row in connection.execute("SELECT gameobject_id FROM gameobjects").fetchall()
+        int(row[0])
+        for row in connection.execute("SELECT gameobject_id FROM gameobjects").fetchall()
     }
     missing_creatures = sorted(all_creatures - existing_creatures)
     missing_gameobjects = sorted(all_gameobjects - existing_gameobjects)
@@ -548,16 +616,26 @@ def _materialize_relation_only_templates(
         for source_id in missing_creatures
         if source_id in direct_creatures and source_id not in creature_names
     ]
+    unresolved_vendor_creatures = [
+        source_id
+        for source_id in missing_creatures
+        if source_id in vendor_creatures and source_id not in creature_names
+    ]
     unresolved_direct_gameobjects = [
         source_id
         for source_id in missing_gameobjects
         if source_id in direct_gameobjects and source_id not in gameobject_names
     ]
-    if unresolved_direct_creatures or unresolved_direct_gameobjects:
+    if (
+        unresolved_direct_creatures
+        or unresolved_vendor_creatures
+        or unresolved_direct_gameobjects
+    ):
         raise PfQuestItemImportError(
-            "pfQuest direct-loot targets are absent from the canonical P1 world and have no "
+            "pfQuest direct acquisition targets are absent from the canonical P1 world and have no "
             "pfQuest enUS identity; "
-            f"missing creature IDs={unresolved_direct_creatures}, "
+            f"missing loot creature IDs={unresolved_direct_creatures}, "
+            f"missing vendor creature IDs={unresolved_vendor_creatures}, "
             f"missing gameobject IDs={unresolved_direct_gameobjects}"
         )
 
@@ -633,7 +711,7 @@ def import_pfquest_items(
     source_root: str | Path,
     source_revision: str,
 ) -> ImportSummary:
-    """Import pfQuest item identity, direct loot, and one-level reference loot with provenance."""
+    """Import pfQuest item identity and bounded loot/reference/vendor acquisition evidence."""
 
     source_revision = source_revision.strip()
     if not source_revision:
@@ -775,7 +853,7 @@ def import_pfquest_items(
         gameobject_links = 0
         reference_links = 0
         resolved_reference_links = 0
-        deferred_vendor_links = 0
+        vendor_links = 0
 
         for item in slice_data.items:
             name = _observe_name(connection, batch_id=batch_id, item=item)
@@ -893,7 +971,31 @@ def import_pfquest_items(
                 ):
                     resolved_reference_links += 1
 
-            deferred_vendor_links += item.vendor_count
+            for vendor_id, max_count in item.vendors:
+                _observe_vendor_relation(
+                    connection,
+                    batch_id=batch_id,
+                    item_id=item.item_id,
+                    vendor_id=vendor_id,
+                    max_count=max_count,
+                )
+                existing = connection.execute(
+                    """
+                    SELECT 1 FROM vendor_items
+                    WHERE vendor_creature_id = ? AND item_id = ?
+                    """,
+                    (vendor_id, item.item_id),
+                ).fetchone()
+                connection.execute(
+                    """
+                    INSERT OR IGNORE INTO vendor_items(vendor_creature_id, item_id)
+                    VALUES (?, ?)
+                    """,
+                    (vendor_id, item.item_id),
+                )
+                if existing is None:
+                    inserted += 1
+                vendor_links += 1
 
         unresolved.sort(
             key=lambda issue: (
@@ -914,7 +1016,8 @@ def import_pfquest_items(
             "reference_creature_memberships": reference_creature_memberships,
             "reference_gameobject_memberships": reference_gameobject_memberships,
             "unresolved_reference_loot": unresolved,
-            "deferred_vendor_links": deferred_vendor_links,
+            "vendor_links": vendor_links,
+            "deferred_vendor_links": 0,
             "items_without_enus_name": slice_data.rows_skipped,
             "relation_only_creature_templates": relation_only_creatures,
             "relation_only_gameobject_templates": relation_only_gameobjects,

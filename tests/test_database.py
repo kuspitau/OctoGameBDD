@@ -10,18 +10,15 @@ from octogamedb.db import Migration, apply_migrations, connect_database, get_app
 
 def test_fresh_initialization_creates_foundation_schema(tmp_path):
     db_path = tmp_path / "nested" / "octogamedb.sqlite3"
-
     with connect_database(db_path) as connection:
         applied = apply_migrations(connection)
-
-        assert [migration.version for migration in applied] == [1, 2, 3, 4, 5]
+        assert [migration.version for migration in applied] == [1, 2, 3, 4, 5, 6]
         tables = {
             row["name"]
             for row in connection.execute(
                 "SELECT name FROM sqlite_master WHERE type = 'table'"
             ).fetchall()
         }
-
     assert db_path.exists()
     assert {
         "schema_migrations",
@@ -44,14 +41,14 @@ def test_fresh_initialization_creates_foundation_schema(tmp_path):
         "item_reference_loot",
         "reference_loot_creatures",
         "reference_loot_gameobjects",
+        "vendor_items",
     } <= tables
 
 
 def test_repeat_initialization_is_idempotent(tmp_path):
     db_path = tmp_path / "octogamedb.sqlite3"
-
     with connect_database(db_path) as connection:
-        assert len(apply_migrations(connection)) == 5
+        assert len(apply_migrations(connection)) == 6
         assert apply_migrations(connection) == ()
         assert get_applied_migrations(connection) == (
             (1, "0001_import_metadata.sql"),
@@ -59,17 +56,15 @@ def test_repeat_initialization_is_idempotent(tmp_path):
             (3, "0003_world_foundation.sql"),
             (4, "0004_items_acquisition.sql"),
             (5, "0005_reference_loot.sql"),
+            (6, "0006_vendor_items.sql"),
         )
 
 
 def test_foreign_keys_are_enforced(tmp_path):
     db_path = tmp_path / "octogamedb.sqlite3"
-
     with connect_database(db_path) as connection:
         apply_migrations(connection)
-
         assert connection.execute("PRAGMA foreign_keys").fetchone()[0] == 1
-
         with pytest.raises(sqlite3.IntegrityError):
             connection.execute(
                 """
@@ -84,11 +79,17 @@ def test_foreign_keys_are_enforced(tmp_path):
                 VALUES (1, 1, 10)
                 """
             )
+        with pytest.raises(sqlite3.IntegrityError):
+            connection.execute(
+                """
+                INSERT INTO vendor_items(vendor_creature_id, item_id)
+                VALUES (1, 1)
+                """
+            )
 
 
 def test_source_and_import_batch_constraints(tmp_path):
     db_path = tmp_path / "octogamedb.sqlite3"
-
     with connect_database(db_path) as connection:
         apply_migrations(connection)
         cursor = connection.execute(
@@ -98,7 +99,6 @@ def test_source_and_import_batch_constraints(tmp_path):
             """
         )
         source_id = cursor.lastrowid
-
         with pytest.raises(sqlite3.IntegrityError):
             connection.execute(
                 """
@@ -106,7 +106,6 @@ def test_source_and_import_batch_constraints(tmp_path):
                 VALUES ('pfquest', 'Duplicate', 'lua')
                 """
             )
-
         with pytest.raises(sqlite3.IntegrityError):
             connection.execute(
                 """
@@ -117,7 +116,6 @@ def test_source_and_import_batch_constraints(tmp_path):
                 """,
                 (source_id,),
             )
-
         with pytest.raises(sqlite3.IntegrityError):
             connection.execute(
                 """
@@ -126,7 +124,6 @@ def test_source_and_import_batch_constraints(tmp_path):
                 """,
                 (source_id,),
             )
-
         connection.execute(
             """
             INSERT INTO import_batches(
@@ -145,7 +142,6 @@ def test_source_and_import_batch_constraints(tmp_path):
 
 def test_failed_transaction_is_rolled_back(tmp_path):
     db_path = tmp_path / "octogamedb.sqlite3"
-
     with pytest.raises(RuntimeError), connect_database(db_path) as connection:
         apply_migrations(connection)
         connection.execute(
@@ -155,7 +151,6 @@ def test_failed_transaction_is_rolled_back(tmp_path):
             """
         )
         raise RuntimeError("force rollback")
-
     with connect_database(db_path) as connection:
         assert (
             connection.execute(
@@ -173,18 +168,15 @@ def test_failed_migration_is_not_recorded(tmp_path, monkeypatch):
         sql="CREATE TABLE partial_table(id INTEGER PRIMARY KEY); INVALID SQL;",
     )
     monkeypatch.setattr(migration_module, "discover_migrations", lambda: (bad_migration,))
-
     with connect_database(db_path) as connection:
         with pytest.raises(sqlite3.OperationalError):
             apply_migrations(connection)
-
         recorded = connection.execute(
             "SELECT COUNT(*) FROM schema_migrations WHERE version = 1"
         ).fetchone()[0]
         partial_table = connection.execute(
             "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'partial_table'"
         ).fetchone()[0]
-
         assert recorded == 0
         assert partial_table == 0
 
@@ -192,22 +184,21 @@ def test_failed_migration_is_not_recorded(tmp_path, monkeypatch):
 def test_existing_version_one_database_upgrades_to_current_schema(tmp_path, monkeypatch):
     db_path = tmp_path / "upgrade.sqlite3"
     all_migrations = migration_module.discover_migrations()
-    assert [migration.version for migration in all_migrations] == [1, 2, 3, 4, 5]
-
+    assert [migration.version for migration in all_migrations] == [1, 2, 3, 4, 5, 6]
     monkeypatch.setattr(migration_module, "discover_migrations", lambda: (all_migrations[0],))
     with connect_database(db_path) as connection:
         assert [migration.version for migration in apply_migrations(connection)] == [1]
         assert get_applied_migrations(connection) == ((1, "0001_import_metadata.sql"),)
-
     monkeypatch.setattr(migration_module, "discover_migrations", lambda: all_migrations)
     with connect_database(db_path) as connection:
-        assert [migration.version for migration in apply_migrations(connection)] == [2, 3, 4, 5]
+        assert [migration.version for migration in apply_migrations(connection)] == [2, 3, 4, 5, 6]
         assert get_applied_migrations(connection) == (
             (1, "0001_import_metadata.sql"),
             (2, "0002_provenance_primitives.sql"),
             (3, "0003_world_foundation.sql"),
             (4, "0004_items_acquisition.sql"),
             (5, "0005_reference_loot.sql"),
+            (6, "0006_vendor_items.sql"),
         )
         for table in (
             "source_observations",
@@ -215,6 +206,7 @@ def test_existing_version_one_database_upgrades_to_current_schema(tmp_path, monk
             "creature_loot",
             "loot_references",
             "item_reference_loot",
+            "vendor_items",
         ):
             assert connection.execute(
                 "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = ?",
@@ -222,19 +214,42 @@ def test_existing_version_one_database_upgrades_to_current_schema(tmp_path, monk
             ).fetchone()[0] == 1
 
 
-def test_existing_version_four_database_upgrades_reference_loot_schema(tmp_path, monkeypatch):
+def test_existing_version_four_database_upgrades_reference_and_vendor_schema(
+    tmp_path, monkeypatch
+):
     db_path = tmp_path / "upgrade-v4.sqlite3"
     all_migrations = migration_module.discover_migrations()
-
     monkeypatch.setattr(migration_module, "discover_migrations", lambda: all_migrations[:4])
     with connect_database(db_path) as connection:
         assert [migration.version for migration in apply_migrations(connection)] == [1, 2, 3, 4]
-
     monkeypatch.setattr(migration_module, "discover_migrations", lambda: all_migrations)
     with connect_database(db_path) as connection:
-        assert [migration.version for migration in apply_migrations(connection)] == [5]
+        assert [migration.version for migration in apply_migrations(connection)] == [5, 6]
         assert connection.execute(
             "SELECT COUNT(*) FROM sqlite_master "
             "WHERE type = 'table' AND name = 'reference_loot_creatures'"
+        ).fetchone()[0] == 1
+        assert connection.execute(
+            "SELECT COUNT(*) FROM sqlite_master "
+            "WHERE type = 'table' AND name = 'vendor_items'"
+        ).fetchone()[0] == 1
+        assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
+
+
+def test_existing_version_five_database_upgrades_vendor_schema(tmp_path, monkeypatch):
+    db_path = tmp_path / "upgrade-v5.sqlite3"
+    all_migrations = migration_module.discover_migrations()
+    monkeypatch.setattr(migration_module, "discover_migrations", lambda: all_migrations[:5])
+    with connect_database(db_path) as connection:
+        assert [migration.version for migration in apply_migrations(connection)] == [1, 2, 3, 4, 5]
+        assert connection.execute(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'vendor_items'"
+        ).fetchone()[0] == 0
+    monkeypatch.setattr(migration_module, "discover_migrations", lambda: all_migrations)
+    with connect_database(db_path) as connection:
+        assert [migration.version for migration in apply_migrations(connection)] == [6]
+        assert get_applied_migrations(connection)[-1] == (6, "0006_vendor_items.sql")
+        assert connection.execute(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'vendor_items'"
         ).fetchone()[0] == 1
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []

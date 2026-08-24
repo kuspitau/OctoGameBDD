@@ -195,17 +195,42 @@ clean foreign-key check, and a real item `647` / reference `30082` query with `9
 
 ### P2-T03 — pfQuest vendor acquisition (`V`)
 
+**Validated.**
+
+P2-T03 resolves the bounded base-pfQuest `V` family with an explicit vendor relation:
+
+- migration 6 adds `vendor_items(vendor_creature_id, item_id)`;
+- primary-source inspection establishes `V[vendor_creature_id] = npc_vendor.maxcount` (including
+  vendor-template expansion to concrete creature IDs);
+- the canonical relation records item/vendor acquisition while exact source `maxcount` is preserved
+  in separate `vendor_source` provenance;
+- named vendors absent from the P1 static materialization may exist as relation-only creature
+  templates without invented spawns/geography;
+- unidentified vendor targets fail closed;
+- `item-sources` exposes vendor paths independently from direct/reference loot and derives geography
+  through P1 creature spawns;
+- same-revision import is idempotent.
+
+Full local validation reproduced exactly `13,860` vendor relations and `13,860` independent pfQuest
+vendor provenance observations, with zero foreign-key violations and zero canonical changes on the
+second same-revision import. A real located path was resolved for item `85` through vendor creature
+`2113`, preserving `vendor_max_count = 0` without inventing additional stock semantics.
+
+### P2-T04 — pfQuest-turtle effective item/acquisition reconciliation
+
 **Next bounded task.**
 
-Resolve the `V` vendor family that remains deferred after P2-T02. P2-T01 full-data validation
-observed `13,860` vendor relations. The task must establish exact pfQuest vendor semantics from
-primary source before choosing schema/field meanings, then add the smallest explicit
-provenance-preserving item/vendor relation and query behavior.
+Reconcile the P2-T03-supported item/acquisition facts against the active `pfQuest + pfQuest-turtle`
+effective item view before widening the item schema. The task is restricted to item identity/name and
+already-supported `U`/`O`/`R`/`V` acquisition semantics.
 
-P2-T03 must reuse P1 vendor creature identity/geography where available, preserve unlocated but
-valid relation-only identity without inventing spawns, remain idempotent, and keep loot/reference
-semantics unchanged. Richer price/stock/economics fields may remain deferred if they are separable
-from the vendor relationship.
+The task must verify Turtle item patch/load semantics from primary source, preserve base and Turtle
+provenance separately, and handle whole-entry replacement/deletion without leaving stale canonical
+relations. D-026 is currently bounded to P1 world reconciliation, so any extension of effective-view
+deletion/complete-set semantics to items must be made explicitly rather than assumed.
+
+Richer item stats/effects/requirements, new loot families, generalized economics, broad Octo item
+overlay reconciliation, P6 scaling and UI remain deferred.
 
 ## P3 — Quests
 

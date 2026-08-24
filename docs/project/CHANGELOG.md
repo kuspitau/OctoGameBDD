@@ -1,5 +1,46 @@
 # Changelog
 
+## 2026-08-24 — P2-T03 full-data validation and P2-T04 routing
+
+- Completed P2-T03 Level-2 validation against the configured full pfQuest/pfQuest-turtle inputs.
+- Confirmed editable dev install succeeds and the full repository suite passes with `67` tests.
+- Confirmed Ruff reports no findings and `compileall` succeeds.
+- Rebuilt a fresh bounded P1 base + active Turtle world reconciliation before importing P2-T03.
+- Validated the exact item-source revision
+  `sha256:698789b81001aeb68206d050c66acf9dd12f601dd02817081a33207d0f213b43`.
+- Reproduced exactly `13,860` canonical vendor relations and `13,860` independent pfQuest
+  `vendor_source` provenance observations.
+- Confirmed same-revision second item import has `rows_inserted = 0` and `rows_updated = 0`.
+- Confirmed `PRAGMA foreign_key_check` reports zero violations.
+- Automated real-data acceptance selected item `85` / vendor creature `2113` and returned a `vendor`
+  path with `vendor_max_count = 0`, null drop chance, and selected pfQuest relation provenance.
+- Final automated acceptance result: `P2-T03 FINAL CHECKS PASSED`.
+- Marked P2-T03 `VALIDATED` and routed the next bounded task to P2-T04 effective Turtle
+  item/acquisition reconciliation.
+
+## 2026-08-24 — P2-T03 pfQuest vendor acquisition
+
+- Confirmed validated P2-T02 is present on GitHub `main` at
+  `f7af9689f726faaf62ea1035bf50984740557a71` and advanced normal routing to P2-T03.
+- Inspected the pinned pfQuest revision `104f35678ca39ab1fb78b655f815cc7016f5e0c8` before assigning
+  `V` field semantics.
+- Established from `toolbox/extractor.lua` that `V[vendor_creature_id]` copies
+  `npc_vendor.maxcount` / vendor-template `maxcount`; pfQuest's browser consumes it as a `Sold by`
+  relation and displays non-zero values as a count annotation.
+- Added migration 6 with explicit `vendor_items(vendor_creature_id, item_id)` canonical relations.
+- Preserved source `maxcount` separately in `item.vendor_source` relation provenance instead of
+  inventing price, drop-rate, restock, or generalized stock semantics.
+- Extended the pfQuest item importer to materialize named relation-only vendor creature templates
+  without invented spawns and to fail closed when vendor identity cannot be established.
+- Extended `find_item_sources()` and `item-sources` with distinct vendor acquisition paths and P1
+  derived geography while keeping direct/reference loot semantics unchanged.
+- Added fixture and migration coverage for exact `V` parsing, FK constraints, v5 -> v6 upgrade,
+  vendor provenance, idempotence, located/unlocated vendors, missing vendor identity, coexistence
+  with loot/reference paths, and CLI output.
+- Agent Level-1 focused result: `23 passed`; `compileall` succeeds. Ruff was unavailable in the agent
+  runtime and remains required in local Level 2.
+- Marked P2-T03 `IMPLEMENTED_AWAITING_LOCAL_VALIDATION`.
+
 ## 2026-08-24 — P2-T02 full-data validation and P2-T03 routing
 
 - Completed P2-T02 Level-2 validation against the configured full pfQuest/pfQuest-turtle inputs.
@@ -146,7 +187,7 @@
 ## 2026-08-24 — P0-T03 fixture/golden-case and audit skeleton
 
 - Confirmed P0-T02 as validated after its implementation reached GitHub `main` at commit `587146435e44960aaebf7105979a79516102f26e`.
-- Formalized fixture conventions separating source-shaped importer samples from synthetic project-owned golden cases.
+- Formalized fixture conventions separating source-shaped parser samples from synthetic semantic golden cases.
 - Added an initial provenance/audit golden case containing a resolved scalar conflict, an unresolved relation conflict, and legitimate multi-valued relations.
 - Added generic source/trace/conflict/coverage audit functions.
 - Added corresponding CLI commands with human-readable and deterministic JSON modes.

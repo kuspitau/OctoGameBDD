@@ -39,6 +39,7 @@ def _seed_world(
         (2001, "Test Wolf"),
         (2002, "Test Boar"),
         (2003, "Test Bear"),
+        (4001, "Test Vendor"),
     ):
         if creature_id != omit_creature:
             connection.execute(
@@ -53,6 +54,7 @@ def _seed_world(
     for spawn_key, creature_id, x, y in (
         ("creature-2001-a", 2001, 40.0, 50.0),
         ("creature-2003-a", 2003, 45.0, 55.0),
+        ("creature-4001-a", 4001, 35.0, 65.0),
     ):
         if creature_id != omit_creature:
             connection.execute(
@@ -99,6 +101,8 @@ def _seed_world(
         positions.append(("creature_spawn", "creature-2001-a", 40.0, 50.0))
     if omit_creature != 2003:
         positions.append(("creature_spawn", "creature-2003-a", 45.0, 55.0))
+    if omit_creature != 4001:
+        positions.append(("creature_spawn", "creature-4001-a", 35.0, 65.0))
     if omit_gameobject != 3001:
         positions.append(("gameobject_spawn", "gameobject-3001-a", 60.0, 70.0))
     for subject_kind, spawn_key, x, y in positions:
@@ -140,7 +144,7 @@ def _seed_world(
     )
 
 
-def test_pfquest_item_fixture_parses_direct_and_reference_relations():
+def test_pfquest_item_fixture_parses_direct_reference_and_vendor_relations():
     slice_data = load_pfquest_item_slice(FIXTURE_ROOT)
 
     assert slice_data.rows_read == 4
@@ -150,7 +154,7 @@ def test_pfquest_item_fixture_parses_direct_and_reference_relations():
     assert first.creature_loot == ((2001, 12.5),)
     assert first.gameobject_loot == ((3001, 25.0),)
     assert first.reference_loot == ((9001, 7.5),)
-    assert first.vendor_count == 1
+    assert first.vendors == ((4001, 0),)
     assert slice_data.missing_reference_ids == ()
     assert len(slice_data.reference_loot) == 1
     reference = slice_data.reference_loot[0]
@@ -161,6 +165,7 @@ def test_pfquest_item_fixture_parses_direct_and_reference_relations():
         2001: "Test Wolf",
         2002: "Test Boar",
         2003: "Test Bear",
+        4001: "Test Vendor",
     }
     assert dict(slice_data.gameobject_names) == {
         3001: "Test Chest",
@@ -199,6 +204,17 @@ def test_pfquest_item_parser_rejects_out_of_range_reference_chance(tmp_path):
     items_path.write_text(text, encoding="utf-8")
 
     with pytest.raises(PfQuestParseError, match="between 0 and 100"):
+        load_pfquest_item_slice(root)
+
+
+def test_pfquest_item_parser_rejects_invalid_vendor_maxcount(tmp_path):
+    root = tmp_path / "pfquest"
+    shutil.copytree(FIXTURE_ROOT, root)
+    items_path = root / "db" / "items.lua"
+    text = items_path.read_text(encoding="utf-8").replace("[4001] = 0", "[4001] = -1")
+    items_path.write_text(text, encoding="utf-8")
+
+    with pytest.raises(PfQuestParseError, match="maxcount must be non-negative"):
         load_pfquest_item_slice(root)
 
 
@@ -242,11 +258,11 @@ def test_missing_reference_definition_is_preserved_and_reported(tmp_path):
             "SELECT COUNT(*) FROM loot_references WHERE reference_loot_id = 9999"
         ).fetchone()[0] == 1
         sources = find_item_sources(connection, 1001)[0]["sources"]
-        assert {source["source_id"] for source in sources} == {2001, 3001}
+        assert {source["source_id"] for source in sources} == {2001, 3001, 4001}
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
 
 
-def test_pfquest_item_import_is_idempotent_and_preserves_reference_provenance(tmp_path):
+def test_pfquest_item_import_is_idempotent_and_preserves_acquisition_provenance(tmp_path):
     db_path = tmp_path / "items.sqlite3"
     revision = compute_pfquest_items_revision(FIXTURE_ROOT)
 
@@ -267,7 +283,7 @@ def test_pfquest_item_import_is_idempotent_and_preserves_reference_provenance(tm
         assert first.rows_read == 4
         assert first.rows_accepted == 3
         assert first.rows_skipped == 1
-        assert first.rows_inserted == 12
+        assert first.rows_inserted == 13
         assert first.rows_updated == 0
         assert first.warning_count == 0
         assert first.details["creature_loot_links"] == 2
@@ -277,7 +293,8 @@ def test_pfquest_item_import_is_idempotent_and_preserves_reference_provenance(tm
         assert first.details["reference_loot_definitions"] == 1
         assert first.details["reference_creature_memberships"] == 2
         assert first.details["reference_gameobject_memberships"] == 1
-        assert first.details["deferred_vendor_links"] == 1
+        assert first.details["vendor_links"] == 1
+        assert first.details["deferred_vendor_links"] == 0
         assert first.details["relation_only_gameobject_templates"] == 1
         assert second.rows_inserted == 0
         assert second.rows_updated == 0
@@ -287,8 +304,13 @@ def test_pfquest_item_import_is_idempotent_and_preserves_reference_provenance(tm
         assert connection.execute("SELECT COUNT(*) FROM gameobject_loot").fetchone()[0] == 1
         assert connection.execute("SELECT COUNT(*) FROM loot_references").fetchone()[0] == 1
         assert connection.execute("SELECT COUNT(*) FROM item_reference_loot").fetchone()[0] == 1
-        assert connection.execute("SELECT COUNT(*) FROM reference_loot_creatures").fetchone()[0] == 2
-        assert connection.execute("SELECT COUNT(*) FROM reference_loot_gameobjects").fetchone()[0] == 1
+        assert (
+            connection.execute("SELECT COUNT(*) FROM reference_loot_creatures").fetchone()[0] == 2
+        )
+        assert (
+            connection.execute("SELECT COUNT(*) FROM reference_loot_gameobjects").fetchone()[0] == 1
+        )
+        assert connection.execute("SELECT COUNT(*) FROM vendor_items").fetchone()[0] == 1
 
         item_reference_observations = connection.execute(
             """
@@ -318,10 +340,28 @@ def test_pfquest_item_import_is_idempotent_and_preserves_reference_provenance(tm
             """
         ).fetchone()[0]
         assert member_observations == 3
+
+        vendor_observations = connection.execute(
+            """
+            SELECT so.value_json
+            FROM observation_groups AS og
+            JOIN source_observations AS so ON so.observation_group_id = og.id
+            JOIN data_sources AS ds ON ds.id = so.source_id
+            WHERE og.subject_kind = 'item'
+              AND og.subject_key = '1001'
+              AND og.fact_key = 'vendor_source'
+              AND og.fact_instance_key = 'creature:4001'
+              AND ds.source_key = 'pfquest'
+            """
+        ).fetchall()
+        assert len(vendor_observations) == 1
+        assert json.loads(vendor_observations[0]["value_json"])["attributes"] == {
+            "max_count": 0
+        }
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
 
 
-def test_item_source_query_resolves_reference_geography_and_deduplicates_overlap(tmp_path):
+def test_item_source_query_resolves_loot_reference_and_vendor_geography(tmp_path):
     db_path = tmp_path / "query.sqlite3"
     revision = compute_pfquest_items_revision(FIXTURE_ROOT)
 
@@ -333,7 +373,7 @@ def test_item_source_query_resolves_reference_geography_and_deduplicates_overlap
 
     assert len(result) == 1
     assert result[0]["item_name"] == "Test Relic"
-    assert len(result[0]["sources"]) == 4
+    assert len(result[0]["sources"]) == 5
 
     wolf = next(
         source
@@ -365,6 +405,7 @@ def test_item_source_query_resolves_reference_geography_and_deduplicates_overlap
             "path_kind": "reference",
             "chance_percent": 7.5,
             "reference_loot_id": 9001,
+            "vendor_max_count": None,
             "relation_source": bear["acquisition_paths"][0]["relation_source"],
             "reference_membership_source": bear["acquisition_paths"][0][
                 "reference_membership_source"
@@ -382,6 +423,70 @@ def test_item_source_query_resolves_reference_geography_and_deduplicates_overlap
     assert reference_cache["zone_id"] is None
     assert reference_cache["location_source"] is None
     assert reference_cache["acquisition_paths"][0]["path_kind"] == "reference"
+
+    vendor = next(
+        source
+        for source in result[0]["sources"]
+        if source["source_kind"] == "creature" and source["source_id"] == 4001
+    )
+    assert vendor["source_name"] == "Test Vendor"
+    assert vendor["zone_name"] == "Test Zone"
+    assert vendor["chance_percent"] is None
+    assert vendor["location_source"]["source_key"] == "world-fixture"
+    assert vendor["acquisition_paths"] == [
+        {
+            "path_kind": "vendor",
+            "chance_percent": None,
+            "reference_loot_id": None,
+            "vendor_max_count": 0,
+            "relation_source": vendor["acquisition_paths"][0]["relation_source"],
+            "reference_membership_source": None,
+        }
+    ]
+
+
+def test_vendor_relation_only_template_is_unlocated_and_preserves_maxcount(tmp_path):
+    root = tmp_path / "pfquest"
+    shutil.copytree(FIXTURE_ROOT, root)
+    items_path = root / "db" / "items.lua"
+    items_path.write_text(
+        items_path.read_text(encoding="utf-8").replace(
+            "      [4001] = 0,",
+            "      [4001] = 0,\n      [4002] = 3,",
+        ),
+        encoding="utf-8",
+    )
+    units_path = root / "db" / "enUS" / "units.lua"
+    units_path.write_text(
+        units_path.read_text(encoding="utf-8").replace(
+            "}",
+            '  [4002] = "Unlocated Vendor",\n}',
+        ),
+        encoding="utf-8",
+    )
+    revision = compute_pfquest_items_revision(root)
+    db_path = tmp_path / "vendor-relation-only.sqlite3"
+
+    with connect_database(db_path) as connection:
+        apply_migrations(connection)
+        _seed_world(connection)
+        summary = import_pfquest_items(connection, source_root=root, source_revision=revision)
+        result = find_item_sources(connection, 1001)
+
+        assert summary.details["vendor_links"] == 2
+        assert summary.details["relation_only_creature_templates"] == 1
+        assert connection.execute(
+            "SELECT name FROM creatures WHERE creature_id = 4002"
+        ).fetchone()[0] == "Unlocated Vendor"
+        assert connection.execute(
+            "SELECT COUNT(*) FROM creature_spawns WHERE creature_id = 4002"
+        ).fetchone()[0] == 0
+
+    vendor = next(source for source in result[0]["sources"] if source["source_id"] == 4002)
+    assert vendor["spawn_key"] is None
+    assert vendor["zone_id"] is None
+    assert vendor["location_source"] is None
+    assert vendor["acquisition_paths"][0]["vendor_max_count"] == 3
 
 
 def test_pfquest_item_import_materializes_named_relation_only_templates(tmp_path):
@@ -468,7 +573,7 @@ def test_pfquest_item_import_fails_closed_when_direct_relation_target_has_no_nam
     with connect_database(db_path) as connection:
         apply_migrations(connection)
         _seed_world(connection, omit_creature=2002)
-        with pytest.raises(PfQuestItemImportError, match=r"missing creature IDs=\[2002\]"):
+        with pytest.raises(PfQuestItemImportError, match=r"missing loot creature IDs=\[2002\]"):
             import_pfquest_items(
                 connection,
                 source_root=root,
@@ -486,6 +591,32 @@ def test_pfquest_item_import_fails_closed_when_direct_relation_target_has_no_nam
         assert batch["error_count"] == 1
         assert "2002" in batch["details_json"]
         assert connection.execute("SELECT COUNT(*) FROM items").fetchone()[0] == 0
+
+
+def test_pfquest_item_import_fails_closed_when_vendor_target_has_no_name(tmp_path):
+    root = tmp_path / "pfquest"
+    shutil.copytree(FIXTURE_ROOT, root)
+    items_path = root / "db" / "items.lua"
+    items_path.write_text(
+        items_path.read_text(encoding="utf-8").replace(
+            "      [4001] = 0,",
+            "      [4001] = 0,\n      [4999] = 2,",
+        ),
+        encoding="utf-8",
+    )
+    revision = compute_pfquest_items_revision(root)
+    db_path = tmp_path / "missing-vendor-identity.sqlite3"
+
+    with connect_database(db_path) as connection:
+        apply_migrations(connection)
+        _seed_world(connection)
+        with pytest.raises(
+            PfQuestItemImportError,
+            match=r"missing vendor creature IDs=\[4999\]",
+        ):
+            import_pfquest_items(connection, source_root=root, source_revision=revision)
+        assert connection.execute("SELECT COUNT(*) FROM items").fetchone()[0] == 0
+        assert connection.execute("SELECT COUNT(*) FROM vendor_items").fetchone()[0] == 0
 
 
 def test_item_cli_import_and_query_json(tmp_path, capsys):
@@ -509,14 +640,20 @@ def test_item_cli_import_and_query_json(tmp_path, capsys):
     imported = json.loads(capsys.readouterr().out)
     assert imported["status"] == "succeeded"
     assert imported["details"]["reference_loot_links"] == 1
+    assert imported["details"]["vendor_links"] == 1
     assert imported["details"]["unresolved_reference_loot"] == []
 
     assert main(["item-sources", "1001", "--db", str(db_path), "--json"]) == 0
     queried = json.loads(capsys.readouterr().out)
     assert queried[0]["item_id"] == 1001
-    assert len(queried[0]["sources"]) == 4
+    assert len(queried[0]["sources"]) == 5
     assert any(
         path["path_kind"] == "reference"
+        for source in queried[0]["sources"]
+        for path in source["acquisition_paths"]
+    )
+    assert any(
+        path["path_kind"] == "vendor" and path["vendor_max_count"] == 0
         for source in queried[0]["sources"]
         for path in source["acquisition_paths"]
     )
