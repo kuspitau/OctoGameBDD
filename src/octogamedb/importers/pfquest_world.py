@@ -241,10 +241,8 @@ def _level_range(value: Any) -> tuple[int | None, int | None]:
         return level, level
     match = re.fullmatch(r"(\d+)\s*-\s*(\d+)", text)
     if match:
-        low, high = int(match.group(1)), int(match.group(2))
-        if low > high:
-            raise PfQuestParseError(f"unit level range is reversed: {text!r}")
-        return low, high
+        first, second = int(match.group(1)), int(match.group(2))
+        return min(first, second), max(first, second)
     raise PfQuestParseError(f"unsupported pfQuest unit level: {value!r}")
 
 

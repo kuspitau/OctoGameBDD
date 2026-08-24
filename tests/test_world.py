@@ -279,6 +279,37 @@ def test_pfquest_import_preserves_an_existing_explicit_canonical_selection(tmp_p
         assert selection["selection_policy"] == "fixture-authority"
 
 
+def test_pfquest_world_normalizes_reversed_unit_level_range(tmp_path):
+    source = tmp_path / "pfquest"
+
+    files = {
+        "db/zones.lua": 'pfDB["zones"]["data"] = {}',
+        "db/enUS/zones.lua": 'pfDB["zones"]["enUS"] = {}',
+        "db/units.lua": (
+            'pfDB["units"]["data"] = { '
+            '[123] = { ["lvl"] = "35-32" } '
+            '}'
+        ),
+        "db/enUS/units.lua": (
+            'pfDB["units"]["enUS"] = { [123] = "Reversed Range Unit" }'
+        ),
+        "db/objects.lua": 'pfDB["objects"]["data"] = {}',
+        "db/enUS/objects.lua": 'pfDB["objects"]["enUS"] = {}',
+    }
+
+    for relative, content in files.items():
+        path = source / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+
+    world = load_pfquest_world_slice(source)
+
+    creature = world.creatures[0]
+    assert creature.creature_id == 123
+    assert creature.level_min == 32
+    assert creature.level_max == 35
+
+
 def test_where_query_returns_zone_and_selected_position_source(tmp_path):
     db_path = tmp_path / "world.sqlite3"
 

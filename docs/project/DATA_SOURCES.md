@@ -135,6 +135,44 @@ pfQuest + pfQuest-octo   (when available)
 
 It compares zone/creature/gameobject IDs that are added, removed or changed. It does **not** choose a canonical winner and does not write either overlay into SQLite. Canonical/provenance reconciliation is deferred to P1-T04 because deletion and replaced spawn sets require explicit durable semantics.
 
+#### P1-T04 provenance/reconciliation contract
+
+P1-T04 preserves three distinct source identities in SQLite:
+
+```text
+pfquest
+pfquest-turtle
+pfquest-octo
+```
+
+For reproducible local validation it can derive content revisions from the exact six P1 pfQuest
+world files and the exact Turtle-style overlay input set (`*-turtle` files plus `overwrites.lua`).
+The content revision identifies the installed inputs; it does not claim equivalence with a reviewed
+public commit.
+
+Effective-source deletion is recorded as:
+
+```text
+world_presence = false
+```
+
+This means absent from that effective source view, not globally nonexistent.
+
+Creature/game-object top-entry replacement is also represented by a complete deterministic:
+
+```text
+spawn_set
+```
+
+The installed `pfquest-turtle` view is the active pfQuest-family P1 view and may supersede only
+base/default pfQuest selections for this bounded fact family. It does not override explicit or
+non-pfQuest selections. Stale canonical spawn rows selected from the managed pfQuest family are
+removed when absent from the selected Turtle set, while all old source observations remain.
+
+`pfquest-octo` remains comparison evidence in P1-T04: differences are recorded under its own source
+revision but do not automatically mutate canonical world rows. A future decision may introduce
+field/relation-specific Octo selection where justified; P1-T04 deliberately does not invent one.
+
 ### Octo client DBC
 
 Extract from the user's actual Octo client where available.

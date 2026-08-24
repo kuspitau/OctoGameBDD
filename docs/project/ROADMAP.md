@@ -85,9 +85,9 @@ P1-T01 intentionally did not infer authoritative map/parent-zone identity from p
 
 ### P1-T02 — Octo DBC map/area hierarchy vertical slice
 
-**Present on GitHub `main`; closed for normal routing.**
+**Validated.**
 
-Present at commit `3302785ba6ece92df6c45df379420484d4eacb23`:
+Present on GitHub `main` at commit `3302785ba6ece92df6c45df379420484d4eacb23`:
 
 - dependency-free classic WDBC parsing for local Octo client `Map.dbc` and `AreaTable.dbc`;
 - deterministic SHA-256 revision identity for the exact DBC pair;
@@ -102,9 +102,9 @@ P1-T02 deliberately does not implement MPQ extraction, world-coordinate conversi
 
 ### P1-T03 — pfQuest Turtle/Octo effective world views and comparison
 
-**Implemented — awaiting local validation.**
+**Validated and present on GitHub `main`.**
 
-This task resolves the source-composition dependency before database reconciliation:
+Present at commit `034c5914457d6ef29a20ec28e690d2fb753d1356`:
 
 - treats installed `pfQuest + pfQuest-turtle` as the primary current local overlay view to inspect;
 - uses reviewed public `KameleonUK/pfQuest-turtle` revision `5b8eeeeb4119be9d075087f0f0e08c187b35ad61` as format/behavior evidence while treating the installed addon as version-specific Level-2 input;
@@ -114,15 +114,31 @@ This task resolves the source-composition dependency before database reconciliat
 - fails closed on unsupported indirect world-table mutations;
 - composes only the existing P1 zones/units/objects enUS world slice into the existing `PfQuestWorldSlice` model;
 - compares effective Turtle and Octo views by added/removed/changed entity IDs without selecting a winner;
-- requires Level-2 validation against configured local `pfquest` and `pfquest_turtle` roots, with `pfquest_octo` optional.
+- validated the launcher-installed Turtle difference where the public phantom-zone cleanup loop is absent.
 
 P1-T03 intentionally does not write to SQLite. This prevents top-entry deletion and replaced spawn-list semantics from being silently forced into scalar canonical-selection behavior.
 
 ### P1-T04 — overlay provenance/canonical reconciliation
 
-**Planned next bounded slice after P1-T03 validation.**
+**Implemented — awaiting local validation.**
 
-Use the P1-T03 effective-view contract to preserve base pfQuest, current Turtle overlay and Octo-specific source identities while explicitly defining canonical behavior for changed entries. Before implementation, decide/document how top-entry deletion and replaced spawn sets are represented in provenance and how stale materialized rows are removed without losing source evidence.
+P1-T04 consumes the P1-T03 effective-view contract without adding a migration:
+
+- records source-view entity membership as scalar `world_presence` evidence so an overlay deletion is negative source evidence rather than a universal tombstone;
+- records creature/game-object complete spawn membership as deterministic `spawn_set` evidence;
+- registers base pfQuest, current Turtle overlay and optional Octo overlay as distinct source identities/revisions;
+- lets the installed Turtle effective view supersede only default/base pfQuest selections for the bounded P1 world fact family;
+- preserves explicit/non-pfQuest selections and leaves D-025 DBC geography authority unchanged;
+- reconciles Turtle additions/changes into the existing canonical world tables;
+- removes stale canonical spawns selected from the managed pfQuest family when absent from the selected complete Turtle set, while retaining their historical provenance;
+- retains removed template/zone identity rows when selected non-pfQuest evidence or canonical dependencies still support them;
+- records optional `pfQuest-octo` differences as comparison evidence without automatic canonical mutation;
+- requires an already imported matching base pfQuest revision so a later base import cannot reintroduce stale spawns within the same validation flow;
+- adds focused idempotence/provenance/protection tests.
+
+P1-T04 is the bounded closure of the P1 overlay-reconciliation ambiguity. Full-world import remains deferred to P6.
+
+After Level-2 validation and push, normal routing proceeds to a newly defined P2-T01 item/acquisition vertical slice.
 
 ## P2 — Items and acquisition
 

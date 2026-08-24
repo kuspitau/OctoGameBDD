@@ -205,3 +205,42 @@ Consequences:
 - deriving that map context does not modify the spawn row and does not convert or relabel `zone_percent` coordinates.
 
 D-025 resolves the map/area authority deliberately deferred by P1-T01 while preserving D-005, D-006, D-008, and D-024.
+
+## D-026 — Effective-source deletion and complete-set replacement are provenance facts
+
+**Status:** accepted
+
+P1-T04 needs to reconcile Turtle-style overlay replacement semantics without confusing source-view
+absence with universal game non-existence and without losing the provenance of canonical rows that
+must be removed.
+
+For the bounded P1 world view:
+
+- entity membership in one effective source view is recorded as scalar `world_presence` evidence;
+- `world_presence = false` means "absent from this effective source view", not an unconditional
+  global tombstone;
+- creature/game-object spawn membership is additionally recorded as a scalar complete `spawn_set`
+  observation for the template;
+- the existing per-spawn `position` and `respawn_seconds` observations remain the attribute
+  evidence for members of that set.
+
+When the installed Turtle effective view is active:
+
+- it may supersede default/base pfQuest selections for this bounded fact family;
+- it does not silently supersede explicit or non-pfQuest selections;
+- optional `pfQuest-octo` remains comparison evidence unless a later explicit policy selects it;
+- stale canonical spawn rows selected from the managed pfQuest family may be deleted when they are
+  absent from the selected complete Turtle set;
+- deleting a materialized row never deletes its source observations;
+- a removed template/zone identity is retained when selected non-pfQuest evidence or a canonical
+  dependency still supports keeping it.
+
+Consequences:
+
+- no schema migration is required for P1-T04 because the existing generic scalar provenance
+  primitives can represent source-view membership and complete-set facts;
+- a historical spawn can retain a selected position observation even when it is no longer a member
+  of the selected template `spawn_set`; membership and attributes are intentionally distinct facts;
+- D-025 remains authoritative for its DBC geography fact family;
+- this decision is bounded to the current effective P1 world-view problem and is not yet a generic
+  deletion framework for every future gameplay domain.

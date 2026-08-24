@@ -5,9 +5,10 @@
 GitHub `main` is the source-of-truth base for this delta:
 
 - branch: `main`
-- base commit: `3302785ba6ece92df6c45df379420484d4eacb23`
+- base commit: `034c5914457d6ef29a20ec28e690d2fb753d1356`
 
-That commit is `Implement P1-T02 Octo DBC map hierarchy`. P1-T02 is therefore present on the validated source-of-truth branch and closed for normal routing.
+That commit is `Implement P1-T03 pfQuest Turtle primary overlay and Octo comparison`.
+P1-T03 is therefore present on the validated source-of-truth branch and closed for normal routing.
 
 **Status:** `IMPLEMENTED_AWAITING_LOCAL_VALIDATION`
 
@@ -17,44 +18,37 @@ That commit is `Implement P1-T02 Octo DBC map hierarchy`. P1-T02 is therefore pr
 
 ## Current task
 
-**P1-T03 — pfQuest Turtle/Octo effective world views and comparison**
+**P1-T04 — overlay provenance/canonical reconciliation**
 
 Detailed task specification:
 
-- `docs/project/tasks/P1-T03.md`
-
-## Why the task scope changed
-
-Initial investigation considered `pfQuest-octo` as the required Octo overlay. Local validation showed that the user's launcher installation already contains `pfQuest-turtle`.
-
-Primary-source verification then established:
-
-- the launcher-provided Turtle addon belongs to the `pfQuest-turtle` line; `KameleonUK/pfQuest-turtle` is the current public maintained reference inspected for format/behavior;
-- reviewed revision `5b8eeeeb4119be9d075087f0f0e08c187b35ad61` is dated 2026-08-02;
-- it contains current Turtle 1.18.x world data and provides public format/behavior evidence, but the user's installed addon must be treated as version-specific local input;
-- reviewed `pfQuest-octo` revision `dd3dc1fb80afe7a71e5c8ca8c31ca2a3ef57af67` is dated 2026-05-12 and its commit explicitly reverts its database to 1.17.2 data;
-- `pfQuest-octo` still contains useful Octo-specific manual corrections, so it is retained as an optional comparison source rather than discarded.
-
-This does not establish a universal source priority. P1-T03 only constructs and compares effective source views.
+- `docs/project/tasks/P1-T04.md`
 
 ## Implementation in this delta
 
-- adds `pfquest_overlay_world.py`;
-- composes the existing P1 pfQuest world subset with Turtle-style patch tables;
-- reproduces `patchtable.lua` semantics: `"_"` deletes, otherwise replace the top-level entry wholesale;
-- applies direct literal world-table assignments from `overwrites.lua` without executing Lua;
-- reproduces the reviewed Kameleon phantom-zone cleanup loop when that supported pattern is actually present in the loaded overlay;
-- fails closed on unsupported indirect world-table mutation;
-- loads both:
-  - `pfQuest + pfQuest-turtle`;
-  - `pfQuest + pfQuest-octo`;
-- compares the two resulting views by added/removed/changed zone, creature and gameobject IDs without selecting a winner;
-- retains the existing P1 dataclasses and zone-percent coordinate validation;
-- introduces no schema migration and performs no SQLite writes.
+- adds `pfquest_overlay_reconcile.py`;
+- records source-view membership as `world_presence = true/false` provenance rather than treating
+  Turtle deletions as universal tombstones;
+- records creature/game-object spawn membership as deterministic complete `spawn_set` facts;
+- registers current Turtle and optional Octo overlays as distinct source identities/revisions;
+- lets the installed Turtle effective view supersede only default/base pfQuest selections for this
+  bounded P1 world fact family;
+- preserves explicit/non-pfQuest selections, including the separate D-025 DBC geography policy;
+- reconciles Turtle additions/changes into the existing migration-3 world tables;
+- removes stale canonical spawns only when their selected position source belongs to the managed
+  pfQuest family, while retaining historical source observations;
+- retains an absent template/zone when selected non-pfQuest evidence or canonical dependencies
+  still support it;
+- records optional `pfQuest-octo` differences as comparison evidence only;
+- adds deterministic content-derived revision helpers for the exact P1 pfQuest and overlay input
+  file sets;
+- introduces no schema migration.
+
+The durable semantics are recorded in D-026 and `docs/project/tasks/P1-T04.md`.
 
 ## Local path/config state
 
-Required:
+P1-T04 introduces no new path key. It reuses the P1-T03 configuration:
 
 ```toml
 [source_paths]
@@ -62,57 +56,57 @@ pfquest = "<installed pfQuest directory>"
 pfquest_turtle = "<installed pfQuest-turtle directory>"
 ```
 
-Optional but supported:
+Optional:
 
 ```toml
 pfquest_octo = "<installed pfQuest-octo directory>"
 ```
 
-The task helper resolves the two required sources. A valid existing or auto-detected `pfquest_octo` is retained/recorded but is never required.
+The previous task already established and validated these keys, so this delta does not include a
+new `get_path.bat`.
 
 ## Agent/sample validation
 
-A focused workspace was assembled from the P1-T01 parser/dataclass subset exposed on GitHub `main` plus the new P1-T03 module/tests.
+Because the execution environment does not expose a complete mounted checkout, a focused
+workspace was assembled with the existing SQLite/provenance/world-schema contracts plus the new
+P1-T04 module/tests.
 
 Performed:
 
 ```bash
-PYTHONPATH=src python -m pytest -q tests/test_pfquest_overlay_world.py
+PYTHONPATH=src python -m pytest -q tests/test_pfquest_overlay_reconcile.py
 ```
 
 Result:
 
 ```text
-5 passed
+4 passed
 ```
 
 Coverage includes:
 
-- Turtle top-entry replacement/deletion;
-- Turtle phantom-zone cleanup when present, plus non-invention when absent;
-- direct literal Octo overwrites;
-- cross-view comparison;
-- fail-closed behavior for unsupported indirect Lua mutation.
+- Turtle complete-set reconciliation and stale spawn removal;
+- preservation of historical pfQuest spawn evidence after canonical deletion;
+- repeat-run idempotence;
+- negative Turtle presence with an explicit non-pfQuest selection;
+- optional Octo comparison evidence without canonical mutation.
 
 Also performed:
 
 ```bash
-python -m py_compile src/octogamedb/importers/pfquest_overlay_world.py tests/test_pfquest_overlay_world.py
+python -m py_compile \
+  src/octogamedb/importers/pfquest_overlay_reconcile.py \
+  tests/test_pfquest_overlay_reconcile.py
 ```
 
 Result: success.
 
-The full existing repository suite and Ruff remain required locally because the execution environment does not expose a complete mounted checkout and does not provide the user's addon files.
+Ruff was not available in the execution environment (`No module named ruff`). The full repository
+suite and Ruff remain required locally.
 
 ## Required local validation
 
-After extracting `changes.zip`, run:
-
-```bat
-get_path.bat
-```
-
-Then:
+From the project root, first run the complete suite:
 
 ```bash
 git diff
@@ -122,121 +116,175 @@ python -m ruff check src tests
 python -m compileall -q src tests
 ```
 
-Then, from PowerShell at the project root:
+Then run a fresh P1-T04 integration against the installed addons from PowerShell:
 
 ```powershell
 @'
-import re
 import tomllib
 from pathlib import Path
 
-from octogamedb.importers.pfquest_overlay_world import (
-    compare_pfquest_world_slices,
-    load_pfquest_octo_world_slice,
-    load_pfquest_turtle_world_slice,
+from octogamedb.db import apply_migrations, connect_database
+from octogamedb.importers.pfquest_overlay_reconcile import (
+    compute_pfquest_overlay_revision,
+    compute_pfquest_world_revision,
+    import_pfquest_overlay_world,
 )
-from octogamedb.importers.pfquest_world import parse_pfquest_assignment
+from octogamedb.importers.pfquest_world import import_pfquest_world_slice
 
 config = tomllib.loads(Path("config.local.toml").read_text(encoding="utf-8"))
 paths = config["source_paths"]
-turtle_root = Path(paths["pfquest_turtle"])
+pfquest = Path(paths["pfquest"])
+turtle = Path(paths["pfquest_turtle"])
+octo = Path(paths["pfquest_octo"]) if paths.get("pfquest_octo") else None
 
-turtle = load_pfquest_turtle_world_slice(paths["pfquest"], turtle_root)
-print("TURTLE")
-print("zones", len(turtle.zones))
-print("creatures", len(turtle.creatures))
-print("gameobjects", len(turtle.gameobjects))
-print("creature_spawns", sum(len(row.spawns) for row in turtle.creatures))
-print("gameobject_spawns", sum(len(row.spawns) for row in turtle.gameobjects))
+db_path = Path("data/generated/p1_t04_validation.sqlite3")
+if db_path.exists():
+    db_path.unlink()
 
-turtle_zone_ids = {row.zone_id for row in turtle.zones}
-zone_patch_path = turtle_root / "db" / "enUS" / "zones-turtle.lua"
-zone_patch = parse_pfquest_assignment(
-    zone_patch_path.read_text(encoding="utf-8"),
-    domain="zones",
-    table_name="enUS-turtle",
-)
-explicit_zone_deletes = sorted(
-    key for key, value in zone_patch.items()
-    if isinstance(key, int) and value == "_"
-)
-assert not (set(explicit_zone_deletes) & turtle_zone_ids)
-print("explicit '_' zone deletions applied", len(explicit_zone_deletes))
+base_revision = compute_pfquest_world_revision(pfquest)
+turtle_revision = compute_pfquest_overlay_revision(turtle)
+print("base_revision", base_revision)
+print("turtle_revision", turtle_revision)
 
-overwrite_text = (turtle_root / "overwrites.lua").read_text(encoding="utf-8")
-match = re.search(r"local\s+phantom_zones\s*=\s*\{(.*?)\}", overwrite_text, re.S)
-if match and "tbl[zid] = nil" in overwrite_text:
-    phantom_ids = [int(value) for value in re.findall(r"\d+", match.group(1))]
-    assert not (set(phantom_ids) & turtle_zone_ids)
-    print("installed phantom cleanup applied", phantom_ids)
-else:
-    print("installed phantom cleanup: not present")
+with connect_database(db_path) as connection:
+    apply_migrations(connection)
+    base = import_pfquest_world_slice(
+        connection,
+        source_root=pfquest,
+        source_revision=base_revision,
+    )
+    first = import_pfquest_overlay_world(
+        connection,
+        pfquest_root=pfquest,
+        overlay_root=turtle,
+        pfquest_revision=base_revision,
+        overlay_kind="turtle",
+        overlay_revision=turtle_revision,
+    )
+    second = import_pfquest_overlay_world(
+        connection,
+        pfquest_root=pfquest,
+        overlay_root=turtle,
+        pfquest_revision=base_revision,
+        overlay_kind="turtle",
+        overlay_revision=turtle_revision,
+    )
 
-assert all(
-    0.0 <= spawn.x <= 100.0 and 0.0 <= spawn.y <= 100.0
-    for row in (*turtle.creatures, *turtle.gameobjects)
-    for spawn in row.spawns
-)
-print("Turtle installed-source invariants: OK")
+    print("BASE", base.to_dict())
+    print("TURTLE_FIRST", first.to_dict())
+    print("TURTLE_SECOND", second.to_dict())
 
-if paths.get("pfquest_octo"):
-    octo = load_pfquest_octo_world_slice(paths["pfquest"], paths["pfquest_octo"])
-    diff = compare_pfquest_world_slices(turtle, octo)
-    print("OCTO")
-    print("zones", len(octo.zones))
-    print("creatures", len(octo.creatures))
-    print("gameobjects", len(octo.gameobjects))
-    print("DIFF")
-    for label, result in (
-        ("zones", diff.zones),
-        ("creatures", diff.creatures),
-        ("gameobjects", diff.gameobjects),
-    ):
-        print(
-            label,
-            "added", len(result.added),
-            "removed", len(result.removed),
-            "changed", len(result.changed),
+    assert second.rows_inserted == 0
+    assert second.rows_updated == 0
+    assert second.details["stale_creature_spawns_deleted"] == 0
+    assert second.details["stale_gameobject_spawns_deleted"] == 0
+    assert second.details["canonical_templates_deleted"] == 0
+    assert second.details["canonical_zones_deleted"] == 0
+
+    stale_selected = connection.execute(
+        """
+        SELECT COUNT(*)
+        FROM canonical_selections AS cs
+        JOIN observation_groups AS og ON og.id = cs.observation_group_id
+        JOIN source_observations AS so ON so.id = cs.observation_id
+        JOIN data_sources AS ds ON ds.id = so.source_id
+        LEFT JOIN creature_spawns AS csp
+          ON og.subject_kind = 'creature_spawn' AND csp.spawn_key = og.subject_key
+        LEFT JOIN gameobject_spawns AS gsp
+          ON og.subject_kind = 'gameobject_spawn' AND gsp.spawn_key = og.subject_key
+        WHERE og.fact_key = 'position'
+          AND ds.source_key IN ('pfquest', 'pfquest-turtle')
+          AND og.subject_kind IN ('creature_spawn', 'gameobject_spawn')
+          AND csp.spawn_key IS NULL
+          AND gsp.spawn_key IS NULL
+        """
+    ).fetchone()[0]
+    print("historical selected spawn observations without canonical row", stale_selected)
+
+    turtle_negative = connection.execute(
+        """
+        SELECT COUNT(*)
+        FROM observation_groups AS og
+        JOIN source_observations AS so ON so.observation_group_id = og.id
+        JOIN data_sources AS ds ON ds.id = so.source_id
+        WHERE og.fact_key = 'world_presence'
+          AND ds.source_key = 'pfquest-turtle'
+          AND so.source_revision = ?
+          AND so.value_json = 'false'
+        """,
+        (turtle_revision,),
+    ).fetchone()[0]
+    print("turtle negative presence observations", turtle_negative)
+
+    assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
+
+    if octo is not None and octo.is_dir():
+        octo_revision = compute_pfquest_overlay_revision(octo)
+        before = {
+            "zones": connection.execute("SELECT COUNT(*) FROM zones").fetchone()[0],
+            "creatures": connection.execute("SELECT COUNT(*) FROM creatures").fetchone()[0],
+            "creature_spawns": connection.execute(
+                "SELECT COUNT(*) FROM creature_spawns"
+            ).fetchone()[0],
+            "gameobjects": connection.execute("SELECT COUNT(*) FROM gameobjects").fetchone()[0],
+            "gameobject_spawns": connection.execute(
+                "SELECT COUNT(*) FROM gameobject_spawns"
+            ).fetchone()[0],
+        }
+        comparison = import_pfquest_overlay_world(
+            connection,
+            pfquest_root=pfquest,
+            overlay_root=octo,
+            pfquest_revision=base_revision,
+            overlay_kind="octo",
+            overlay_revision=octo_revision,
         )
-        print("  added sample", result.added[:20])
-        print("  removed sample", result.removed[:20])
-        print("  changed sample", result.changed[:20])
+        after = {
+            "zones": connection.execute("SELECT COUNT(*) FROM zones").fetchone()[0],
+            "creatures": connection.execute("SELECT COUNT(*) FROM creatures").fetchone()[0],
+            "creature_spawns": connection.execute(
+                "SELECT COUNT(*) FROM creature_spawns"
+            ).fetchone()[0],
+            "gameobjects": connection.execute("SELECT COUNT(*) FROM gameobjects").fetchone()[0],
+            "gameobject_spawns": connection.execute(
+                "SELECT COUNT(*) FROM gameobject_spawns"
+            ).fetchone()[0],
+        }
+        print("OCTO_COMPARISON", comparison.to_dict())
+        assert comparison.details["comparison_only"] is True
+        assert before == after
 '@ | python -
 ```
+
 Expected invariants:
 
-- full tests pass;
+- the complete repository test suite passes;
 - Ruff reports no errors;
 - Python compilation succeeds;
-- the Turtle effective view loads successfully;
-- every top-level zone deletion (`"_"`) declared by the installed Turtle patch is absent from the effective view;
-- if the installed `overwrites.lua` contains the supported phantom-zone cleanup loop, those locally declared IDs are absent; if the loop is absent, no such deletion is invented;
-- all emitted spawn percentages remain within `[0, 100]`;
-- when `pfquest_octo` is configured, both views load and the comparison prints deterministic added/removed/changed ID sets;
-- no database or tracked data file is created.
-
-## Level-2 source-version observation
-
-The user's installed `pfQuest-turtle` loaded successfully with:
-
-```text
-zones 773
-creatures 13802
-gameobjects 20965
-creature_spawns 110071
-gameobject_spawns 74994
-```
-
-Its local `overwrites.lua` does **not** contain the reviewed public `phantom_zones` / `tbl[zid] = nil` cleanup pattern. Zone `5138` therefore remains present as `The Deadmines`. This is accepted as local-source behavior rather than overwritten with semantics from another revision.
+- the fresh base pfQuest import succeeds;
+- the first Turtle reconciliation records source-view evidence and may insert/update/delete
+  canonical P1 rows according to the installed data;
+- the second reconciliation of the same exact revisions reports zero canonical changes/deletions;
+- removed/replaced pfQuest spawn observations remain in provenance even when their canonical spawn
+  rows are gone;
+- `world_presence = false` observations are retained for Turtle removals;
+- SQLite `PRAGMA foreign_key_check` is empty;
+- optional Octo comparison records evidence with `comparison_only=true` and leaves canonical P1 row
+  counts unchanged;
+- the validation database is local/generated only and must not be committed.
 
 ## Known limitations
 
-P1-T03 handles only the static enUS P1 world subset. It is not a general Lua interpreter. A new upstream indirect mutation pattern touching zones/units/objects deliberately fails validation and must be reviewed before support is added.
-
-No source is declared canonical by this task.
+- P1-T04 reconciles only the static enUS P1 world subset already supported by P1-T03.
+- `world_presence` and `spawn_set` are bounded provenance facts for effective world views, not a
+  generic deletion framework for all future domains.
+- `pfQuest-octo` remains comparison evidence until a later explicit field/relation policy chooses it.
+- full installed-source behavior remains Level-2 validation because local addon data is not in Git.
 
 ## Next handoff rule
 
-After local validation, commit and push P1-T03 to `main`. The next conversation must confirm the resulting main commit before advancing.
+After local validation, commit and push P1-T04 to `main`. The next conversation must confirm the
+resulting main commit before advancing.
 
-Next bounded task: **P1-T04 — overlay provenance/canonical reconciliation**, explicitly modeling deletion/existence evidence and stale replaced spawn sets before writing the overlay views into SQLite.
+Next bounded work: define **P2-T01 — first item/acquisition vertical slice** from the validated
+P0/P1 foundation; do not jump directly to full-world/P6 ingestion.

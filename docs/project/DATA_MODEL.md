@@ -201,6 +201,70 @@ zone_percent spawn + canonical zone.map_id
 
 A pfQuest spawn remains `coordinate_space = 'zone_percent'` even after its zone has an authoritative map relationship.
 
+## P1-T04 effective-view deletion and complete-set semantics
+
+P1-T04 keeps the migration-3 canonical schema unchanged and uses the generic provenance layer to
+represent source-view replacement semantics explicitly.
+
+For a P1 zone, creature or game object, effective-view membership is a scalar observation:
+
+```text
+world_presence = true | false
+```
+
+This is source-scoped evidence. `false` means that the entity is absent from that effective source
+view; it does not by itself assert universal game non-existence.
+
+For creature and game-object spawn membership, the complete effective source set is observed on the
+template:
+
+```text
+spawn_set = [
+  {
+    spawn_key,
+    coordinate_space,
+    zone_id,
+    x,
+    y,
+    respawn_seconds
+  },
+  ...
+]
+```
+
+The set is deterministic and complete for that effective source view. Individual members still
+carry their existing scalar provenance:
+
+```text
+Creature/GameObject template
+  -> selected spawn_set membership
+       -> member spawn_key
+            -> selected position
+            -> selected respawn_seconds
+```
+
+Membership and member attributes are distinct facts. Therefore a stale spawn's historical
+`position` observation may remain preserved/selected after its canonical spawn row is removed; the
+selected template `spawn_set` determines whether it is currently a member of the active effective
+view.
+
+Canonical reconciliation rules:
+
+- the installed Turtle effective view may supersede default/base pfQuest selections for this
+  bounded P1 fact family;
+- an explicit/non-pfQuest selection remains authoritative unless a separate decision says otherwise;
+- stale canonical spawn rows are removed only when their selected position source belongs to the
+  managed pfQuest family and they are absent from the selected complete Turtle set;
+- deleting canonical rows never deletes their `source_observations`;
+- an absent creature/game-object template is removed only after its managed spawns are gone and no
+  selected non-pfQuest fact supports retaining it;
+- an absent zone row is removed only when no selected non-pfQuest fact and no canonical FK
+  dependency requires the identity anchor;
+- optional `pfQuest-octo` evidence is recorded without automatic canonical materialization.
+
+This is the durable P1 interpretation recorded by D-026, not a general tombstone schema for every
+future domain.
+
 ## Important relation families
 
 Use dedicated domain tables (exact names may evolve):
@@ -290,7 +354,8 @@ Derived values must be reproducible and traceable to their input facts.
 
 ## Provenance model requirements
 
-Exact implementation is deferred, but the model must support provenance at useful granularity for both scalar facts and relations.
+The generic P0 provenance implementation plus P1-T04 complete-view facts must support useful
+granularity for scalar facts, relations, source-view membership and source-complete relation sets.
 
 Conceptual metadata:
 
@@ -304,7 +369,8 @@ is_derived
 derivation_rule
 ```
 
-A canonical winner must not delete competing source observations.
+A canonical winner must not delete competing source observations. Materialized-row deletion caused
+by a selected complete source set is likewise not provenance deletion.
 
 ## Roles, not premature entities
 

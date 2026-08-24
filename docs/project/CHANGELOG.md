@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-08-24 — P1-T04 overlay provenance/canonical reconciliation
+
+- Confirmed P1-T03 is present on GitHub `main` at commit `034c5914457d6ef29a20ec28e690d2fb753d1356` and advanced normal routing to P1-T04.
+- Recorded D-026: effective-source deletion is source-view `world_presence` evidence rather than a universal tombstone, and replace-whole spawn membership is preserved as a complete `spawn_set` fact.
+- Added distinct persisted source identities for current `pfquest-turtle` and optional `pfquest-octo` overlay evidence.
+- Added deterministic content-derived revisions for the exact P1 pfQuest and Turtle-style overlay file sets used locally.
+- Added Turtle reconciliation that may supersede only default/base pfQuest selections for the bounded P1 world fact family while preserving explicit/non-pfQuest selections and D-025 DBC geography authority.
+- Added complete-set stale-spawn cleanup: pfQuest-family canonical spawn rows absent from the selected Turtle set are removed while their historical source observations remain.
+- Added conservative template/zone deletion so non-pfQuest selected evidence and canonical FK dependencies retain identity anchors.
+- Kept `pfQuest-octo` comparison-only: its changed/removed/added effective-view evidence is stored without automatic canonical materialization.
+- Added focused tests for complete-set replacement, historical provenance retention, repeat-run idempotence, negative presence with external support, and Octo comparison-only behavior.
+- Introduced no schema migration and reused the P1-T03 local path contract.
+- Marked P1-T04 `IMPLEMENTED_AWAITING_LOCAL_VALIDATION`.
+
 ## 2026-08-24 — P1-T03 local Turtle revision compatibility correction
 
 - Level-2 validation found that the launcher-installed `pfQuest-turtle` is not behavior-identical to the reviewed public Kameleon revision: local `overwrites.lua` lacks the public phantom-zone cleanup loop and therefore retains zone 5138 (`The Deadmines`).
