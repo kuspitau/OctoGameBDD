@@ -1,1 +1,0 @@
-pfDB["units"]["enUS-turtle"] = { [6] = "Kobold Worker", [7] = "Overlay Scout" }

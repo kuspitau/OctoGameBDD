@@ -63,3 +63,10 @@ delete.bat
 # Git bat
 update_push.bat
 initial_push.bat
+
+# Local full-data validation artifacts
+validation_logs/
+P*_T*_level2_validation.bat
+p*_t*_base.json
+p*_t*_first.json
+p*_t*_second.json
