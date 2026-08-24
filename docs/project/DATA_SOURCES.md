@@ -40,7 +40,7 @@ P1-T01 public-format inspection is pinned to upstream revision:
 104f35678ca39ab1fb78b655f815cc7016f5e0c8
 ```
 
-The relevant world-slice files at that revision are:
+The relevant P1 world-slice files at that revision are:
 
 ```text
 db/zones.lua
@@ -55,7 +55,52 @@ The inspected pfQuest code consumes unit/object `coords` entries as positional `
 
 The tracked P1-T01 source fixture mirrors those six file paths but is deliberately reduced. The parser is a dependency-free Lua literal-table subset parser, not a general Lua interpreter. Full-source compatibility must be expanded and validated deliberately before P6 full ingestion.
 
-The upstream pfQuest repository uses the MIT license. The P1-T01 fixture contains only a very small representative structure/sample and test-owned reduced records.
+#### P2-T01 item/direct-loot format
+
+P2-T01 reuses the same literal-Lua parser and inspects the item tables at the same pinned upstream
+revision. The bounded inputs are:
+
+```text
+db/items.lua
+db/enUS/items.lua
+db/enUS/units.lua
+db/enUS/objects.lua
+```
+
+Relevant source shape:
+
+```text
+pfDB["items"]["data"][item_id]["U"][creature_id] = chance_percent
+pfDB["items"]["data"][item_id]["O"][gameobject_id] = chance_percent
+pfDB["items"]["data"][item_id]["R"] = ...
+pfDB["items"]["data"][item_id]["V"] = ...
+pfDB["items"]["enUS"][item_id] = item_name
+pfDB["units"]["enUS"][creature_id] = creature_name
+pfDB["objects"]["enUS"][gameobject_id] = gameobject_name
+```
+
+For P2-T01:
+
+- `U` is direct creature-loot evidence;
+- `O` is direct game-object-loot evidence;
+- the numeric value is preserved as the source-listed drop chance percentage;
+- `R` reference-loot and `V` vendor memberships are detected/countable but deliberately not
+  materialized yet;
+- item identity/name and direct relations carry pfQuest source/revision/import-batch provenance;
+- the unit/object enUS tables supply source identity for legitimate direct-loot targets that have no
+  static P1 world record or spawn;
+- the exact local four-file input set can be identified by a deterministic SHA-256 content revision.
+
+A referenced direct `U`/`O` target may therefore exist as a relation-only canonical template with
+no spawn. The importer records the pfQuest-provided name and leaves geography unknown. If the target
+is absent both from the P1 world and from the corresponding pfQuest enUS name table, the import
+fails closed rather than inventing a placeholder identity.
+
+The P2 fixture under `tests/fixtures/pfquest/items_slice/` is a tiny source-shaped sample, not a
+redistribution of the full item database.
+
+The upstream pfQuest repository uses the MIT license. Tracked fixtures contain only minimal
+representative structures/records.
 
 ### pfQuest-turtle
 
@@ -96,6 +141,10 @@ Local validation key:
 pfquest_turtle = "..."
 ```
 
+P2-T01 does not yet compose a Turtle item overlay. The Turtle path is used during Level-2 validation
+to reconstruct/reconcile the canonical P1 world before base pfQuest direct-loot relations are
+materialized.
+
 ### pfQuest-octo
 
 - Repository: `https://github.com/paokkerkir/pfQuest-octo`
@@ -133,7 +182,7 @@ pfQuest + pfQuest-turtle
 pfQuest + pfQuest-octo   (when available)
 ```
 
-It compares zone/creature/gameobject IDs that are added, removed or changed. It does **not** choose a canonical winner and does not write either overlay into SQLite. Canonical/provenance reconciliation is deferred to P1-T04 because deletion and replaced spawn sets require explicit durable semantics.
+It compares zone/creature/gameobject IDs that are added, removed or changed. It does **not** choose a canonical winner and does not write either overlay into SQLite. Canonical/provenance reconciliation is handled by P1-T04 because deletion and replaced spawn sets require explicit durable semantics.
 
 #### P1-T04 provenance/reconciliation contract
 
@@ -145,10 +194,7 @@ pfquest-turtle
 pfquest-octo
 ```
 
-For reproducible local validation it can derive content revisions from the exact six P1 pfQuest
-world files and the exact Turtle-style overlay input set (`*-turtle` files plus `overwrites.lua`).
-The content revision identifies the installed inputs; it does not claim equivalence with a reviewed
-public commit.
+For reproducible local validation it can derive content revisions from the exact six P1 pfQuest world files and the exact Turtle-style overlay input set (`*-turtle` files plus `overwrites.lua`). The content revision identifies the installed inputs; it does not claim equivalence with a reviewed public commit.
 
 Effective-source deletion is recorded as:
 
@@ -164,14 +210,9 @@ Creature/game-object top-entry replacement is also represented by a complete det
 spawn_set
 ```
 
-The installed `pfquest-turtle` view is the active pfQuest-family P1 view and may supersede only
-base/default pfQuest selections for this bounded fact family. It does not override explicit or
-non-pfQuest selections. Stale canonical spawn rows selected from the managed pfQuest family are
-removed when absent from the selected Turtle set, while all old source observations remain.
+The installed `pfquest-turtle` view is the active pfQuest-family P1 view and may supersede only base/default pfQuest selections for this bounded fact family. It does not override explicit or non-pfQuest selections. Stale canonical spawn rows selected from the managed pfQuest family are removed when absent from the selected Turtle set, while all old source observations remain.
 
-`pfquest-octo` remains comparison evidence in P1-T04: differences are recorded under its own source
-revision but do not automatically mutate canonical world rows. A future decision may introduce
-field/relation-specific Octo selection where justified; P1-T04 deliberately does not invent one.
+`pfquest-octo` remains comparison evidence in P1-T04: differences are recorded under its own source revision but do not automatically mutate canonical world rows. A future decision may introduce field/relation-specific Octo selection where justified; P1-T04 deliberately does not invent one.
 
 ### Octo client DBC
 

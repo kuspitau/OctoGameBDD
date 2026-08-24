@@ -10,6 +10,11 @@ from typing import Any
 
 from octogamedb.audit import conflict_report, coverage_report, source_report, trace_report
 from octogamedb.db import DEFAULT_DB_PATH, apply_migrations, connect_database
+from octogamedb.importers.pfquest_items import (
+    compute_pfquest_items_revision,
+    import_pfquest_items,
+)
+from octogamedb.items import find_item_sources
 
 
 def _add_db_argument(parser: argparse.ArgumentParser) -> None:
@@ -73,6 +78,26 @@ def _build_parser() -> argparse.ArgumentParser:
     _add_db_argument(coverage_parser)
     _add_json_argument(coverage_parser)
 
+    import_items_parser = subparsers.add_parser(
+        "import-pfquest-items",
+        help="Import the bounded P2 pfQuest item/direct-loot slice.",
+    )
+    import_items_parser.add_argument("source_root", type=Path, help="Installed pfQuest directory.")
+    import_items_parser.add_argument(
+        "--source-revision",
+        help="Optional explicit source revision; otherwise hash the two item input files.",
+    )
+    _add_db_argument(import_items_parser)
+    _add_json_argument(import_items_parser)
+
+    item_sources_parser = subparsers.add_parser(
+        "item-sources",
+        help="Show direct creature/game-object loot sources and derived spawn geography.",
+    )
+    item_sources_parser.add_argument("item_id", type=int, help="Native item ID.")
+    _add_db_argument(item_sources_parser)
+    _add_json_argument(item_sources_parser)
+
     return parser
 
 
@@ -97,7 +122,7 @@ def _status(db_path: Path) -> int:
     return 0
 
 
-def _print_json(payload: dict[str, Any]) -> None:
+def _print_json(payload: Any) -> None:
     print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
 
 
@@ -204,6 +229,62 @@ def _audit_command(args: argparse.Namespace) -> int:
     return 0
 
 
+def _import_pfquest_items_command(args: argparse.Namespace) -> int:
+    revision = args.source_revision or compute_pfquest_items_revision(args.source_root)
+    with connect_database(args.db) as connection:
+        apply_migrations(connection)
+        summary = import_pfquest_items(
+            connection,
+            source_root=args.source_root,
+            source_revision=revision,
+        )
+    payload = summary.to_dict()
+    if args.json:
+        _print_json(payload)
+    else:
+        print(f"Source: {payload['source_key']}@{payload['source_revision']}")
+        print(f"Status: {payload['status']}")
+        print(
+            f"Rows: read={payload['rows_read']}, accepted={payload['rows_accepted']}, "
+            f"skipped={payload['rows_skipped']}"
+        )
+        print(
+            f"Canonical changes: inserted={payload['rows_inserted']}, "
+            f"updated={payload['rows_updated']}"
+        )
+        print(json.dumps(payload["details"], ensure_ascii=False, sort_keys=True))
+    return 0
+
+
+def _print_item_sources(payload: list[dict[str, Any]]) -> None:
+    if not payload:
+        print("Item not found.")
+        return
+    item = payload[0]
+    print(f"Item: {item['item_id']} — {item['item_name']}")
+    print(f"Sources: {len(item['sources'])}")
+    for source in item["sources"]:
+        location = "unlocated"
+        if source["spawn_key"] is not None:
+            zone = source["zone_name"] or source["zone_id"] or "unknown zone"
+            location = f"{zone} @ {source['x']},{source['y']} ({source['coordinate_space']})"
+        print(
+            f"- {source['source_kind']}:{source['source_id']} {source['source_name']} — "
+            f"{source['chance_percent']}% — {location}"
+        )
+
+
+def _item_sources_command(args: argparse.Namespace) -> int:
+    with connect_database(args.db) as connection:
+        apply_migrations(connection)
+        payload = find_item_sources(connection, args.item_id)
+    if args.json:
+        _print_json(payload)
+    else:
+        _print_item_sources(payload)
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
 
@@ -211,6 +292,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _status(args.db)
     if args.command in {"source", "trace", "conflict", "coverage"}:
         return _audit_command(args)
+    if args.command == "import-pfquest-items":
+        return _import_pfquest_items_command(args)
+    if args.command == "item-sources":
+        return _item_sources_command(args)
 
     raise AssertionError(f"Unhandled command: {args.command}")
 

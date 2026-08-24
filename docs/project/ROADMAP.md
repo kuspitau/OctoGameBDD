@@ -110,7 +110,7 @@ Present at commit `034c5914457d6ef29a20ec28e690d2fb753d1356`:
 - uses reviewed public `KameleonUK/pfQuest-turtle` revision `5b8eeeeb4119be9d075087f0f0e08c187b35ad61` as format/behavior evidence while treating the installed addon as version-specific Level-2 input;
 - retains `pfQuest-octo` revision `dd3dc1fb80afe7a71e5c8ca8c31ca2a3ef57af67` as an optional Octo-specific comparison source rather than assuming it is globally newer;
 - reproduces top-entry Turtle patch semantics: `"_"` deletes and every other patch value replaces wholesale;
-- applies direct literal world-table overwrites and the reviewed Kameleon phantom-zone cleanup pattern when present, without inventing cleanup absent from the installed addon or executing Lua;
+- applies direct literal world-table overwrites and the reviewed Turtle phantom-zone cleanup pattern when present, without inventing cleanup absent from the installed addon or executing Lua;
 - fails closed on unsupported indirect world-table mutations;
 - composes only the existing P1 zones/units/objects enUS world slice into the existing `PfQuestWorldSlice` model;
 - compares effective Turtle and Octo views by added/removed/changed entity IDs without selecting a winner;
@@ -120,7 +120,7 @@ P1-T03 intentionally does not write to SQLite. This prevents top-entry deletion 
 
 ### P1-T04 — overlay provenance/canonical reconciliation
 
-**Implemented — awaiting local validation.**
+**Present on GitHub `main` at commit `582810dfe6ae41e4eec9af303d6f98a772830ef8`.**
 
 P1-T04 consumes the P1-T03 effective-view contract without adding a migration:
 
@@ -138,8 +138,6 @@ P1-T04 consumes the P1-T03 effective-view contract without adding a migration:
 
 P1-T04 is the bounded closure of the P1 overlay-reconciliation ambiguity. Full-world import remains deferred to P6.
 
-After Level-2 validation and push, normal routing proceeds to a newly defined P2-T01 item/acquisition vertical slice.
-
 ## P2 — Items and acquisition
 
 Implement:
@@ -154,6 +152,38 @@ Implement:
 - source/location queries.
 
 Add reference-loot handling when required by the chosen source.
+
+### P2-T01 — first item/acquisition vertical slice
+
+**Validated.**
+
+P2-T01 establishes the first bounded item/acquisition path on top of the P0/P1 foundation:
+
+- migration 4 adds canonical `items`, `creature_loot`, and `gameobject_loot`;
+- parses pfQuest item names plus direct `U` creature and `O` game-object loot relations;
+- preserves source-listed drop chance percentages and provenance;
+- preserves native item/source IDs and explicit domain relation tables;
+- retains named direct-loot targets as relation-only templates when the static P1 world has no
+  canonical template, without inventing spawns/geography;
+- still fails closed when neither canonical P1 identity nor pfQuest enUS identity exists;
+- derives item geography through P1 spawns/zones/maps rather than storing `item -> zone` truth;
+- passes full-data idempotence and provenance validation.
+
+Full-data validation observed `17,712` items, `198,811` creature-loot links, `8,298` game-object-loot
+links, `10,209` deferred reference-loot links, and `13,860` deferred vendor links.
+
+### P2-T02 — pfQuest reference-loot resolution
+
+**Next bounded task.**
+
+Resolve the `R` reference-loot family that P2-T01 deliberately counted but did not materialize. The
+task must first establish pfQuest's exact reference-loot representation and expansion semantics from
+primary source code, then add the smallest provenance-preserving canonical representation/query
+behavior needed to make referenced loot contribute correctly to item acquisition.
+
+P2-T02 must preserve direct `U`/`O` semantics, avoid duplicating derived source geography, remain
+idempotent, and use reduced source-shaped fixtures before full-data validation. Vendor `V` relations
+remain deferred unless reference-loot semantics prove they are inseparable.
 
 ## P3 — Quests
 

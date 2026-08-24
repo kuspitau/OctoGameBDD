@@ -41,6 +41,29 @@ The fixture is intentionally reduced. It preserves assignment/table/field shape 
 
 The P1-T01 parser supports the literal Lua table subset represented by these fixtures. Full-source ingestion requires separate compatibility validation before P6.
 
+### P2-T01 pfQuest item/direct-loot slice
+
+`pfquest/items_slice/` mirrors the four bounded pfQuest inputs used by P2-T01:
+
+```text
+db/items.lua
+db/enUS/items.lua
+db/enUS/units.lua
+db/enUS/objects.lua
+```
+
+It contains project-selected synthetic IDs and only enough source-shaped structure to test:
+
+- localized item identity;
+- `U` creature-loot relations and percentage chance;
+- `O` game-object-loot relations and percentage chance;
+- detection/deferment of `R` reference-loot and `V` vendor memberships;
+- a data row without an enUS name;
+- an enUS item name without an explicit data row;
+- unit/object names used to materialize relation-only loot-source templates without fake spawns.
+
+The fixture is not a copy of the full pfQuest item database.
+
 ## Golden cases
 
 `golden/` is reserved for small project-owned synthetic cases that verify normalized/provenance/audit semantics across sources. These are not substitutes for source-shaped parser fixtures.

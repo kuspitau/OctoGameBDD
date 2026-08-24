@@ -14,7 +14,7 @@ def test_fresh_initialization_creates_foundation_schema(tmp_path):
     with connect_database(db_path) as connection:
         applied = apply_migrations(connection)
 
-        assert [migration.version for migration in applied] == [1, 2, 3]
+        assert [migration.version for migration in applied] == [1, 2, 3, 4]
         tables = {
             row["name"]
             for row in connection.execute(
@@ -37,6 +37,9 @@ def test_fresh_initialization_creates_foundation_schema(tmp_path):
         "creature_spawns",
         "gameobjects",
         "gameobject_spawns",
+        "items",
+        "creature_loot",
+        "gameobject_loot",
     } <= tables
 
 
@@ -44,12 +47,13 @@ def test_repeat_initialization_is_idempotent(tmp_path):
     db_path = tmp_path / "octogamedb.sqlite3"
 
     with connect_database(db_path) as connection:
-        assert len(apply_migrations(connection)) == 3
+        assert len(apply_migrations(connection)) == 4
         assert apply_migrations(connection) == ()
         assert get_applied_migrations(connection) == (
             (1, "0001_import_metadata.sql"),
             (2, "0002_provenance_primitives.sql"),
             (3, "0003_world_foundation.sql"),
+            (4, "0004_items_acquisition.sql"),
         )
 
 
@@ -176,7 +180,7 @@ def test_failed_migration_is_not_recorded(tmp_path, monkeypatch):
 def test_existing_version_one_database_upgrades_to_current_schema(tmp_path, monkeypatch):
     db_path = tmp_path / "upgrade.sqlite3"
     all_migrations = migration_module.discover_migrations()
-    assert [migration.version for migration in all_migrations] == [1, 2, 3]
+    assert [migration.version for migration in all_migrations] == [1, 2, 3, 4]
 
     monkeypatch.setattr(migration_module, "discover_migrations", lambda: (all_migrations[0],))
     with connect_database(db_path) as connection:
@@ -185,11 +189,12 @@ def test_existing_version_one_database_upgrades_to_current_schema(tmp_path, monk
 
     monkeypatch.setattr(migration_module, "discover_migrations", lambda: all_migrations)
     with connect_database(db_path) as connection:
-        assert [migration.version for migration in apply_migrations(connection)] == [2, 3]
+        assert [migration.version for migration in apply_migrations(connection)] == [2, 3, 4]
         assert get_applied_migrations(connection) == (
             (1, "0001_import_metadata.sql"),
             (2, "0002_provenance_primitives.sql"),
             (3, "0003_world_foundation.sql"),
+            (4, "0004_items_acquisition.sql"),
         )
         assert connection.execute(
             "SELECT COUNT(*) FROM sqlite_master "
@@ -198,4 +203,8 @@ def test_existing_version_one_database_upgrades_to_current_schema(tmp_path, monk
         assert connection.execute(
             "SELECT COUNT(*) FROM sqlite_master "
             "WHERE type = 'table' AND name = 'creature_spawns'"
+        ).fetchone()[0] == 1
+        assert connection.execute(
+            "SELECT COUNT(*) FROM sqlite_master "
+            "WHERE type = 'table' AND name = 'creature_loot'"
         ).fetchone()[0] == 1

@@ -1,5 +1,40 @@
 # Changelog
 
+## 2026-08-24 — P2-T01 full-data validation and P2-T02 routing
+
+- Completed P2-T01 Level-2 validation against the configured full pfQuest/pfQuest-turtle inputs.
+- Validated 17,712 items, 198,811 direct creature-loot links and 8,298 direct game-object-loot links.
+- Confirmed exactly two relation-only game-object templates in the validated dataset and no relation-only creature templates.
+- Confirmed same-revision item re-import idempotence with zero canonical inserts/updates.
+- Confirmed a real item-source query derives Turtle-selected Tanaris spawn geography while preserving separate pfQuest loot-relation provenance.
+- Recorded 10,209 deferred reference-loot links and 13,860 deferred vendor links.
+- Marked P2-T01 `VALIDATED` and routed the next bounded task to P2-T02 reference-loot resolution.
+
+
+## 2026-08-24 — P2-T01 Level-2 relation-only source compatibility correction
+
+- Level-2 full-data validation found direct game-object loot references to IDs `180523` and `180671` that were not materialized by the P1 static-world slice.
+- Verified from pfQuest's enUS object table that these are real named templates: `Apple Bob` and `Xandivious' Demon Bag`.
+- Corrected the P2-T01 assumption that every direct-loot target must already be a P1 static-world template.
+- The item importer now reads pfQuest unit/object enUS names and materializes missing direct-loot targets as relation-only templates with provenance, without inventing spawns or geography.
+- Targets missing both canonical P1 identity and pfQuest enUS identity still fail closed.
+- Expanded deterministic item-source revision coverage to the four actual inputs and expanded focused tests from seven to eight cases.
+
+## 2026-08-24 — P2-T01 first item/acquisition vertical slice
+
+- Confirmed P1-T04 is present on GitHub `main` at commit `582810dfe6ae41e4eec9af303d6f98a772830ef8` and advanced normal routing to P2-T01.
+- Defined P2-T01 as a bounded `item -> direct loot source -> P1 spawn -> zone/map` vertical slice rather than starting full P2/P6 ingestion.
+- Added migration 4 with canonical `items`, `creature_loot`, and `gameobject_loot` tables while preserving native IDs and explicit domain relations.
+- Inspected pfQuest item structure at the already pinned upstream revision `104f35678ca39ab1fb78b655f815cc7016f5e0c8` and mapped direct `U`/`O` relations to creature/game-object loot with source-listed percentage chances.
+- Added deterministic content-derived revisions for the exact `db/items.lua` + `db/enUS/items.lua` input pair.
+- Added provenance-aware item-name and direct-loot relation materialization with same-revision idempotence.
+- Added fail-closed preflight for direct loot relations whose creature/game-object target is absent from the canonical P1 world.
+- Counted but deliberately deferred pfQuest `R` reference-loot and `V` vendor relations.
+- Added `find_item_sources()` plus `import-pfquest-items` and `item-sources` CLI surfaces, deriving geography through P1 spawns/zones/maps rather than persisting `item -> zone` truth.
+- Added a reduced source-shaped pfQuest item fixture and seven focused parser/revision/import/provenance/query/failure/CLI tests.
+- Added `.pytest_tmp/` to `.gitignore` and a safe handoff deletion helper for test artifacts accidentally tracked by the P1-T04 base commit.
+- Marked P2-T01 `IMPLEMENTED_AWAITING_LOCAL_VALIDATION`.
+
 ## 2026-08-24 — P1-T04 overlay provenance/canonical reconciliation
 
 - Confirmed P1-T03 is present on GitHub `main` at commit `034c5914457d6ef29a20ec28e690d2fb753d1356` and advanced normal routing to P1-T04.
