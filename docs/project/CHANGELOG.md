@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026-08-24 — P3-T01 validation catch-up and P3-T02 quest Turtle reconciliation
+
+- Reconciled project memory with the human transition result that P3-T01 already completed its
+  prescribed Level-2/full-data validation successfully; marked P3-T01 `VALIDATED` without inventing
+  run counts, revisions, representative IDs, or other validation details absent from durable input.
+- Selected P3-T02 as the next bounded P3 task because P3-T01 explicitly deferred Turtle effects on
+  the same quest identity/giver/finisher facts and D-027 is limited to P2.
+- Inspected the reviewed Turtle quest load/patch contract at revision
+  `5b8eeeeb4119be9d075087f0f0e08c187b35ad61`: quest patch tables load before `overwrites.lua` and
+  `patchtable.lua`; `"_"` deletes a top-level entry and other values replace wholesale; the reviewed
+  `overwrites.lua` contains a direct nested mutation of `quests.data-turtle`.
+- Added D-028 with quest-specific `quest_presence` and `quest_endpoint_set` complete-view semantics;
+  no schema migration is required.
+- Added the P3-T02 Turtle quest reconciler with deterministic content revision hashing, load-layout
+  checks, supported direct literal overwrite handling, fail-closed indirect mutation behavior,
+  protected-selection semantics, stale managed identity/endpoint cleanup, and source-correct
+  primitive provenance.
+- Preserved P3-T01 non-fabrication: endpoints whose P1 target identity is missing remain unresolved
+  provenance and are not materialized through invented templates/spawns/geography.
+- Added a source-shaped Turtle quest fixture and focused tests covering replacement/deletion,
+  overwrite ordering, added/removed identities, inherited base endpoints, unresolved targets,
+  custom-selection protection, idempotence, and FK integrity.
+- Focused agent result: `3 passed`; Python compilation succeeds. Ruff is unavailable in the agent
+  runtime; full repository/local-source Level-2 validation remains required for P3-T02.
+- Routed `CURRENT_STATE.md` to P3-T02 as `IMPLEMENTED_AWAITING_LOCAL_VALIDATION`; P3-T01 must not be
+  revalidated merely because the previous project-memory snapshot lagged its human validation.
+
 ## 2026-08-24 — P3-T01 first quest identity/endpoints vertical slice
 
 - Confirmed GitHub `main` base `a515ac68b80e3ebba9f600beeccddd760e160e27` and normal routing to

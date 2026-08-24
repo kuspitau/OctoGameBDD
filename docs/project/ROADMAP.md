@@ -2,258 +2,54 @@
 
 Task IDs are stable handoff references. Do not renumber completed tasks.
 
+Detailed historical/source/validation facts live in the task documents and `CURRENT_STATE.md`. This
+roadmap keeps the phase order and the next bounded work visible without duplicating every closeout
+metric.
+
 ## P0 — Repository and data foundation
 
-Goal: establish a trustworthy project-owned persistence/import/test foundation before gameplay-domain breadth.
+Goal: establish trustworthy project-owned persistence/import/test/provenance infrastructure.
 
-### P0-T01 — SQLite foundation and import metadata
+- **P0-T01 — SQLite foundation and import metadata: VALIDATED**
+- **P0-T02 — provenance/conflict primitives: VALIDATED**
+- **P0-T03 — fixture/golden-case and audit skeleton: VALIDATED**
 
-**Validated.**
-
-Implemented and present on GitHub `main`:
-
-- SQLite connection/database-location handling;
-- versioned packaged SQL migration mechanism;
-- foundational metadata tables:
-  - schema migrations;
-  - data source registry;
-  - import batches/runs;
-- minimal `python -m octogamedb status` CLI;
-- deterministic tests for fresh DB creation, repeat initialization, constraints and CLI status.
-
-### P0-T02 — Provenance/conflict primitives
-
-**Validated.**
-
-Present on GitHub `main` at commit `587146435e44960aaebf7105979a79516102f26e`:
-
-- generic evidence groups for scalar and relation fact slots;
-- relation-instance keys so multi-valued relations are not automatically conflicts;
-- stable source observations keyed by source revision, with per-run import-batch links;
-- deterministic/idempotent observation payload recording across repeated imports of the same revision;
-- preservation of competing scalar and relation observations;
-- explicit canonical-selection policy/reason metadata;
-- same-group foreign-key enforcement for canonical winners;
-- schema-v1 -> schema-v2 migration coverage and provenance/conflict tests.
-
-The generic structures are evidence/provenance storage, not a replacement for explicit canonical gameplay relation tables.
-
-### P0-T03 — Fixture/golden-case and audit skeleton
-
-**Validated.**
-
-Present on GitHub `main` at commit `780ccadee17a0015125c2ba4aada0d30e747edff`:
-
-- fixture conventions separating source-shaped parser samples from synthetic semantic golden cases;
-- initial provenance/audit golden case;
-- generic source/trace/conflict/coverage audit functions;
-- corresponding CLI commands with text and deterministic JSON output;
-- reusable machine-readable import summaries;
-- tests covering conflict semantics, traceability, coverage invariants, CLI output, and summary serialization.
-
-The follow-up local-source path and in-ZIP handoff-helper workflow amendment is present on `main` at `fc0dbe0fc22610113bfc8bd9c1e07cb41d400a39`. With the full P0 foundation on the source-of-truth branch, P0 is closed for normal task routing.
+P0 established migrations, data-source/import-batch metadata, generic provenance/conflict primitives,
+audit CLI surfaces, fixture conventions and the serial GitHub-read-only delta handoff workflow.
 
 ## P1 — World foundation
 
-Implement canonical:
+Goal: canonical maps, zones/subzones, creatures, creature spawns, game objects and game-object spawns,
+with authoritative hierarchy and effective overlay reconciliation.
 
-- maps;
-- zones/subzones;
-- creatures;
-- creature spawns;
-- game objects;
-- game-object spawns.
+- **P1-T01 — world schema and pfQuest vertical slice: VALIDATED**
+- **P1-T02 — Octo DBC map/area hierarchy: VALIDATED**
+- **P1-T03 — pfQuest Turtle/Octo effective world views: VALIDATED**
+- **P1-T04 — overlay provenance/canonical reconciliation: VALIDATED**
 
-Build the first small end-to-end vertical slice from representative source fixtures before attempting full-world ingestion.
-
-### P1-T01 — World schema and pfQuest fixture vertical slice
-
-**Validated.**
-
-Present on GitHub `main` at commit `d4310762f1e00b2664cb6d39eadf3e9abd407c46`:
-
-- schema migration 3 with the six P1 canonical world tables;
-- native template/zone/map IDs and template-vs-spawn separation;
-- explicit `zone_percent` vs future `world` spawn coordinate spaces;
-- a source-shaped pfQuest fixture parser/importer pinned to inspected upstream revision `104f35678ca39ab1fb78b655f815cc7016f5e0c8`;
-- provenance-aware, idempotent canonical materialization;
-- deterministic spawn identities where pfQuest provides no native spawn ID;
-- a small creature/game-object location query with selected-source attribution;
-- Level 1 parser/schema/import/query tests.
-
-P1-T01 intentionally did not infer authoritative map/parent-zone identity from pfQuest source geometry and did not perform full-world ingestion.
-
-### P1-T02 — Octo DBC map/area hierarchy vertical slice
-
-**Validated.**
-
-Present on GitHub `main` at commit `3302785ba6ece92df6c45df379420484d4eacb23`:
-
-- dependency-free classic WDBC parsing for local Octo client `Map.dbc` and `AreaTable.dbc`;
-- deterministic SHA-256 revision identity for the exact DBC pair;
-- canonical map identity/type and area -> map / subzone -> parent-area hierarchy using the existing migration-3 schema;
-- an explicit field-specific source-selection policy that allows direct Octo client DBC map/area facts to supersede lower-authority observations while preserving all evidence;
-- source-only preservation of additional Map/AreaTable fields not yet promoted to canonical columns;
-- derived map context for zone-only spawns through `zones.map_id`, without copying the map into the spawn row or changing `zone_percent` semantics;
-- synthetic WDBC fixtures and Level 1 parser/import/idempotency/provenance/query tests;
-- local-path handoff for `[source_paths].octo_dbc` and real-client compatibility for isolated unnamed AreaTable rows.
-
-P1-T02 deliberately does not implement MPQ extraction, world-coordinate conversion, full DBC ingestion, or overlay reconciliation.
-
-### P1-T03 — pfQuest Turtle/Octo effective world views and comparison
-
-**Validated and present on GitHub `main`.**
-
-Present at commit `034c5914457d6ef29a20ec28e690d2fb753d1356`:
-
-- treats installed `pfQuest + pfQuest-turtle` as the primary current local overlay view to inspect;
-- uses reviewed public `KameleonUK/pfQuest-turtle` revision `5b8eeeeb4119be9d075087f0f0e08c187b35ad61` as format/behavior evidence while treating the installed addon as version-specific Level-2 input;
-- retains `pfQuest-octo` revision `dd3dc1fb80afe7a71e5c8ca8c31ca2a3ef57af67` as an optional Octo-specific comparison source rather than assuming it is globally newer;
-- reproduces top-entry Turtle patch semantics: `"_"` deletes and every other patch value replaces wholesale;
-- applies direct literal world-table overwrites and the reviewed Turtle phantom-zone cleanup pattern when present, without inventing cleanup absent from the installed addon or executing Lua;
-- fails closed on unsupported indirect world-table mutations;
-- composes only the existing P1 zones/units/objects enUS world slice into the existing `PfQuestWorldSlice` model;
-- compares effective Turtle and Octo views by added/removed/changed entity IDs without selecting a winner;
-- validated the launcher-installed Turtle difference where the public phantom-zone cleanup loop is absent.
-
-P1-T03 intentionally does not write to SQLite. This prevents top-entry deletion and replaced spawn-list semantics from being silently forced into scalar canonical-selection behavior.
-
-### P1-T04 — overlay provenance/canonical reconciliation
-
-**Present on GitHub `main` at commit `582810dfe6ae41e4eec9af303d6f98a772830ef8`.**
-
-P1-T04 consumes the P1-T03 effective-view contract without adding a migration:
-
-- records source-view entity membership as scalar `world_presence` evidence so an overlay deletion is negative source evidence rather than a universal tombstone;
-- records creature/game-object complete spawn membership as deterministic `spawn_set` evidence;
-- registers base pfQuest, current Turtle overlay and optional Octo overlay as distinct source identities/revisions;
-- lets the installed Turtle effective view supersede only default/base pfQuest selections for the bounded P1 world fact family;
-- preserves explicit/non-pfQuest selections and leaves D-025 DBC geography authority unchanged;
-- reconciles Turtle additions/changes into the existing canonical world tables;
-- removes stale canonical spawns selected from the managed pfQuest family when absent from the selected complete Turtle set, while retaining their historical provenance;
-- retains removed template/zone identity rows when selected non-pfQuest evidence or canonical dependencies still support them;
-- records optional `pfQuest-octo` differences as comparison evidence without automatic canonical mutation;
-- requires an already imported matching base pfQuest revision so a later base import cannot reintroduce stale spawns within the same validation flow;
-- adds focused idempotence/provenance/protection tests.
-
-P1-T04 is the bounded closure of the P1 overlay-reconciliation ambiguity. Full-world import remains deferred to P6.
+Key durable outcomes include template/spawn separation, explicit coordinate spaces, DBC-authoritative
+map/area hierarchy, Turtle complete spawn-set reconciliation and optional pfQuest-octo comparison
+evidence.
 
 ## P2 — Items and acquisition
 
-Implement:
+Goal: item identity plus explicit acquisition paths and derived geography.
 
-- items;
-- item stats/effects/requirements;
-- creature loot;
-- game-object loot;
-- item/container loot;
-- specialized loot families as needed;
-- vendors;
-- source/location queries.
+- **P2-T01 — direct creature/game-object loot: VALIDATED**
+- **P2-T02 — pfQuest reference-loot resolution: VALIDATED**
+- **P2-T03 — pfQuest vendor acquisition: VALIDATED**
+- **P2-T04 — pfQuest-turtle effective item/acquisition reconciliation: VALIDATED**
 
-Add reference-loot handling when required by the chosen source.
-
-### P2-T01 — first item/acquisition vertical slice
-
-**Validated.**
-
-P2-T01 establishes the first bounded item/acquisition path on top of the P0/P1 foundation:
-
-- migration 4 adds canonical `items`, `creature_loot`, and `gameobject_loot`;
-- parses pfQuest item names plus direct `U` creature and `O` game-object loot relations;
-- preserves source-listed drop chance percentages and provenance;
-- preserves native item/source IDs and explicit domain relation tables;
-- retains named direct-loot targets as relation-only templates when the static P1 world has no
-  canonical template, without inventing spawns/geography;
-- still fails closed when neither canonical P1 identity nor pfQuest enUS identity exists;
-- derives item geography through P1 spawns/zones/maps rather than storing `item -> zone` truth;
-- passes full-data idempotence and provenance validation.
-
-Full-data validation observed `17,712` items, `198,811` creature-loot links, `8,298` game-object-loot
-links, `10,209` deferred reference-loot links, and `13,860` deferred vendor links.
-
-### P2-T02 — pfQuest reference-loot resolution
-
-**Validated.**
-
-P2-T02 resolves the `R` family with an explicit provenance-preserving reference model:
-
-- migration 5 adds loot-reference identity plus item/reference and reference/source membership
-  relations;
-- the pinned pfQuest one-level `R -> refloot.U/O` behavior is preserved without inventing recursive
-  semantics;
-- item-side reference chance and refloot membership provenance remain distinct;
-- effective sources are derived at query time rather than flattened into direct loot truth;
-- direct/reference overlap preserves separate acquisition paths without inventing combined
-  probability;
-- missing definitions/source identities are explicitly reported;
-- same-revision full-data reimport is idempotent.
-
-Full local validation observed `10,209` item reference relations, `8,793` resolved reference links, a
-clean foreign-key check, and a real item `647` / reference `30082` query with `9,578` reference paths
-(`9,543` located) plus independently traceable item->reference and reference->member provenance.
-
-### P2-T03 — pfQuest vendor acquisition (`V`)
-
-**Validated.**
-
-P2-T03 resolves the bounded base-pfQuest `V` family with an explicit vendor relation:
-
-- migration 6 adds `vendor_items(vendor_creature_id, item_id)`;
-- primary-source inspection establishes `V[vendor_creature_id] = npc_vendor.maxcount` (including
-  vendor-template expansion to concrete creature IDs);
-- the canonical relation records item/vendor acquisition while exact source `maxcount` is preserved
-  in separate `vendor_source` provenance;
-- named vendors absent from the P1 static materialization may exist as relation-only creature
-  templates without invented spawns/geography;
-- unidentified vendor targets fail closed;
-- `item-sources` exposes vendor paths independently from direct/reference loot and derives geography
-  through P1 creature spawns;
-- same-revision import is idempotent.
-
-Full local validation reproduced exactly `13,860` vendor relations and `13,860` independent pfQuest
-vendor provenance observations, with zero foreign-key violations and zero canonical changes on the
-second same-revision import. A real located path was resolved for item `85` through vendor creature
-`2113`, preserving `vendor_max_count = 0` without inventing additional stock semantics.
-
-### P2-T04 — pfQuest-turtle effective item/acquisition reconciliation
-
-**Validated.**
-
-P2-T04 reconciles the already-supported P2 fact family against the installed
-`pfQuest + pfQuest-turtle` effective view without widening the item schema:
-
-- validates Turtle load order and top-entry patch semantics from the source inputs;
-- applies supported direct literal `overwrites.lua` mutations before composition;
-- records separate base and Turtle complete-source-view provenance for item presence, complete U/O/R/V
-  acquisition sets, reference presence and complete reference-member sets;
-- preserves the existing individual item/name/direct/reference/vendor/member provenance used by
-  audit and query surfaces;
-- removes stale canonical managed-pfQuest relations only when the selected complete set excludes them;
-- protects explicit/custom selections, including custom policies whose selected observation still
-  uses source key `pfquest`;
-- does not synthesize Turtle primitive-relation provenance when a protected complete set governs
-  membership;
-- materializes named relation-only Turtle targets without invented geography;
-- fails closed for ambiguous/unsupported mutations, while unidentified U/O/V targets are retained
-  as unresolved provenance without fabricated canonical identities;
-- requires no schema migration and remains same-revision idempotent in agent harness validation.
-
-Full Level-2 validation against the configured local pfQuest/pfQuest-turtle inputs completed on
-2026-08-24. The first run reconciled the effective source view; the second same-revision run produced
-zero canonical inserts, updates or deletions. Dangling source identities and missing refloot
-definitions remain explicit stable diagnostics rather than fabricated canonical data.
-
-Richer item stats/effects/requirements, new loot families, generalized economics, broad Octo item
-overlay reconciliation, P6 scaling and UI remain deferred.
+Current P2 canonical support covers item identity, direct loot, one-level reference loot and vendors,
+with source provenance and Turtle effective-view reconciliation. Rich item stats/effects/requirements,
+new specialized loot families and economics remain deferred.
 
 ## P3 — Quests
 
-Implement:
+Goal:
 
 - quest identity/restrictions;
-- givers;
-- finishers;
+- givers/finishers;
 - prerequisites/follow-ups;
 - objectives;
 - required items;
@@ -262,28 +58,60 @@ Implement:
 
 ### P3-T01 — first quest identity/endpoints vertical slice
 
-**Implemented — awaiting local validation.**
+**VALIDATED.**
 
-P3-T01 establishes the bounded base-pfQuest identity/endpoints slice:
+Provides canonical native-ID quest identity plus explicit creature/game-object giver and finisher
+relations. Missing P1 endpoint targets remain unresolved provenance without fabricated identities.
+Endpoint geography is derived through P1.
 
-- migration 7 adds native-ID `quests` plus explicit creature/game-object endpoint tables with
-  `giver` / `finisher` kinds;
-- primary-source inspection maps quest title field `T` and `start/end × U/O` endpoint semantics;
-- item-started quests and broader quest restrictions/objectives/rewards remain deferred;
-- names and endpoint relations retain generic provenance and preserve prior explicit canonical
-  selections;
-- endpoint targets absent from canonical P1 identity remain explicit unresolved provenance without
-  fabricated templates/spawns;
-- `quest_by_id()` derives endpoint spawn/zone/map geography through P1 rather than persisting
-  `quest -> zone` truth;
-- deterministic base quest revisions hash exactly the quest data and enUS localization files;
-- Turtle quest overlay influence was inspected, but quest effective-view reconciliation is deferred
-  rather than silently extending P2 D-027.
+Detailed record: `docs/project/tasks/P3-T01.md`.
 
-Agent Level-1 focused result: `15 passed`; Python compilation succeeds. Ruff and full installed-pfQuest
-validation remain required before P3-T01 can be marked validated or routing advances.
+### P3-T02 — pfQuest-turtle effective quest identity/endpoint reconciliation
 
-Detailed task/validation contract: `docs/project/tasks/P3-T01.md`.
+**VALIDATED.**
+
+Adds D-028 and reconciles the P3-T01 fact family against the installed Turtle effective view using
+`quest_presence` and `quest_endpoint_set`, source-correct primitive provenance, protected explicit
+selections, stale managed-endpoint cleanup and same-revision idempotence.
+
+Full local validation completed on 2026-08-24. A fresh cumulative rebuild through P3-T02 produced a
+clean canonical local DB with `6,498` quests, `12,145` creature endpoints and `545` game-object
+endpoints and passed FK/integrity validation.
+
+Detailed record: `docs/project/tasks/P3-T02.md`.
+
+### P3-T03 — quest restrictions and dependency graph
+
+**READY_FOR_IMPLEMENTATION.**
+
+Next bounded scope:
+
+- quest level and minimum/required level;
+- race/class restrictions;
+- prerequisite relations;
+- derived follow-ups where appropriate;
+- exclusive/closing quest-group semantics;
+- explicit Turtle effective-view/reconciliation rules for this new fact family.
+
+Primary-source inspection must confirm `lvl`, `min`, `race`, `class`, `pre`, and `close` semantics
+before schema/materialization decisions. Do not silently generalize D-028.
+
+Objectives, required items and rewards remain deferred to later bounded P3 tasks.
+
+Detailed task: `docs/project/tasks/P3-T03.md`.
+
+### Later P3 tasks — to be numbered when bounded
+
+After P3-T03, choose the smallest coherent next vertical slice from:
+
+- objectives (creature/gameobject/item);
+- required item quantities/requirements;
+- guaranteed rewards;
+- choice rewards;
+- item-started quest acquisition;
+- additional restrictions/text needed by real source coherence.
+
+Do not bundle all remaining quest fields into one task merely to "finish P3".
 
 ## P4 — Spells and crafting
 
@@ -310,49 +138,22 @@ Expand:
 - data-quality checks;
 - idempotency checks.
 
-Example coverage metrics:
+## P6 — Full Octo import / scaling
 
-- items with stats/source/icon;
-- creatures with spawns/zones/loot;
-- quests with giver/finisher/objectives/rewards;
-- recipes with result/reagents/source.
+Scale importers to full available data from the useful source set, profile performance/database size,
+and add materialized derived views only where measurements justify them.
 
-## P6 — Full Octo import
-
-Scale importers to full available data from:
-
-- pfQuest;
-- current pfQuest-turtle;
-- pfQuest-octo where it contributes distinct Octo evidence;
-- OctoDB;
-- client DBC/WDB;
-- selected Turtle/Vanilla enrichment sources.
-
-Profile performance and database size. Keep the full generated DB local.
+The full generated DB remains local. D-029 / `CANONICAL_DB.md` governs its normal cumulative
+lifecycle.
 
 ## P7 — Graphical explorer
 
-Build local UI with entity tabs/views:
+Build the local entity explorer with tabs/views for Items, Quests, Creatures, GameObjects, Recipes,
+Spells and Zones, including search/filter/sort, cross-entity navigation, provenance inspection,
+tooltips and spawn maps.
 
-- Items
-- Quests
-- Creatures
-- GameObjects
-- Recipes
-- Spells
-- Zones
-
-Core capabilities:
-
-- search;
-- sorting/filtering;
-- configurable columns;
-- clickable cross-entity navigation;
-- WoW-like item tooltips;
-- source/provenance inspection;
-- spawn maps.
-
-NiceGUI is the current leading candidate but remains uncommitted until this phase.
+NiceGUI remains a leading candidate but is not committed before the data/query layer demonstrates its
+requirements.
 
 ## P8 — Advanced queries
 
@@ -364,15 +165,16 @@ Add:
 - item comparisons;
 - advanced cross-domain filters;
 - richer map views;
-- optional materialized derived views after measurement.
+- optional measured materialized views.
 
 ## Development strategy
 
-Do not use "import the whole game" as the first acceptance test.
+For each new domain/fact family:
 
-For each new domain:
-
-1. use small representative fixtures;
-2. validate semantics and provenance;
-3. add golden cases;
-4. then scale to full local data.
+1. inspect primary source semantics;
+2. use small representative fixtures;
+3. validate schema/provenance/effective-view behavior;
+4. add golden cases;
+5. perform Level-2 validation against configured real data;
+6. advance the canonical local DB only after successful validation;
+7. then route the next bounded task.

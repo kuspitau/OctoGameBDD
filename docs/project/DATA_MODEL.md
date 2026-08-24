@@ -511,6 +511,47 @@ restrictions remain outside this first slice. Turtle quest overlays are also kno
 bounded source view, but D-027 is explicitly P2-only; P3-T01 does not generalize its complete-set
 reconciliation policy without a quest-specific follow-up decision/task.
 
+## P3-T02 Turtle effective quest identity/endpoint semantics
+
+P3-T02 adds no schema migration. It uses the generic provenance layer to represent the active
+Turtle-composed view of only the facts already modeled by P3-T01:
+
+```text
+quest_presence
+quest_endpoint_set
+```
+
+`quest_presence` is a scalar boolean indicating whether the composed source view has a usable enUS
+quest title. `quest_endpoint_set` is the complete set of supported giver/finisher endpoints for the
+composed quest record, with each member carrying:
+
+```text
+endpoint_kind = giver | finisher
+target_kind   = creature | gameobject
+target_id     = native template ID
+```
+
+These complete-view facts are separate from primitive `name` and `endpoint` observations. A value can
+be part of the effective Turtle view while still being inherited from base pfQuest. In that case the
+complete-view observation is Turtle-view evidence but the primitive name/endpoint remains pfQuest
+source evidence. P3-T02 does not manufacture Turtle primitive provenance for inherited base facts.
+
+The active Turtle view may supersede only default/base managed selections for this bounded P3 fact
+family. Explicit/custom selections remain protected. A stale materialized endpoint is deleted only
+when the selected complete endpoint set excludes it and the selected primitive endpoint relation is
+managed. An absent effective quest identity is deleted only when no protected selected fact supports
+retaining it. Source observations remain even when canonical rows are removed.
+
+Quest data and localization are independent composition dimensions. A Turtle localization addition
+can activate a quest whose base data had previously been skipped for lack of a usable title. In that
+case inherited base endpoints may become materializable, but they are recorded as base pfQuest
+primitive evidence. A selected endpoint whose P1 target identity is absent remains unresolved
+provenance and is not materialized through a fabricated template/spawn/geography.
+
+D-028 deliberately limits these semantics to quest name plus `start/end × U/O`. Objectives,
+prerequisites/follow-ups, required items, rewards, restrictions and item-started quest semantics need
+separate bounded P3 contracts before they can participate in effective-view reconciliation.
+
 ## Important relation families
 
 Use dedicated domain tables (exact names may evolve):
@@ -606,7 +647,7 @@ Derived values must be reproducible and traceable to their input facts.
 
 ## Provenance model requirements
 
-The generic P0 provenance implementation plus P1-T04 complete-view facts must support useful granularity for scalar facts, relations, source-view membership and source-complete relation sets.
+The generic P0 provenance implementation plus P1-T04/P2-T04/P3-T02 complete-view facts must support useful granularity for scalar facts, relations, source-view membership and source-complete relation sets.
 
 Conceptual metadata:
 

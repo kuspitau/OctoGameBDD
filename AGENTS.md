@@ -17,10 +17,18 @@ Before making changes:
 5. Inspect the implementation, callers, tests, and docs affected by the task before editing.
 6. Identify the GitHub base revision/commit when available.
 7. If the task needs files/directories that exist only on the user's machine, read `docs/project/LOCAL_PATHS.md` before designing path handling.
+8. If the task needs cumulative full data or may mutate the local canonical DB, read
+   `docs/project/CANONICAL_DB.md`.
 
 Important rules:
 
-- GitHub `main` is the validated source of truth.
+- GitHub `main` is the validated source of truth for tracked code/schema/docs.
+- The cumulative full-data working baseline is local `data/generated/octogamedb.sqlite3` when
+  `CURRENT_STATE.md` says a canonical local DB has been validated through the required stage.
+- Before **any mutation** of that canonical DB, create/replace
+  `data/generated/octogamedb_bak.sqlite3`; prefer separate validation copies for exploratory or
+  destructive tests.
+- Never put the canonical DB or its backup in Git or `changes.zip`.
 - Preserve native game IDs.
 - Keep raw/staging/canonical/derived layers distinct.
 - Preserve provenance and source conflicts; do not silently overwrite competing facts.

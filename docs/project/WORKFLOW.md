@@ -6,7 +6,7 @@ The project will be developed across many fresh ChatGPT coding conversations.
 
 GitHub provides:
 
-- the canonical validated tree;
+- the canonical validated tracked tree;
 - history and diffs;
 - a stable handoff point.
 
@@ -18,6 +18,10 @@ Project docs provide:
 - future plan.
 
 The human remains the only writer/pusher to GitHub.
+
+Large generated data has a separate local lifecycle. In particular,
+`data/generated/octogamedb.sqlite3` can be the validated cumulative local DB while remaining absent
+from GitHub. See `docs/project/CANONICAL_DB.md`.
 
 ## Normal cycle
 
@@ -41,8 +45,9 @@ The human remains the only writer/pusher to GitHub.
 13. Human reviews git diff
 14. Human runs local/full-data validation
 15. Human fixes/reports failures as needed
-16. Human commits and pushes
-17. Next conversation starts from the new main
+16. If canonical local DB must advance, follow the backup/evolution rules below
+17. Human commits and pushes
+18. Next conversation starts from the new main
 ```
 
 ## Why a delta ZIP
@@ -57,9 +62,11 @@ tests/test_foo.py
 docs/project/CURRENT_STATE.md
 ```
 
-then only those project-relative paths belong in `changes.zip`, apart from required transient root-level handoff helpers.
+then only those project-relative paths belong in `changes.zip`, apart from required transient
+root-level handoff helpers.
 
-Unchanged tracked files are intentionally absent.
+Unchanged tracked files are intentionally absent. Generated local SQLite databases are never part of
+the delta ZIP.
 
 ## Transient handoff helpers
 
@@ -73,7 +80,8 @@ ZIP extraction cannot perform deletions, so the BAT carries explicit safe remova
 
 ### `get_path.bat`
 
-Generated only when the task or its Level 2 validation requires local source paths not already configured.
+Generated only when the task or its Level 2 validation requires local source paths not already
+configured.
 
 It follows `docs/project/LOCAL_PATHS.md`:
 
@@ -111,9 +119,58 @@ External source locations normally live under:
 [source_paths]
 ```
 
-Public addon/source formats should be researched from their current primary repositories/docs rather than inferred from local paths or memory.
+Public addon/source formats should be researched from their current primary repositories/docs rather
+than inferred from local paths or memory.
 
 The local installed copy is used when version-specific/full-data validation requires it.
+
+## Canonical local DB workflow
+
+The validated cumulative data baseline is normally:
+
+```text
+data/generated/octogamedb.sqlite3
+```
+
+when `CURRENT_STATE.md` states that it has been built and validated through the required project
+stage.
+
+Do not confuse this with GitHub source of truth: GitHub owns the tracked implementation and durable
+rules; the SQLite file is their local full-data materialization.
+
+### Read-only/full-data checks
+
+A task that only needs to inspect/query cumulative real data should use the canonical local DB rather
+than rebuilding P1/P2/P3 from zero or guessing which historical validation DB is complete.
+
+### Before a canonical mutation
+
+Before the first write:
+
+```text
+data/generated/octogamedb.sqlite3
+-> copy/replace -> data/generated/octogamedb_bak.sqlite3
+-> then mutate canonical DB
+```
+
+If `_bak` exists, replace it. It is a one-step rollback snapshot, not a growing backup history.
+
+For first-run or destructive validation, prefer a separate temporary/dedicated DB copy. Once an
+implementation is accepted, evolve the canonical DB under the backup rule and run its final integrity
+checks.
+
+### Failure
+
+If a canonical evolution fails after writes occurred, restore from `_bak` before the canonical DB is
+considered valid again. Preserve diagnostics separately when useful.
+
+### Success
+
+After successful Level 2 closure, `CURRENT_STATE.md` and the task document record that the canonical
+local DB now includes the new task. Neither canonical nor backup DB is committed.
+
+The project must remain capable of a clean rebuild from tracked migrations/importers plus configured
+local source inputs. See `docs/project/CANONICAL_DB.md` for the complete contract.
 
 ## Full-data testing
 
@@ -133,10 +190,11 @@ The human validates against:
 - full SQL dumps;
 - actual Octo client DBC/WDB;
 - full scraped/cached OctoDB data;
-- generated full SQLite DB;
+- the generated canonical SQLite DB or safe copies of it;
 - other heavy local sources.
 
-If the validation needs unknown local locations, the delta should contain `get_path.bat` so the user does not have to manually edit paths in source code.
+If validation needs unknown local locations, the delta should contain `get_path.bat` so the user does
+not have to manually edit paths in source code.
 
 ## Audit-only conversations
 

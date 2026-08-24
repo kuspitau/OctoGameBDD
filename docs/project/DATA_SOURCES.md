@@ -215,8 +215,8 @@ representative structures/records.
 ### pfQuest-turtle
 
 - Reviewed public repository: `https://github.com/KameleonUK/pfQuest-turtle`
-- P1-T03/P2-T04 reviewed revision: `5b8eeeeb4119be9d075087f0f0e08c187b35ad61`
-- Role: current Turtle-style pfQuest overlay present in the user's launcher-managed Octo installation; important source for custom/current world and item/acquisition data.
+- P1-T03/P2-T04/P3-T02 reviewed revision: `5b8eeeeb4119be9d075087f0f0e08c187b35ad61`
+- Role: current Turtle-style pfQuest overlay present in the user's launcher-managed Octo installation; important source for custom/current world, item/acquisition and bounded quest data.
 
 Relevant P1 composition evidence includes:
 
@@ -317,18 +317,62 @@ The deterministic P2 Turtle revision hashes the exact validated composition inpu
 toc/XML load-list files. A materially different local layout or unsupported indirect mutation of a bounded P2
 input table fails explicitly rather than being guessed.
 
-#### P3-T01 quest overlay observation
+#### P3-T02 effective quest identity/endpoint view
 
-The reviewed Turtle addon also contains quest data/localization patch inputs, including
-`db/quests-turtle.lua` and `db/enUS/quests-turtle.lua`, so the effective Turtle view can change quest
-identity and endpoint-bearing records. The same top-entry patch mechanism matters to that future
-composition.
+The reviewed Turtle addon contains the bounded P3 inputs:
 
-P3-T01 does **not** implement this reconciliation. D-027 explicitly states that its complete-set
-policy is limited to the P2 item fact family and is not a generic quests rule. Base pfQuest quest
-identity/endpoints are therefore implemented and validated first; a later bounded P3 task must define
-quest-specific effective-view membership/deletion semantics before Turtle is allowed to mutate the
-canonical quest slice.
+```text
+pfQuest-turtle.toc
+init/data-turtle.xml
+init/enUS-turtle.xml
+db/quests-turtle.lua
+db/enUS/quests-turtle.lua
+overwrites.lua
+patchtable.lua
+```
+
+The TOC loads Turtle data/localization before `overwrites.lua` and `patchtable.lua`. The reviewed
+`patchtable.lua` includes `quests` in the same top-entry patch mechanism used by other Turtle tables:
+`"_"` removes a quest top-level entry and any other value replaces the base entry wholesale.
+
+At reviewed revision `5b8eeeeb4119be9d075087f0f0e08c187b35ad61`, `overwrites.lua` includes a
+direct nested mutation of `pfDB["quests"]["data-turtle"]`. P3-T02 therefore applies direct literal
+mutations of the bounded quest patch tables before composition and fails closed on unsupported
+indirect/runtime mutations instead of executing arbitrary Lua.
+
+P3-T02 is limited to the P3-T01 fact family:
+
+```text
+quest enUS identity/name (T)
+start.U creature giver
+start.O game-object giver
+end.U creature finisher
+end.O game-object finisher
+```
+
+It does not import objectives, prerequisites/follow-ups, required items, rewards, richer restrictions
+or item-start semantics.
+
+D-028 records complete effective-view facts under the distinct `pfquest-turtle` source:
+
+```text
+quest_presence
+quest_endpoint_set
+```
+
+These are complete-view membership facts, not a reason to relabel inherited primitive facts. A quest
+name or endpoint inherited unchanged from base pfQuest keeps pfQuest primitive `name`/`endpoint`
+provenance even though it participates in the active Turtle effective view. Explicit/custom selected
+facts remain protected; stale managed canonical identities/endpoints may be removed only under the
+bounded D-028 policy, while historical source observations are retained.
+
+A Turtle-selected endpoint whose target is missing from canonical P1 identity remains unresolved
+provenance and is not materialized through a fabricated target/spawn/geography. P3-T02 deliberately
+does not widen to Turtle unit/object identity solely to hide that diagnostic.
+
+The deterministic P3 Turtle revision hashes exactly the seven files listed above. The installed local
+copy remains the authoritative Level-2/version-specific input; a source layout that materially differs
+from the reviewed contract must fail explicitly and be re-inspected rather than guessed.
 
 ### pfQuest-octo
 
