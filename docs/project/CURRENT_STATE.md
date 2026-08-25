@@ -4,56 +4,35 @@ This file is the permanent task router. GitHub `main` is the validated source of
 project state; every new coding conversation must still verify the actual current head before
 editing.
 
-## Integration note for this closeout handoff
+## GitHub baseline
 
-P3-T04 was implemented against GitHub `main` commit:
-
-```text
-7aba4585dc29c3a9a5bbfeb8f5f09e3b190f124b
-```
-
-At P3-T04 closeout packaging time, GitHub `main` still points to that P3-T03 closeout commit. The
-human has already applied the P3-T04 implementation delta plus the subsequent test/lint correction
-deltas locally, completed the prescribed disposable full-data validation, advanced the canonical DB,
-and completed the final tracked quality gates successfully.
-
-Therefore this closeout delta is **stacked on that locally applied and validated P3-T04 working tree**.
-It must not be extracted onto a fresh checkout of `7aba458...` without first applying the preceding
-P3-T04 implementation/test-fix handoffs. The intended serial workflow is to apply this closeout to the
-validated local tree, review the combined diff, then commit/push the complete P3-T04 implementation +
-closeout to `main`.
-
-## Recently completed
-
-### P3-T03 — quest restrictions and dependency graph
-
-**Status: VALIDATED**
-
-P3-T03 established migration 8 for quest/minimum level, race/class masks, prerequisite sets,
-follow-ups and close/exclusive sets. Its canonical closeout produced `3,533` prerequisite sets,
-`3,716` prerequisite members, `303` close sets and `1,095` close-set members with clean
-same-revision idempotence and FK/integrity checks.
-
-Detailed record: `docs/project/tasks/P3-T03.md`.
-
-### P3-T04 — quest objectives and objective geography
-
-**Status: VALIDATED**
-
-P3-T04 was fully validated on 2026-08-25 against the configured real pfQuest and pfQuest-turtle
-sources, first on a disposable copy and then on the canonical local database.
-
-Validated P3-T04 source revisions:
+The P3-T05 source investigation in this handoff was performed against GitHub `main` commit:
 
 ```text
-base pfQuest objectives
-sha256:2acc862f732bc512482eaaec0b86a2a5d67c548d8cc50f7b6128f5ffba27a58c
-
-pfQuest-turtle effective objectives
-sha256:8e570cb4303e73fae03d6b4240b0122f0000f35dd441aca686feed039641f90f
+56658585524b0a3a82083d24ac63105a0efb24da
 ```
 
-The canonical evolution applied migration 9 and produced:
+That commit contains the validated P3-T04 implementation and closeout, so the previous P3-T04
+stacked-handoff warning is no longer active.
+
+## Validated cumulative state
+
+P0 through P3-T04 are `VALIDATED`.
+
+The canonical cumulative local database remains:
+
+```text
+data/generated/octogamedb.sqlite3
+```
+
+It is validated through migration:
+
+```text
+0009_quest_objectives.sql
+```
+
+P3-T04 established source-backed quest objective membership/geography for `U/O/I/IR/A/Z` plus
+area-trigger and item-use-target support. Its canonical validation produced, among other rows:
 
 ```text
 quests                         6498
@@ -69,155 +48,84 @@ area_trigger_locations         558
 item_use_target_sets           189
 item_use_creature_targets      113
 item_use_gameobject_targets    220
-import_batches                 20
-observation_groups             1182571
-canonical_selections           1172691
-source_observations            2083312
 ```
 
-First canonical P3-T04 reconciliation:
+The second same-revision P3-T04 canonical pass produced zero inserts, updates and deletes, and
+foreign-key/integrity checks passed. Detailed validation remains in
+`docs/project/tasks/P3-T04.md`.
 
-```text
-status                                  succeeded
-error_count                             0
-rows_read / rows_accepted               13014 / 13014
-rows_skipped                            0
-rows_inserted                           12723
-rows_updated                            0
-canonical_objective_rows_deleted        0
-changed_effective_objective_quest_count 1811
-changed_effective_itemreq_count         30
-changed_effective_area_trigger_count    252
-warning_count                           219
-duplicate_source_objective_member_count 0
-protected_canonical_rows_retained       0
-```
-
-The 219 warnings are explicit unresolved source evidence rather than validation failures:
-
-```text
-missing_quest_identity      188
-missing_creature_identity    30
-missing_item_identity         1
-```
-
-By subtype/context the validator reported:
-
-```text
-set        188
-creature    28
-U            2
-I            1
-```
-
-No target identities were fabricated to suppress these diagnostics.
-
-Second same-revision reconciliation:
-
-```text
-status                            succeeded
-error_count                       0
-rows_inserted                     0
-rows_updated                      0
-canonical_objective_rows_deleted  0
-warning_count                     219
-```
-
-`rows_read`/`rows_accepted` increase to `13096` on the second pass because newly materialized managed
-support identities (`area_triggers` / item-use target sets) join the reconciliation candidate universe;
-the canonical state itself remains unchanged.
-
-Structural checks passed:
-
-```text
-PRAGMA foreign_key_check   ok
-PRAGMA integrity_check     ok
-```
-
-Representative real-data query checks passed for:
-
-- quest `7`: creature objective `6` (`Kobold Vermin`) with derived Elwynn Forest spawn geography;
-- quest `28`: game-object objective `177788` (`Shrine of Remulos`) in Moonglade;
-- quest `6`: item objective `182` (`Garrick's Head`);
-- quest `28`: item-use objective `15877` (`Shrine Bauble`) resolving through spell `19719` to
-  game-object `177788` and its geography;
-- quest `25`: area-trigger objective `2926` with source-backed coordinates in Ashenvale and
-  Stonetalon Mountains.
-
-No selected real-data `obj.Z` member exists in the validated source revisions (`Z = 0`); the schema,
-parser, reconciliation and fixture tests still cover direct zone-objective support.
-
-Final tracked quality gate after the last lint-only correction:
-
-```text
-python -m ruff check .
-All checks passed!
-
-pytest --basetemp=.pytest_tmp
-97 passed in 5.31s
-```
-
-The compileall gate was also run with no reported error.
-
-Detailed implementation/validation record: `docs/project/tasks/P3-T04.md`.
-
-## Canonical local database
-
-The canonical cumulative database is:
-
-```text
-data/generated/octogamedb.sqlite3
-```
-
-It is now **validated through P3-T04**, including migration:
-
-```text
-0009_quest_objectives.sql
-```
-
-The immediately preceding P3-T03 canonical state was backed up before mutation at:
+The one-step rollback path remains:
 
 ```text
 data/generated/octogamedb_bak.sqlite3
 ```
 
-under D-029 / `docs/project/CANONICAL_DB.md`.
+under D-029. No database mutation is part of the P3-T05 source-gate handoff, so this backup must not
+be replaced merely to apply the documentation delta.
 
-Future tasks must continue to replace that one-step backup immediately before any new canonical DB
-mutation.
+## P3-T05 source investigation
+
+P3-T05 was entered as the next bounded implementation task, but primary-source inspection found that
+the source pair named by the task does not carry the required quantity/reward facts in its distributed
+quest representation.
+
+Reviewed public revisions:
+
+```text
+shagu/pfQuest
+104f35678ca39ab1fb78b655f815cc7016f5e0c8
+
+KameleonUK/pfQuest-turtle
+5b8eeeeb4119be9d075087f0f0e08c187b35ad61
+```
+
+Established source contract:
+
+- pfQuest `toolbox/extractor.lua` reads `ReqItemId1..4` and `ReqSourceId1..4` into one item-membership
+  set and serializes only the resulting IDs as quest `obj.I` membership;
+- the distributed quest export does not preserve the corresponding raw item/source-item quantities;
+- the extractor does not serialize guaranteed or choice item rewards;
+- `db/quests-itemreq.lua` is item-use target evidence and carries no requirement quantity;
+- the currently published pfQuest extractor was also checked on 2026-08-25 and still does not export
+  `ReqItemCount`;
+- the reviewed pfQuest-turtle `db/quests-turtle.lua` is empty, and the currently published file checked
+  on 2026-08-25 is also empty.
+
+Therefore assigning quantities/rewards from the existing pfQuest/Turtle files would violate D-023 and
+P3-T05's own no-inference requirement. D-031 records the durable source gate.
 
 ## Active task
 
-### P3-T05 — quest item requirements and rewards
+### P3-T05A — establish quest quantity/reward source contract
 
 **Status: READY_FOR_IMPLEMENTATION**
 
 Detailed task:
 
 ```text
-docs/project/tasks/P3-T05.md
+docs/project/tasks/P3-T05A.md
 ```
 
-The next bounded P3 slice is source-backed quest/item quantity semantics and reward semantics:
+P3-T05A must select and validate a reproducible source contract for:
 
-- required item/source-item requirements and their actual quantities where the reviewed source carries
-  them;
-- guaranteed item rewards;
-- choice item rewards;
-- preservation of guaranteed-vs-choice distinction and source quantities;
-- Turtle effective-view/reconciliation semantics and provenance for only that bounded fact family.
+- required item IDs and quantities;
+- any distinct required source/provided-item IDs and quantities;
+- guaranteed item reward IDs and quantities;
+- choice item reward IDs and quantities;
+- complete-set/absence/order semantics needed for reconciliation.
 
-P3-T05 must not retroactively invent quantities for P3-T04 `obj.I` membership merely because a source
-contains some related count field. It must map counts to the precise reviewed source relation that
-carries them.
+Follow `DATA_SOURCES.md` source priority. Evaluate Octo-specific authoritative data such as OctoDB
+first. If a Vanilla VMaNGOS/CMaNGOS-style source is needed as a baseline/fallback, pin the exact source
+revision and define a field/relation-specific authority policy rather than treating it as Octo truth.
 
-Item-started quest acquisition (`start.I`), arbitrary quest text and broader repeatability/event/
-profession restrictions remain later bounded work unless primary-source inspection proves an
-inseparable dependency.
+P3-T05 implementation remains blocked until P3-T05A establishes that contract. Do not add migration
+10, requirement/reward canonical tables, or inferred quantities before then.
 
-## Routing guard
+## Next-conversation guard
 
-The next coding conversation should take P3-T05 from `docs/project/tasks/P3-T05.md` **only after** the
-human has committed and pushed the combined P3-T04 implementation + this closeout so GitHub `main`
-actually contains the validated P3-T04 state. If `main` still points to `7aba458...`, stop and reconcile
-the unpushed local handoff instead of implementing P3-T05 against stale project state.
+The next coding conversation should take P3-T05A only after this documentation delta has been applied,
+committed and pushed to GitHub `main`.
+
+If GitHub `main` still points to `56658585524b0a3a82083d24ac63105a0efb24da`, this handoff has not
+yet been integrated; do not independently implement P3-T05 against the old `READY_FOR_IMPLEMENTATION`
+routing.

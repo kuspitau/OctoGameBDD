@@ -412,3 +412,41 @@ relation selections remain protected. Historical source observations are never d
 
 D-030 is limited to restrictions/dependencies. Objectives, required items, rewards, item-started
 quests, skill/profession requirements and localized body text remain deferred.
+
+## D-031 — P3 quest item quantities/rewards are source-gated
+
+**Status:** accepted
+
+P3-T05 must not infer quantity-bearing quest requirements or item rewards from the distributed
+pfQuest objective membership export.
+
+Primary-source inspection of `shagu/pfQuest` at revision
+`104f35678ca39ab1fb78b655f815cc7016f5e0c8` establishes that `toolbox/extractor.lua` reads raw
+`ReqItemId1..4` and `ReqSourceId1..4` fields only to build the item objective membership set later
+serialized as `obj.I`. The exported quest record does not preserve the corresponding raw counts and
+does not serialize guaranteed or choice item reward fields. `db/quests-itemreq.lua` is item-use target
+evidence, not quantity evidence. The current public extractor was also checked on 2026-08-25 and
+still does not export `ReqItemCount`.
+
+The reviewed `KameleonUK/pfQuest-turtle` revision
+`5b8eeeeb4119be9d075087f0f0e08c187b35ad61` does not repair that loss: its public
+`db/quests-turtle.lua` is empty, as is the currently published file checked on 2026-08-25.
+
+Consequences:
+
+- P3-T04 `obj.I` remains source-backed objective membership only; no quantity may be attached to a
+  member by positional matching, ID coincidence, or a default count;
+- required item, required source/provided item, guaranteed reward and choice reward facts remain
+  blocked until a reviewed source contract carries their exact semantics;
+- no P3-T05 schema/import/reconciliation migration may be added merely to make the planned model
+  writable before such a source contract exists;
+- the next task is P3-T05A, which must establish a reproducible source and revision strategy before
+  P3-T05 implementation resumes;
+- source investigation follows the existing `DATA_SOURCES.md` priority. Octo-specific authoritative
+  data such as OctoDB should be evaluated first; a pinned Vanilla VMaNGOS/CMaNGOS-style source may be
+  used only under an explicit field/relation policy and must not be silently promoted to Octo truth.
+
+This decision does not reject the P3-T05 canonical direction. Once a valid source is established,
+requirements and guaranteed/choice rewards should still use explicit domain relations, exact
+source-backed quantities, mandatory provenance and bounded effective-view reconciliation where the
+selected source semantics justify it.

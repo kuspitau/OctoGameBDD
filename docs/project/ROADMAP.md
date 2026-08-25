@@ -110,23 +110,41 @@ Detailed record: `docs/project/tasks/P3-T04.md`.
 
 ### P3-T05 — quest item requirements and rewards
 
+**BLOCKED_ON_SOURCE_CONTRACT.**
+
+Primary-source inspection on 2026-08-25 established that the distributed pfQuest quest export cannot
+support the planned quantity/reward import faithfully:
+
+- raw `ReqItemId*` and `ReqSourceId*` are collapsed into membership-only `obj.I`;
+- their corresponding counts are not serialized;
+- guaranteed and choice item rewards are not serialized;
+- `quests-itemreq` is item-use target evidence, not quantity evidence;
+- the reviewed/current public pfQuest-turtle quest data does not restore those fields.
+
+D-031 forbids filling the gap by inference. The intended canonical functionality remains planned, but
+implementation waits on P3-T05A.
+
+Detailed task: `docs/project/tasks/P3-T05.md`.
+
+### P3-T05A — establish quest quantity/reward source contract
+
 **READY_FOR_IMPLEMENTATION.**
 
 Next bounded scope:
 
-- inspect the primary pfQuest quest/export/runtime representation of required item/source-item counts;
-- distinguish those quantity-bearing source relations from the P3-T04 objective membership export;
-- model guaranteed item rewards separately from choice item rewards;
-- preserve exact source-backed quantities and absence/empty semantics where meaningful;
-- reconcile the bounded fact family through the installed Turtle effective view with provenance,
-  protected selections, stale managed-row cleanup and same-revision idempotence;
-- expose the resulting requirement/reward relations through quest/item query surfaces.
+- inspect Octo-specific authoritative quest data first, beginning with OctoDB and any stable structured
+  payload/API or reproducible page representation it exposes;
+- identify exact required-item/source-item quantity and guaranteed/choice reward semantics;
+- establish deterministic source revision/caching/retrieval and provenance rules;
+- determine Vanilla versus Octo/Turtle custom-quest coverage;
+- use a pinned VMaNGOS/CMaNGOS-style baseline only under an explicit fallback/authority policy if
+  needed;
+- update source/decision/task memory so P3-T05 can resume without repeating source archaeology.
 
-Do not infer a quantity for every P3-T04 `obj.I` member unless primary-source inspection proves a
-one-to-one source relation. Item-started quest acquisition (`start.I`), arbitrary quest text and broader
-quest conditions remain later bounded P3 work.
+Do not add P3-T05 canonical requirement/reward tables merely to make the future model writable before
+this source contract is established.
 
-Detailed task: `docs/project/tasks/P3-T05.md`.
+Detailed task: `docs/project/tasks/P3-T05A.md`.
 
 ## P4 — Spells and crafting
 
