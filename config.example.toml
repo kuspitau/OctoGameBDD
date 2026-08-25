@@ -15,11 +15,13 @@ samples = "data/samples"
 #
 # [source_paths]
 # wow_root = "C:/Games/OctoWow"
+# tortoise_repo = "C:/source/tortoise-wow"
 # pfquest = "C:/Games/OctoWow/Interface/AddOns/pfQuest"
 # pfquest_turtle = "C:/Games/OctoWow/Interface/AddOns/pfQuest-turtle"
 # pfquest_octo = "C:/Games/OctoWow/Interface/AddOns/pfQuest-octo"
 # octo_wdb = "C:/Games/OctoWow/Cache/WDB/enUS"
 # octo_dbc = "C:/Games/OctoWow/Data/..."
 #
+# P3-T05B Level-2 validation requires wow_root and tortoise_repo.
 # Task-specific get_path.bat helpers may discover/request these paths and
 # update config.local.toml without changing unrelated configuration.

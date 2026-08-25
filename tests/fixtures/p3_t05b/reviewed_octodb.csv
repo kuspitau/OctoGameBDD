@@ -1,0 +1,5 @@
+quest_id,fact_family,item_id,value,slot
+818,required_item,1001,6,1
+818,reward_item,3001,1,1
+40788,required_item,1201,8,1
+40675,choice_reward_item,4201,1,1

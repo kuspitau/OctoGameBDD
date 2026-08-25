@@ -6,6 +6,7 @@ Examples include:
 
 - the local OctoWoW installation root;
 - installed addons such as pfQuest, pfQuest-turtle and optional pfQuest-octo;
+- local public-source checkouts such as `Penqle/tortoise-wow`;
 - WDB caches;
 - extracted DBC directories;
 - SavedVariables;
@@ -122,6 +123,44 @@ pfquest_octo = "..."
 ```
 
 P1-T03 `get_path.bat` resolves and validates the required pfQuest + pfQuest-turtle pair. An existing `pfquest_octo` entry is unrelated configuration and must be preserved; its absence must not make the helper fail.
+
+### P3-T05B path contract
+
+Required for Level-2 validation:
+
+```toml
+[source_paths]
+wow_root = "..."
+tortoise_repo = "..."
+```
+
+Validation markers:
+
+```text
+wow_root
+  -> WoW.exe/Wow.exe exists
+  -> Interface/AddOns exists
+
+tortoise_repo
+  -> sql/base/tw_world_quest_template.sql exists
+  -> sql/database_updates/world exists
+```
+
+The P3-T05B `get_path.bat` delegates to:
+
+```text
+python scripts/validate_p3_t05b.py configure-paths
+```
+
+That command reuses valid configured values, tries bounded common-location discovery, asks only for unresolved/ambiguous targets, and updates only `wow_root` / `tortoise_repo` in the ignored `config.local.toml`.
+
+The Tortoise validation command independently verifies the actual Git revision. Normal P3-T05B validation requires:
+
+```text
+61a8269151721f6467eddb05e7bed37704d0fc0b
+```
+
+The live probe SavedVariables path is deliberately **not** persisted as a stable config key. The normalizer discovers `WTF/Account/*/SavedVariables/OctoGameBDD_QuestProbe.lua` below the configured `wow_root` when exactly one match exists; with multiple account files, the user passes `--saved-variables` explicitly for that run.
 
 ## Updating `config.local.toml`
 

@@ -1,0 +1,8 @@
+## Interface: 11200
+## Title: OctoGameBDD Quest Probe
+## Notes: Manual bounded ClassicAPI quest evidence capture for OctoGameBDD P3-T05B
+## Author: OctoGameBDD
+## Version: 1.0.0
+## SavedVariables: OctoGameBDDQuestProbeDB
+
+OctoGameBDD_QuestProbe.lua

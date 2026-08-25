@@ -1,0 +1,1 @@
+SET @fixture = 1;

@@ -128,46 +128,39 @@ Detailed record: `docs/project/tasks/P3-T05A.md`.
 
 ### P3-T05B — validate Octo live quest-query and Tortoise SQL source contract
 
-**READY_FOR_IMPLEMENTATION.**
+**VALIDATED.**
 
-A post-P3-T05A audit found two stronger source layers that should be validated before final canonical
-schema work:
+P3-T05B implemented and locally validated the D-033 acquisition bridge without canonical DB mutation:
 
-- direct positive quest fields obtainable from the actual Octo client/server through ClassicAPI
-  (`RequestLoadQuestByID` + `GetQuestDetails`);
-- the pinned `Penqle/tortoise-wow` 1.18.1 source-shaped world SQL, including base `quest_template` and
-  ordered world migrations.
+- source-shaped Tortoise `quest_template` projection at pinned revision
+  `61a8269151721f6467eddb05e7bed37704d0fc0b` with deterministic relevant migration replay;
+- bounded actual-Octo ClassicAPI capture using pinned semantic reference
+  `e793f80f6b45ed49a94dc8abdc9fcac4fe6b03dd`;
+- reviewed OctoDB structural positive evidence;
+- pinned CMaNGOS Vanilla fallback/baseline;
+- deterministic four-source comparison with D-033 family-specific selection, conflict retention and
+  conservative unknown/absence semantics;
+- real `ReqSource` audit preserving explicit zero-count semantics;
+- canonical SQLite hash unchanged across the validation.
 
-P3-T05B will:
-
-- add/validate source-shaped acquisition for those two sources without mutating the canonical DB;
-- preserve native quest-template family/slot semantics before normalization;
-- build a conservative, user-triggered live quest probe with one outstanding request at a time;
-- compare representative Vanilla/custom quests across Octo live, OctoDB, Tortoise and CMaNGOS;
-- validate D-033's bounded field-specific priority and unknown/absence behavior;
-- keep `tortoise-db-viewer` as parser/staging reference only because its final `quest_item` projection
-  already normalizes away source distinctions required by OctoGameBDD.
-
-Detailed task: `docs/project/tasks/P3-T05B.md`.
+Level-2 validation completed on 2026-08-26. Detailed record:
+`docs/project/tasks/P3-T05B.md`.
 
 ### P3-T05 — quest item requirements and rewards
 
-**BLOCKED_ON_P3-T05B.**
+**READY_FOR_IMPLEMENTATION.**
 
-The canonical direction remains unchanged: explicit required/source/provided/guaranteed/choice item
-relations with exact quantities, source slot/order, provenance, unresolved native IDs and safe
-reconciliation.
+P3-T05 is now the active bounded task. Its canonical direction remains explicit
+required/source/provided/guaranteed/choice item relations with exact quantities where source-backed,
+source slot/order, provenance, unresolved native IDs and safe reconciliation.
 
-Implementation now waits for P3-T05B so it can use the stronger D-033 source strategy rather than
-hard-coding the older D-032-only OctoDB + CMaNGOS acquisition plan.
-
-Once P3-T05B is `VALIDATED`, P3-T05 returns to `READY_FOR_IMPLEMENTATION` and should consume:
+Implementation should consume:
 
 - direct Octo live positive observations for the field families actually exposed;
 - OctoDB structural positive observations;
 - pinned Tortoise source-shaped SQL as close Turtle-lineage fallback/coverage;
 - pinned CMaNGOS as Vanilla fallback/semantics baseline;
-- all conflicts retained under D-006.
+- all conflicts retained under D-006/D-033.
 
 Detailed task: `docs/project/tasks/P3-T05.md`.
 

@@ -4,21 +4,32 @@ This file is the permanent task router. GitHub `main` is the validated source of
 project state; every new coding conversation must still verify the actual current head before
 editing.
 
-## GitHub baseline
+## Integration baseline for this closeout
 
-This source-strategy audit and handoff were prepared against GitHub `main` commit:
+At closeout preparation time, visible GitHub `main` is still:
 
 ```text
-6d1fab728a6eda5e61409cbc468d458ae9056238
+ee893eb2a37808ebb791790abd8561a76da92738
 ```
 
-That commit is the human-applied P3-T05A closeout (`Establish P3-T05 quest quantity/reward source
-contract`). It contains D-032, validated P3-T05A project memory, and routes directly to P3-T05.
+Commit title:
+
+```text
+Refine P3-T05 source strategy with live Octo and Tortoise evidence
+```
+
+The validated P3-T05B implementation delta was applied locally on top of that commit and has not yet
+been pushed to GitHub. This closeout delta is intentionally stacked on that local implementation
+state. It must not be applied by itself to the visible `ee893eb...` tree.
+
+After the human commits and pushes the combined implementation + closeout, the next conversation must
+verify that the current GitHub head contains both before proceeding.
 
 ## Validated cumulative state
 
-P0 through P3-T04 are `VALIDATED` in code/data. P3-T05A remains `VALIDATED` as the source-contract
-investigation that established the OctoDB + CMaNGOS strategy from the sources known at that time.
+P0 through P3-T04 are `VALIDATED` in code/data. P3-T05A is `VALIDATED` as the historical source-
+contract investigation. P3-T05B is now also `VALIDATED` after successful real-source Level-2
+validation on 2026-08-26.
 
 The canonical cumulative local database remains:
 
@@ -26,95 +37,109 @@ The canonical cumulative local database remains:
 data/generated/octogamedb.sqlite3
 ```
 
-It is validated through migration:
+It remains validated through migration:
 
 ```text
 0009_quest_objectives.sql
 ```
 
-Neither P3-T05A nor this later source-strategy audit mutates SQLite, adds a migration or advances the
-canonical data state. Do not replace the D-029 backup merely to apply this documentation delta.
+P3-T05A, D-033 and P3-T05B do not add a canonical migration or advance canonical SQLite data.
+P3-T04 remains the latest canonical-data implementation. The P3-T05B validation explicitly confirmed
+that the canonical database hash was unchanged.
 
-P3-T04 remains the latest canonical-data implementation. Its detailed counts/idempotence/FK results
-remain in `docs/project/tasks/P3-T04.md`.
+## P3-T05B — validated acquisition/source bridge
 
-## Post-P3-T05A source-strategy audit
-
-After P3-T05A was completed, further public-source investigation found two inputs that materially
-improve the planned P3-T05 acquisition strategy.
-
-### 1. Direct Octo quest observations through ClassicAPI
-
-Pinned semantic reference:
+### Status
 
 ```text
-https://github.com/brues-code/ClassicAPI
-master @ e793f80f6b45ed49a94dc8abdc9fcac4fe6b03dd
+VALIDATED
 ```
 
-At that revision, `C_QuestLog.RequestLoadQuestByID(questID)` can request/load quest static data and
-settles through `QUEST_DATA_LOAD_RESULT`; `C_QuestLog.GetQuestDetails(questID)` exposes:
-
-- ordinary item requirements as native item ID + exact count;
-- guaranteed item rewards as native item ID + exact count;
-- choice item rewards as native item ID + exact count;
-- `srcItemID` for the quest-start source/provided item.
-
-This is direct positive evidence from the actual Octo client/server interaction when executed in the
-user's live client. It is **not** a complete server quest-template dump. The exposed contract does not
-provide `ReqSourceId/ReqSourceCount` or a `SrcItemCount`, and other server-enforced quest restrictions
-are also absent from the Vanilla quest-query cache. Query failure/missing fields therefore remain
-unknown rather than negative complete-set evidence.
-
-### 2. Structured Turtle 1.18.1 world SQL
-
-Pinned public reference:
+Detailed record:
 
 ```text
-https://github.com/Penqle/tortoise-wow
-main @ 61a8269151721f6467eddb05e7bed37704d0fc0b
+docs/project/tasks/P3-T05B.md
 ```
 
-The repository describes itself as an unofficial community restoration of Turtle-WoW 1.18.1 build
-7272 and documents a database lifecycle based on `sql/base` plus server-applied updates. It contains a
-source-shaped `quest_template` with the P3-T05 fixed-slot requirement/source/provided/reward families
-and current/custom Turtle-lineage content.
+Durable validated outcomes:
 
-This is substantially closer and broader evidence for Octo-oriented work than a Vanilla-only
-CMaNGOS baseline, but it is **not automatically Octo production truth**. Its Turtle 1.18.1 restoration
-lineage makes it highly relevant for comparison/coverage while any disagreement with direct Octo
-evidence remains a source conflict.
+- source-shaped `tortoise-world-sql` projection over the pinned Tortoise base quest table plus
+  deterministic relevant world-migration replay;
+- pinned Tortoise revision:
+  `61a8269151721f6467eddb05e7bed37704d0fc0b`;
+- bounded manual Octo/ClassicAPI quest probe with one outstanding request at a time and no autonomous
+  enumeration;
+- pinned ClassicAPI semantic reference:
+  `e793f80f6b45ed49a94dc8abdc9fcac4fe6b03dd`;
+- deterministic live SavedVariables normalization with missing/empty/failure fields remaining
+  `unknown` rather than negative complete-set evidence;
+- no fabricated live `ReqSource` facts and no fabricated `srcItemID` count;
+- reviewed OctoDB positive structural observations;
+- pinned CMaNGOS Vanilla fallback/baseline;
+- deterministic four-source comparison implementing D-033's fact-family-specific priority while
+  retaining conflicts and refusing silent same-priority disagreement;
+- real source auditing confirms nonzero `ReqSourceId` and explicit zero-count semantics can be
+  preserved without coercing them into ordinary quest-required quantities;
+- no canonical SQLite mutation.
 
-### Supporting references
+The local `data/raw` validation workspace is not a durable project dependency. Future work must rely
+on the tracked acquisition/normalization code, pinned/configured source identities and reproducible
+validation procedures rather than historical temporary validation directories.
+
+## P3-T05B Level-2 completion record
+
+Human/local validation completed successfully on 2026-08-26.
+
+Previously completed general gates:
 
 ```text
-Questie-Octo
-https://github.com/SandreaSub/Questie-Octo
-main @ 389af5f003f1a0f05132a7d39410c7d184700800
+python -m pip install -e ".[dev]"
+pytest --basetemp=.pytest_tmp
+python -m ruff check src tests
+python -m compileall -q src tests
 ```
 
-Its provenance notes use current Turtle/Tortoise server source for server-side quest/spawn/script
-checks while separately treating direct Octo client extracts as authority for client-side facts. This
-corroborates Tortoise as useful Octo-oriented audit evidence, not as universal Octo truth.
+The task-specific validator also checked the script scope omitted by those commands and then completed
+all remaining Level-2 work. Final reported result:
 
 ```text
-Tortoise DB Viewer
-https://github.com/Xian55/tortoise-db-viewer
-main @ f274ac2b00aa7e3b25def609bd354ca4feb298e9
+[PASS] P3-T05B LOCAL VALIDATION COMPLETE: all remaining Level-2 checks passed.
+[PASS] SUMMARY: P3-T05B completed all remaining local validation checks.
+[PASS] Validation script finished successfully.
 ```
 
-Its builder demonstrates a practical base-SQL + ordered-migration staging pipeline, but its final
-`quest_item` projection already normalizes source families (including suppressing some duplicated
-`ReqSource` entries). It is therefore a technical/parser reference and cross-check only. P3-T05 must
-consume source-shaped Tortoise quest facts itself.
+This covered the pinned Tortoise projection/determinism checks, actual Octo/ClassicAPI capture,
+reviewed OctoDB evidence, pinned CMaNGOS evidence, D-033 four-source comparison invariants, real
+`ReqSource` audit cases and canonical DB non-mutation.
 
-## Decision update
+No additional D-033/source-contract change was required by the real-source validation.
 
-D-033 records the new bounded P3-T05 authority strategy and **supersedes D-032 only for current source
-priority/acquisition**. D-032 remains the durable historical P3-T05A result and its semantic findings
-remain in force unless contradicted by later validated evidence.
+## Active task
 
-Target P3-T05 ordering to validate in P3-T05B:
+### P3-T05 — quest item requirements and rewards
+
+**Status: READY_FOR_IMPLEMENTATION**
+
+Detailed task:
+
+```text
+docs/project/tasks/P3-T05.md
+```
+
+The next conversation should implement P3-T05 using the validated P3-T05B bridge and existing D-033
+field-family policy. It must not redo P3-T05B as a prerequisite merely because its local raw validation
+artifacts are absent.
+
+The cumulative canonical DB is still the P3-T04/migration-9 baseline. P3-T05 is the next task that may
+introduce a new canonical migration/data evolution, so D-029 / `docs/project/CANONICAL_DB.md` applies
+before any canonical write.
+
+## Durable source strategy
+
+D-033 remains the current bounded source-priority/acquisition decision. D-032 remains historical and
+its semantic distinctions continue to apply where not superseded.
+
+Validated field-specific priority:
 
 ```text
 ReqItem + count:
@@ -134,52 +159,16 @@ SrcItem count:
 
 ReqSource ID/count:
   Tortoise SQL -> CMaNGOS Vanilla
-  (Octo-specific live coverage still unresolved)
+  (Octo-specific live coverage remains unresolved)
 ```
 
-Every selected fact retains its real source identity. A Tortoise fallback is never relabeled as live
-Octo truth. OctoDB remains partial positive HTML evidence. CMaNGOS remains the pinned Vanilla fallback
-and semantics reference. pfQuest/P3-T04 objective membership still cannot manufacture P3-T05
-quantities.
-
-## Active task
-
-### P3-T05B — validate Octo live quest-query and Tortoise SQL source contract
-
-**Status: READY_FOR_IMPLEMENTATION**
-
-Detailed task:
-
-```text
-docs/project/tasks/P3-T05B.md
-```
-
-The next conversation should implement and validate this acquisition/source-contract bridge before
-P3-T05 schema work resumes. The bounded work includes:
-
-- a source-shaped Tortoise `quest_template` adapter over the pinned base + relevant ordered world
-  migrations;
-- deterministic source revision/content hashing and small fixtures;
-- preservation of native slot/family semantics, including duplicate IDs and `ReqSourceCount = 0`;
-- a small, user-triggered ClassicAPI quest probe using one outstanding request at a time;
-- local raw capture/provenance for direct Octo positive observations;
-- representative Vanilla/custom comparisons across Octo live, OctoDB, Tortoise and CMaNGOS;
-- explicit validation of missing/unknown fields without treating absence as a complete empty set;
-- no canonical P3-T05 migration or canonical DB mutation.
-
-P3-T05 is temporarily `BLOCKED_ON_P3-T05B`. Its canonical direction is unchanged; only its source
-acquisition/priority strategy is being strengthened before implementation.
+Every selected fact retains its real source identity. Missing live fields/query failures remain
+unknown. A Tortoise fallback is never relabeled as live Octo truth, and P3-T04 objective membership
+must not manufacture P3-T05 quantities.
 
 ## Next-conversation guard
 
-Take P3-T05B only after this delta has been applied, the tracked quality gate has passed, and the
-result has been committed/pushed to GitHub `main`.
-
-If GitHub `main` still points to:
-
-```text
-6d1fab728a6eda5e61409cbc468d458ae9056238
-```
-
-then this post-P3-T05A strategy update has not yet been integrated. Do **not** start P3-T05 directly
-from the old D-032-only routing; first integrate/reconcile this handoff.
+Before starting P3-T05, verify GitHub `main` contains the locally validated P3-T05B implementation and
+this closeout. If GitHub still points to
+`ee893eb2a37808ebb791790abd8561a76da92738`, the combined handoff has not yet been integrated and the
+next conversation must not assume P3-T05B code exists on `main`.
