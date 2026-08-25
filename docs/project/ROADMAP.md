@@ -112,39 +112,62 @@ Detailed record: `docs/project/tasks/P3-T04.md`.
 
 **VALIDATED.**
 
-P3-T05A resolved D-031's source gate without reinterpreting pfQuest objective membership:
+P3-T05A resolved D-031's source gate using the sources known at that point:
 
-- native-ID OctoDB quest pages are the preferred Octo-specific partial observation source for
-  structurally explicit required/provided/guaranteed/choice item facts;
-- OctoDB page revisions are content-addressed by SHA-256 and cached locally; page absence is not
-  complete negative evidence;
-- `cmangos/classic-db@250a705a462c1acb457d3002359c7e0052c4dafe`, artifact
-  `ClassicDB_1_12_1_z2815.sql.gz` blob `0a77f5230a3d5d6db968678203dfe3b30c34b8a9`, is the pinned
-  Vanilla fallback baseline;
-- `cmangos/mangos-classic@9b682be617ac61c127c23aa60d7b4ffbc0ce37e6` supplies the pinned field
-  semantics reference;
-- D-032 keeps `ReqItem`, `SrcItem`, auxiliary `ReqSource`, guaranteed `RewItem`, and choice
-  `RewChoiceItem` families distinct and records field-specific authority;
-- `ReqSourceCount = 0` is a valid source/drop-control value in current ClassicDB, not a zero turn-in
-  requirement.
+- native-ID OctoDB quest pages as Octo-specific partial positive observations;
+- content-addressed cached OctoDB pages rather than page absence as negative evidence;
+- pinned CMaNGOS ClassicDB Vanilla fallback;
+- explicit separation of `ReqItem`, `SrcItem`, auxiliary `ReqSource`, guaranteed `RewItem` and choice
+  `RewChoiceItem` semantics;
+- preservation of `ReqSourceCount = 0` as valid source/drop-control semantics.
+
+D-032 remains the historical decision for this investigation. Its current P3-T05 source-priority
+portion is superseded by D-033 after the later P3-T05B routing audit.
 
 Detailed record: `docs/project/tasks/P3-T05A.md`.
 
-### P3-T05 — quest item requirements and rewards
+### P3-T05B — validate Octo live quest-query and Tortoise SQL source contract
 
 **READY_FOR_IMPLEMENTATION.**
 
-Next bounded scope:
+A post-P3-T05A audit found two stronger source layers that should be validated before final canonical
+schema work:
 
-- add explicit canonical/provenance modeling for ordinary required items, auxiliary/source items,
-  quest-start provided items, guaranteed rewards and choice reward sets;
-- implement/cache a fail-closed native-ID OctoDB page adapter for explicit positive observations;
-- implement the pinned CMaNGOS ClassicDB fixed-slot fallback with complete Vanilla set semantics;
-- preserve source slots, exact quantities and the special `ReqSourceCount` semantics;
-- apply D-032 so CMaNGOS never silently overwrites higher-priority Octo-specific evidence;
-- keep missing item identities unresolved rather than fabricating placeholders;
-- validate deterministic source revisions, same-revision idempotence, reconciliation and query
-  provenance before advancing the canonical DB under D-029.
+- direct positive quest fields obtainable from the actual Octo client/server through ClassicAPI
+  (`RequestLoadQuestByID` + `GetQuestDetails`);
+- the pinned `Penqle/tortoise-wow` 1.18.1 source-shaped world SQL, including base `quest_template` and
+  ordered world migrations.
+
+P3-T05B will:
+
+- add/validate source-shaped acquisition for those two sources without mutating the canonical DB;
+- preserve native quest-template family/slot semantics before normalization;
+- build a conservative, user-triggered live quest probe with one outstanding request at a time;
+- compare representative Vanilla/custom quests across Octo live, OctoDB, Tortoise and CMaNGOS;
+- validate D-033's bounded field-specific priority and unknown/absence behavior;
+- keep `tortoise-db-viewer` as parser/staging reference only because its final `quest_item` projection
+  already normalizes away source distinctions required by OctoGameBDD.
+
+Detailed task: `docs/project/tasks/P3-T05B.md`.
+
+### P3-T05 — quest item requirements and rewards
+
+**BLOCKED_ON_P3-T05B.**
+
+The canonical direction remains unchanged: explicit required/source/provided/guaranteed/choice item
+relations with exact quantities, source slot/order, provenance, unresolved native IDs and safe
+reconciliation.
+
+Implementation now waits for P3-T05B so it can use the stronger D-033 source strategy rather than
+hard-coding the older D-032-only OctoDB + CMaNGOS acquisition plan.
+
+Once P3-T05B is `VALIDATED`, P3-T05 returns to `READY_FOR_IMPLEMENTATION` and should consume:
+
+- direct Octo live positive observations for the field families actually exposed;
+- OctoDB structural positive observations;
+- pinned Tortoise source-shaped SQL as close Turtle-lineage fallback/coverage;
+- pinned CMaNGOS as Vanilla fallback/semantics baseline;
+- all conflicts retained under D-006.
 
 Detailed task: `docs/project/tasks/P3-T05.md`.
 
@@ -207,9 +230,12 @@ Add:
 For each new domain/fact family:
 
 1. inspect primary source semantics;
-2. use small representative fixtures;
-3. validate schema/provenance/effective-view behavior;
-4. add golden cases;
-5. perform Level-2 validation against configured real data;
-6. advance the canonical local DB only after successful validation;
-7. then route the next bounded task.
+2. distinguish source authority from source completeness/coverage;
+3. prefer direct current Octo observations for the fields they actually expose, without generalizing
+   them to invisible server-side fields;
+4. use small representative fixtures;
+5. validate schema/provenance/effective-view behavior;
+6. add golden cases and explicit conflict cases;
+7. perform Level-2 validation against configured real data/live client inputs when required;
+8. advance the canonical local DB only after successful validation;
+9. then route the next bounded task.

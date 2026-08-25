@@ -529,3 +529,100 @@ extracted from structural page data; a visually omitted “1” must not be gues
 Missing canonical item identity stays an unresolved native item ID with source/slot/quantity evidence;
 P3-T05 must not fabricate an item row solely to satisfy a foreign key. Non-item rewards remain outside
 P3-T05 unless later implementation proves they are structurally inseparable.
+
+## D-033 — P3-T05 authority adds direct Octo quest-query observations and pinned Turtle 1.18.1 SQL
+
+**Status:** accepted
+
+A post-P3-T05A audit found two materially stronger P3-T05 inputs that were not part of D-032's
+original investigation: direct quest-query observations from the live Octo client/server interaction
+through ClassicAPI, and a current structured Turtle 1.18.1 world-SQL restoration. D-033 supersedes
+D-032 **only for the current P3-T05 source-priority/acquisition strategy**. D-032 remains the durable
+record of P3-T05A and its semantic distinctions, source-slot preservation, `ReqSourceCount = 0`
+handling, OctoDB fail-closed parsing and partial-positive absence rules remain applicable.
+
+Pinned public semantic/reference revisions for this decision are:
+
+```text
+brues-code/ClassicAPI
+master @ e793f80f6b45ed49a94dc8abdc9fcac4fe6b03dd
+
+Penqle/tortoise-wow
+main @ 61a8269151721f6467eddb05e7bed37704d0fc0b
+
+SandreaSub/Questie-Octo
+main @ 389af5f003f1a0f05132a7d39410c7d184700800
+
+Xian55/tortoise-db-viewer
+main @ f274ac2b00aa7e3b25def609bd354ca4feb298e9
+```
+
+ClassicAPI establishes a direct Octo observation path. At the pinned revision,
+`C_QuestLog.RequestLoadQuestByID(questID)` loads/requests quest static data and settles through
+`QUEST_DATA_LOAD_RESULT`; `C_QuestLog.GetQuestDetails(questID)` exposes ordinary item requirements as
+native item ID + count, guaranteed reward items + counts, choice reward items + counts, and
+`srcItemID`. Observations obtained by running this path in the user's actual Octo client are stored
+under a distinct source identity such as:
+
+```text
+octo-live-quest-query
+```
+
+This source is high-authority **positive field evidence**, not a complete server quest-template view.
+The reviewed API does not expose `ReqSourceId/ReqSourceCount` or a count corresponding to
+`srcItemID`; several other server-enforced quest restrictions are also absent from the Vanilla query
+cache. Query failure, a missing field, or an unqueryable candidate therefore means unknown for that
+fact and may not authorize negative complete-set cleanup. Live captures must record client/realm and
+capture metadata where available and preserve the raw capture alongside any normalized projection.
+
+`Penqle/tortoise-wow` at the pinned revision is an unofficial community restoration of Turtle-WoW
+1.18.1 build 7272. For P3-T05, the relevant source-shaped data is the effective `quest_template`
+formed from:
+
+```text
+sql/base/tw_world_quest_template.sql
+sql/database_updates/world/*
+```
+
+with only applicable ordered world migrations affecting the bounded quest-template facts included in
+the deterministic input revision. This source is registered separately, for example as:
+
+```text
+tortoise-world-sql
+```
+
+It is a broad, structured, close Turtle-lineage source that can cover custom content and the fixed
+slot families absent from pfQuest. It is **not** relabeled as Octo production truth. Any disagreement
+with direct Octo observations or OctoDB remains an explicit source conflict under D-006. Questie-Octo
+is corroborating audit evidence that current Turtle/Tortoise server source is practically useful for
+Octo quest/spawn/script verification; it is not promoted to a canonical source by this decision.
+
+The current field-family priority target becomes:
+
+| P3-T05 family | Current selection priority |
+| --- | --- |
+| ordinary required item + count | Octo live quest query -> OctoDB -> Tortoise SQL -> CMaNGOS Vanilla |
+| guaranteed reward item + count | Octo live quest query -> OctoDB -> Tortoise SQL -> CMaNGOS Vanilla |
+| choice reward item + count | Octo live quest query -> OctoDB -> Tortoise SQL -> CMaNGOS Vanilla |
+| quest-start/source item ID | Octo live quest query -> OctoDB -> Tortoise SQL -> CMaNGOS Vanilla |
+| quest-start/source item count | OctoDB only when structurally explicit -> Tortoise SQL -> CMaNGOS Vanilla |
+| `ReqSource` ID/raw count semantics | Tortoise SQL -> CMaNGOS Vanilla; Octo-specific live coverage remains unresolved |
+
+Priority is field-family-specific and does not imply that a lower row is erased when a higher source
+exists. Competing observations remain provenance. A lower-priority complete source may fill missing
+facts when the explicit family policy allows it, but it cannot manufacture a field the higher source
+does not expose or reinterpret absence as contradiction.
+
+`tortoise-db-viewer` is retained as a technical implementation/reference source, not as P3-T05 raw
+evidence. Its builder correctly stages Tortoise base SQL plus migrations, but its derived
+`quest_item(quest,item,role,count)` projection intentionally normalizes source semantics, including
+suppressing a `ReqSource` row when the same item is already an ordinary `ReqItem`. That is useful for
+its UI but would destroy source-family/slot/duplicate evidence required by D-005/D-006/D-032.
+OctoGameBDD must therefore consume source-shaped Tortoise SQL rather than importing the viewer's
+final quest projection as canonical P3-T05 evidence.
+
+Because the new hierarchy changes acquisition and reconciliation assumptions immediately before
+schema implementation, P3-T05 is gated by P3-T05B. P3-T05B must validate a source-shaped Tortoise
+adapter and a conservative direct-Octo live capture path, establish deterministic revisions and
+cross-source golden comparisons, and leave the canonical DB unchanged. Only after P3-T05B is
+validated may P3-T05 resume implementation against D-033.
