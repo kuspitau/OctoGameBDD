@@ -450,3 +450,82 @@ This decision does not reject the P3-T05 canonical direction. Once a valid sourc
 requirements and guaranteed/choice rewards should still use explicit domain relations, exact
 source-backed quantities, mandatory provenance and bounded effective-view reconciliation where the
 selected source semantics justify it.
+
+## D-032 — P3 quest item/reward authority is field-specific: OctoDB observations over a pinned CMaNGOS baseline
+
+**Status:** accepted
+
+P3-T05A establishes a source contract without promoting either OctoDB or CMaNGOS to universal quest
+truth.
+
+For P3-T05 item/reward families, the preferred Octo-specific evidence is a cached OctoDB quest-detail
+page addressed by native quest ID:
+
+```text
+https://octowow.st/db/?quest=<quest_id>
+```
+
+A successfully parsed page may contribute only facts that are explicitly represented by the page's
+quest-item/reward structure: ordinary required items, quest-start provided items when present,
+guaranteed item rewards and choice item rewards. The page and its exact bytes are provenance. Because
+OctoDB exposes no immutable public data revision and no stable structured quest API was identified in
+P3-T05A, each cached page revision is its SHA-256; a batch revision hashes the sorted native-ID/page
+hash manifest. Retrieval time is metadata, not source identity.
+
+OctoDB HTML is treated as **partial observation evidence**, not a complete negative source view. A
+missing section or missing quest page therefore cannot by itself delete stale managed canonical
+members. This remains true even though current pages clearly expose Vanilla and Octo/custom quest
+requirements/reward families. Page parsing must fail closed if section/item/count structure is not
+recognized; prose descriptions are not a quantity source.
+
+The pinned Vanilla fallback/baseline is:
+
+```text
+cmangos/classic-db
+250a705a462c1acb457d3002359c7e0052c4dafe
+Full_DB/ClassicDB_1_12_1_z2815.sql.gz
+blob 0a77f5230a3d5d6db968678203dfe3b30c34b8a9
+
+cmangos/mangos-classic semantic reference
+9b682be617ac61c127c23aa60d7b4ffbc0ce37e6
+```
+
+Its fixed `quest_template` slot families are complete baseline evidence for each present Vanilla quest
+row:
+
+```text
+ReqItemId[4] / ReqItemCount[4]
+ReqSourceId[4] / ReqSourceCount[4]
+SrcItemId / SrcItemCount
+RewChoiceItemId[6] / RewChoiceItemCount[6]
+RewItemId[4] / RewItemCount[4]
+```
+
+CMaNGOS may fill/select a P3-T05 fact only under an explicit Vanilla fallback policy when no
+higher-priority Octo-specific selected observation exists for that fact family. An OctoDB/Octo-specific
+observation never gets overwritten merely because the Vanilla baseline has a convenient row. Source
+disagreements are retained under D-006.
+
+The families are not semantically interchangeable:
+
+- `ReqItemId/ReqItemCount` is an item and amount required to complete the quest;
+- `SrcItemId/SrcItemCount` is an item and amount supplied to the player for the quest;
+- `ReqSourceId/ReqSourceCount` is auxiliary source-item/drop-control data used by the quest/loot
+  runtime, not a turn-in quantity. In current CMaNGOS ClassicDB, a nonzero `ReqSourceId` with
+  `ReqSourceCount = 0` is valid and means the normal core/stack drop behavior rather than “requires
+  zero”;
+- `RewItem*` is guaranteed item reward evidence;
+- `RewChoiceItem*` is the alternative choice-reward set.
+
+Source slot/order is preserved in provenance for every fixed-slot family. Repeated item IDs across
+slots or semantic families are not collapsed before provenance. Choice slot order is presentation
+order only; it does not imply gameplay preference/ranking.
+
+For ordinary requirements and reward families, `item_id = 0` means the CMaNGOS slot is absent. A
+nonzero item ID with an unexpected zero quantity is retained as source-shaped anomaly evidence rather
+than silently defaulted. `ReqSourceCount = 0` is the documented exception above. OctoDB counts must be
+extracted from structural page data; a visually omitted “1” must not be guessed from prose.
+
+Missing canonical item identity stays an unresolved native item ID with source/slot/quantity evidence;
+P3-T05 must not fabricate an item row solely to satisfy a foreign key. Non-item rewards remain outside
+P3-T05 unless later implementation proves they are structurally inseparable.

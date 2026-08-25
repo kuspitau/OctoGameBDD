@@ -29,6 +29,75 @@ Preserve disagreements even when a canonical winner is selected.
   - record source URL/ID and retrieval/import metadata;
   - do not repeatedly hit the website when cached source data exists.
 
+#### P3-T05A quest item/reward observation contract
+
+Public investigation on 2026-08-25 found no documented stable structured OctoDB quest endpoint or
+immutable database revision. P3-T05 therefore uses the native-ID quest-detail page as the Octo-specific
+observation surface, not browse/search result sets:
+
+```text
+https://octowow.st/db/?quest=<quest_id>
+```
+
+The page is AoWoW-shaped and current pages structurally expose item links under the quest requirement
+and reward sections. Representative observations checked during P3-T05A include:
+
+```text
+quest 818   A Solvent Spirit       Vanilla
+  required: Intact Makrura Eye x4; Crawler Mucus x8
+  guaranteed reward: Really Sticky Glue
+
+quest 815   Break a Few Eggs       Vanilla
+  required: Taillasher Egg x3
+  guaranteed rewards: Tough Hunk of Bread; Tough Jerky
+
+quest 40788 Heavy Earthen Cores    Octo/Turtle custom
+  required: Heavy Earthen Core x8
+  choice rewards: Roasted Quail; Morning Glory Dew
+
+quest 40675 A Hero's Reward        Octo/Turtle custom
+  choice rewards: Band of Durotar; Signet of Durotar; Ring of Durotar
+```
+
+The open Vanilla AoWoW implementation `MarkusNemesis/vanillawowdb` at revision
+`06e30fae4d448eada30f465c2bef6763f9664596` is a format/lineage reference only, not proof of the
+exact OctoDB deployed revision. Its quest templates corroborate the visible family distinction:
+ordinary item requirements, a quest-start `Provided Item`, guaranteed item rewards and choice item
+rewards are rendered in separate structures, and the item icon calls retain counts even where a
+human-visible count of one is omitted.
+
+P3-T05 implementation must inspect the cached raw OctoDB HTML and accept only a source-shaped
+structural parse. It must use native item links plus explicit structural count data from the page;
+localized quest prose is not a quantity source, and a visually omitted `1` must not be guessed. If
+the expected section/item/count representation is absent or changes, the parser fails closed and
+reports the page for re-inspection.
+
+OctoDB HTML is deliberately **partial observation evidence** for P3-T05. A successfully parsed page
+may supply explicit positive facts, but a missing section/page is not complete negative evidence and
+must not drive stale canonical-member cleanup by itself. This conservative rule also avoids treating
+current OctoDB browse/filter completeness as authoritative.
+
+Raw/cache convention follows D-014 and `data/README.md`:
+
+```text
+data/raw/octodb/quests/<quest_id>.html
+```
+
+A future downloader may keep request metadata/manifests beside that local tree or under
+`data/cache/octodb/`; these artifacts remain ignored and are not distributed in Git. It must prefer
+an already matching cached artifact. For network retrieval, use a descriptive User-Agent, no more
+than one request per second by default, bounded retry/backoff for transient failures, and no automatic
+parallel scraping unless a later task establishes a service-safe policy.
+
+Because the service exposes no immutable public data revision, deterministic source identity is
+content-based:
+
+- per page: SHA-256 of the exact response bytes after a successful retrieval;
+- batch: SHA-256 of a deterministic UTF-8 manifest containing sorted `(quest_id, page_sha256)` pairs;
+- retrieval URL/native quest ID, retrieval time, HTTP status/content type and content hash are retained
+  as provenance/import metadata;
+- retrieval timestamp never replaces the content hash as source revision.
+
 ### pfQuest
 
 - Repository: `https://github.com/shagu/pfQuest`
@@ -567,6 +636,54 @@ Useful for:
 
 Example ClassicDB repository:
 - `https://github.com/classicdb/database`
+
+#### P3-T05A pinned Vanilla quest item/reward baseline
+
+P3-T05 uses the maintained CMaNGOS Classic lineage rather than an unpinned “Mangos-like” schema:
+
+```text
+cmangos/classic-db
+revision 250a705a462c1acb457d3002359c7e0052c4dafe
+Full_DB/ClassicDB_1_12_1_z2815.sql.gz
+blob 0a77f5230a3d5d6db968678203dfe3b30c34b8a9
+
+cmangos/mangos-classic
+semantic/core revision 9b682be617ac61c127c23aa60d7b4ffbc0ce37e6
+```
+
+At that core revision `QuestDef.cpp` consumes the fixed `quest_template` item/reward slot families:
+
+```text
+ReqItemId[4]          ReqItemCount[4]
+ReqSourceId[4]        ReqSourceCount[4]
+SrcItemId             SrcItemCount
+RewChoiceItemId[6]    RewChoiceItemCount[6]
+RewItemId[4]          RewItemCount[4]
+```
+
+Semantics used by P3-T05 are deliberately distinct:
+
+- `ReqItemId/ReqItemCount`: item/amount required to complete the quest;
+- `SrcItemId/SrcItemCount`: item/amount provided to the player for the quest;
+- `ReqSourceId/ReqSourceCount`: auxiliary source item/drop-control metadata, not a required turn-in
+  amount. `cmangos/classic-db` update `Updates/4804_TDB-0653_quest_angry_scytheclaws.sql` documents a
+  real nonzero `ReqSourceId` with `ReqSourceCount = 0` and states that zero selects normal core/item
+  stack-size drop behavior;
+- `RewItemId/RewItemCount`: guaranteed item rewards;
+- `RewChoiceItemId/RewChoiceItemCount`: choice reward alternatives and their quantities.
+
+A pinned `quest_template` row is complete baseline evidence for those fixed slots. Preserve the native
+slot number even if two slots or families repeat the same item ID. Slot order is source/presentation
+order; choice order is not a gameplay ranking.
+
+For normal requirement/reward slots, zero item ID is an absent slot. A nonzero ID with an unexpected
+zero count is source-shaped anomaly evidence and must not be defaulted. `ReqSourceCount = 0` is the
+explicit exception above and remains a meaningful raw value.
+
+Authority is D-032: CMaNGOS is Vanilla fallback/baseline evidence only. It may be selected when no
+higher-priority Octo-specific selected observation exists for that P3-T05 fact family; it must never
+silently overwrite OctoDB/direct-Octo evidence. Historical disagreements remain provenance. Octo-only
+quests absent from this baseline simply have no CMaNGOS observation.
 
 ## Research vs local extraction
 

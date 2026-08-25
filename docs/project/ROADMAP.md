@@ -108,43 +108,45 @@ identities.
 
 Detailed record: `docs/project/tasks/P3-T04.md`.
 
-### P3-T05 — quest item requirements and rewards
-
-**BLOCKED_ON_SOURCE_CONTRACT.**
-
-Primary-source inspection on 2026-08-25 established that the distributed pfQuest quest export cannot
-support the planned quantity/reward import faithfully:
-
-- raw `ReqItemId*` and `ReqSourceId*` are collapsed into membership-only `obj.I`;
-- their corresponding counts are not serialized;
-- guaranteed and choice item rewards are not serialized;
-- `quests-itemreq` is item-use target evidence, not quantity evidence;
-- the reviewed/current public pfQuest-turtle quest data does not restore those fields.
-
-D-031 forbids filling the gap by inference. The intended canonical functionality remains planned, but
-implementation waits on P3-T05A.
-
-Detailed task: `docs/project/tasks/P3-T05.md`.
-
 ### P3-T05A — establish quest quantity/reward source contract
+
+**VALIDATED.**
+
+P3-T05A resolved D-031's source gate without reinterpreting pfQuest objective membership:
+
+- native-ID OctoDB quest pages are the preferred Octo-specific partial observation source for
+  structurally explicit required/provided/guaranteed/choice item facts;
+- OctoDB page revisions are content-addressed by SHA-256 and cached locally; page absence is not
+  complete negative evidence;
+- `cmangos/classic-db@250a705a462c1acb457d3002359c7e0052c4dafe`, artifact
+  `ClassicDB_1_12_1_z2815.sql.gz` blob `0a77f5230a3d5d6db968678203dfe3b30c34b8a9`, is the pinned
+  Vanilla fallback baseline;
+- `cmangos/mangos-classic@9b682be617ac61c127c23aa60d7b4ffbc0ce37e6` supplies the pinned field
+  semantics reference;
+- D-032 keeps `ReqItem`, `SrcItem`, auxiliary `ReqSource`, guaranteed `RewItem`, and choice
+  `RewChoiceItem` families distinct and records field-specific authority;
+- `ReqSourceCount = 0` is a valid source/drop-control value in current ClassicDB, not a zero turn-in
+  requirement.
+
+Detailed record: `docs/project/tasks/P3-T05A.md`.
+
+### P3-T05 — quest item requirements and rewards
 
 **READY_FOR_IMPLEMENTATION.**
 
 Next bounded scope:
 
-- inspect Octo-specific authoritative quest data first, beginning with OctoDB and any stable structured
-  payload/API or reproducible page representation it exposes;
-- identify exact required-item/source-item quantity and guaranteed/choice reward semantics;
-- establish deterministic source revision/caching/retrieval and provenance rules;
-- determine Vanilla versus Octo/Turtle custom-quest coverage;
-- use a pinned VMaNGOS/CMaNGOS-style baseline only under an explicit fallback/authority policy if
-  needed;
-- update source/decision/task memory so P3-T05 can resume without repeating source archaeology.
+- add explicit canonical/provenance modeling for ordinary required items, auxiliary/source items,
+  quest-start provided items, guaranteed rewards and choice reward sets;
+- implement/cache a fail-closed native-ID OctoDB page adapter for explicit positive observations;
+- implement the pinned CMaNGOS ClassicDB fixed-slot fallback with complete Vanilla set semantics;
+- preserve source slots, exact quantities and the special `ReqSourceCount` semantics;
+- apply D-032 so CMaNGOS never silently overwrites higher-priority Octo-specific evidence;
+- keep missing item identities unresolved rather than fabricating placeholders;
+- validate deterministic source revisions, same-revision idempotence, reconciliation and query
+  provenance before advancing the canonical DB under D-029.
 
-Do not add P3-T05 canonical requirement/reward tables merely to make the future model writable before
-this source contract is established.
-
-Detailed task: `docs/project/tasks/P3-T05A.md`.
+Detailed task: `docs/project/tasks/P3-T05.md`.
 
 ## P4 — Spells and crafting
 
