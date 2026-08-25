@@ -31,39 +31,52 @@ Both files are generated/local artifacts and remain ignored by Git.
 
 ## Current baseline
 
-As of the P3-T03 closeout on 2026-08-24, the human has validated the cumulative database through the
-complete P1/P2 chain plus P3-T01, P3-T02 and P3-T03. The canonical local DB is therefore
-**validated through P3-T03**.
+As of the P3-T04 closeout on 2026-08-25, the human has validated the cumulative database through the
+complete P1/P2 chain plus P3-T01, P3-T02, P3-T03 and P3-T04. The canonical local DB is therefore
+**validated through P3-T04**.
 
-P3-T03 applied migration 8 and successfully reconciled quest progression/restriction facts from the
-configured pfQuest and pfQuest-turtle trees. The final same-revision pass produced zero canonical
-inserts, updates or deletes; `PRAGMA foreign_key_check` and `PRAGMA integrity_check` both passed.
+P3-T04 applied migration 9 and successfully reconciled quest objective membership, item-use target
+support and area-trigger location support from the configured pfQuest and pfQuest-turtle trees. The
+final same-revision pass produced zero canonical inserts, updates or deletes; `PRAGMA
+foreign_key_check` and `PRAGMA integrity_check` both passed.
 
-Validated quest source revisions are:
-
-```text
-base pfQuest quests/progression
-sha256:667303b5507015b4039508e6a8f8afc0f6c086f285d5dc56afd0addb79cbe8e3
-
-pfQuest-turtle quests/progression
-sha256:234f8062f8006d5dc17c526b81772cf50f8591170781ae5af8b72a86b237d25a
-```
-
-P3-T03 validator-reported canonical counts are:
+Validated P3-T04 source revisions are:
 
 ```text
-quests                          6498
-quest_prerequisite_sets         3533
-quest_prerequisite_set_members  3716
-quest_close_sets                303
-quest_close_set_members         1095
-import_batches                  16
-observation_groups              1167121
-canonical_selections            1157241
-source_observations             2059171
+base pfQuest objectives
+sha256:2acc862f732bc512482eaaec0b86a2a5d67c548d8cc50f7b6128f5ffba27a58c
+
+pfQuest-turtle objectives
+sha256:8e570cb4303e73fae03d6b4240b0122f0000f35dd441aca686feed039641f90f
 ```
 
-The current task router (`docs/project/CURRENT_STATE.md`) records the next task that may consume this
+P3-T04 validator-reported canonical counts are:
+
+```text
+quests                         6498
+quest_objective_sets           4224
+quest_creature_objectives      1484
+quest_gameobject_objectives    99
+quest_item_objectives          5064
+quest_item_use_objectives      226
+quest_area_trigger_objectives  50
+quest_zone_objectives          0
+area_triggers                  496
+area_trigger_locations         558
+item_use_target_sets           189
+item_use_creature_targets      113
+item_use_gameobject_targets    220
+import_batches                 20
+observation_groups             1182571
+canonical_selections           1172691
+source_observations            2083312
+```
+
+The task validator also reports `219` unresolved objective/support references as explicit warnings
+(`188` missing quest identities, `30` missing creature identities and `1` missing item identity).
+These are preserved audit evidence and do not represent FK or integrity failures.
+
+The current task router (`docs/project/CURRENT_STATE.md`) records which next task may consume this
 baseline.
 
 ## Before mutating the canonical DB

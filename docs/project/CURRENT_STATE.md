@@ -6,112 +6,126 @@ editing.
 
 ## Integration note for this closeout handoff
 
-P3-T03 was implemented against GitHub `main` commit:
+P3-T04 was implemented against GitHub `main` commit:
 
 ```text
-6b105bd072a19fd8b9b1d5f4c1f7b635237f7a49
+7aba4585dc29c3a9a5bbfeb8f5f09e3b190f124b
 ```
 
-At closeout packaging time, GitHub `main` still points to that P3-T02 commit. The human has already
-applied the preceding P3-T03 implementation delta locally and completed its full local validation and
-canonical-DB evolution successfully.
+At P3-T04 closeout packaging time, GitHub `main` still points to that P3-T03 closeout commit. The
+human has already applied the P3-T04 implementation delta plus the subsequent test/lint correction
+deltas locally, completed the prescribed disposable full-data validation, advanced the canonical DB,
+and completed the final tracked quality gates successfully.
 
-Therefore this closeout delta is **stacked on that locally applied P3-T03 implementation delta**. It
-must not be extracted onto a fresh checkout of `6b105bd...` without first applying the preceding
-P3-T03 implementation handoff. The intended serial workflow is to apply this closeout to the already
-validated local tree, then commit/push the combined P3-T03 implementation + closeout to `main`.
+Therefore this closeout delta is **stacked on that locally applied and validated P3-T04 working tree**.
+It must not be extracted onto a fresh checkout of `7aba458...` without first applying the preceding
+P3-T04 implementation/test-fix handoffs. The intended serial workflow is to apply this closeout to the
+validated local tree, review the combined diff, then commit/push the complete P3-T04 implementation +
+closeout to `main`.
 
 ## Recently completed
-
-### P3-T01 — first quest identity/endpoints vertical slice
-
-**Status: VALIDATED**
-
-P3-T01 established canonical native-ID quest identity plus creature/game-object giver and finisher
-relations, with missing P1 endpoint targets preserved as unresolved provenance rather than fabricated
-identities.
-
-The later clean cumulative rebuild used during P3-T02 closure independently observed the base quest
-revision:
-
-```text
-sha256:667303b5507015b4039508e6a8f8afc0f6c086f285d5dc56afd0addb79cbe8e3
-```
-
-and `4,433` accepted base quests.
-
-Detailed record: `docs/project/tasks/P3-T01.md`.
-
-### P3-T02 — pfQuest-turtle effective quest identity/endpoint reconciliation
-
-**Status: VALIDATED**
-
-P3-T02 reconciled the P3-T01 identity/endpoints fact family against the active Turtle-composed quest
-view. Its clean cumulative closeout produced `6,498` quests, `12,145` creature endpoints and `545`
-game-object endpoints with clean FK/integrity checks and same-revision idempotence.
-
-Validated quest revisions carried into P3-T03:
-
-```text
-base pfQuest quests
-sha256:667303b5507015b4039508e6a8f8afc0f6c086f285d5dc56afd0addb79cbe8e3
-
-pfQuest-turtle quests
-sha256:234f8062f8006d5dc17c526b81772cf50f8591170781ae5af8b72a86b237d25a
-```
-
-Detailed record: `docs/project/tasks/P3-T02.md`.
 
 ### P3-T03 — quest restrictions and dependency graph
 
 **Status: VALIDATED**
 
-The human completed the prescribed full local validation on 2026-08-24. The validation-copy wrapper
-reported:
+P3-T03 established migration 8 for quest/minimum level, race/class masks, prerequisite sets,
+follow-ups and close/exclusive sets. Its canonical closeout produced `3,533` prerequisite sets,
+`3,716` prerequisite members, `303` close sets and `1,095` close-set members with clean
+same-revision idempotence and FK/integrity checks.
+
+Detailed record: `docs/project/tasks/P3-T03.md`.
+
+### P3-T04 — quest objectives and objective geography
+
+**Status: VALIDATED**
+
+P3-T04 was fully validated on 2026-08-25 against the configured real pfQuest and pfQuest-turtle
+sources, first on a disposable copy and then on the canonical local database.
+
+Validated P3-T04 source revisions:
 
 ```text
-[PASS] FULL LOCAL P3-T03 VALIDATION SUCCEEDED
-[PASS] Canonical database remained unchanged.
+base pfQuest objectives
+sha256:2acc862f732bc512482eaaec0b86a2a5d67c548d8cc50f7b6128f5ffba27a58c
+
+pfQuest-turtle effective objectives
+sha256:8e570cb4303e73fae03d6b4240b0122f0000f35dd441aca686feed039641f90f
 ```
 
-The canonical DB was then backed up and deliberately evolved through P3-T03. Migration 8 was applied
-and the real configured sources produced:
+The canonical evolution applied migration 9 and produced:
 
 ```text
-base pfQuest progression revision
-sha256:667303b5507015b4039508e6a8f8afc0f6c086f285d5dc56afd0addb79cbe8e3
+quests                         6498
+quest_objective_sets           4224
+quest_creature_objectives      1484
+quest_gameobject_objectives    99
+quest_item_objectives          5064
+quest_item_use_objectives      226
+quest_area_trigger_objectives  50
+quest_zone_objectives          0
+area_triggers                  496
+area_trigger_locations         558
+item_use_target_sets           189
+item_use_creature_targets      113
+item_use_gameobject_targets    220
+import_batches                 20
+observation_groups             1182571
+canonical_selections           1172691
+source_observations            2083312
+```
 
-pfQuest-turtle progression revision
-sha256:234f8062f8006d5dc17c526b81772cf50f8591170781ae5af8b72a86b237d25a
+First canonical P3-T04 reconciliation:
 
-first pass
+```text
 status                                  succeeded
 error_count                             0
-rows_read / rows_accepted               12120 / 12120
+rows_read / rows_accepted               13014 / 13014
 rows_skipped                            0
-rows_inserted                           8647
-rows_updated                            6494
-canonical_progression_rows_deleted      0
-changed_effective_progression_count     5258
-warning_count                           1
-unresolved_progression_relation_count   0
-duplicate_source_member_count           0
-prerequisite_cycle_count                0
-close_group_mismatch_count              0
-close_self_missing_count                0
-self_prerequisite_count                 1
-
-second same-revision pass
-rows_inserted                           0
+rows_inserted                           12723
 rows_updated                            0
-canonical_progression_rows_deleted      0
-error_count                             0
-warning_count                           1
+canonical_objective_rows_deleted        0
+changed_effective_objective_quest_count 1811
+changed_effective_itemreq_count         30
+changed_effective_area_trigger_count    252
+warning_count                           219
+duplicate_source_objective_member_count 0
+protected_canonical_rows_retained       0
 ```
 
-The single warning is the explicitly surfaced self-prerequisite diagnostic. No unresolved target,
-duplicate-member, prerequisite-cycle or close-set mismatch diagnostic was reported. The source oddity
-remains audit evidence; it was not silently normalized away.
+The 219 warnings are explicit unresolved source evidence rather than validation failures:
+
+```text
+missing_quest_identity      188
+missing_creature_identity    30
+missing_item_identity         1
+```
+
+By subtype/context the validator reported:
+
+```text
+set        188
+creature    28
+U            2
+I            1
+```
+
+No target identities were fabricated to suppress these diagnostics.
+
+Second same-revision reconciliation:
+
+```text
+status                            succeeded
+error_count                       0
+rows_inserted                     0
+rows_updated                      0
+canonical_objective_rows_deleted  0
+warning_count                     219
+```
+
+`rows_read`/`rows_accepted` increase to `13096` on the second pass because newly materialized managed
+support identities (`area_triggers` / item-use target sets) join the reconciliation candidate universe;
+the canonical state itself remains unchanged.
 
 Structural checks passed:
 
@@ -120,67 +134,90 @@ PRAGMA foreign_key_check   ok
 PRAGMA integrity_check     ok
 ```
 
-Representative real-data checks also passed:
+Representative real-data query checks passed for:
 
-- quest `2` (`Sharptalon's Claw`) selected Turtle progression provenance with `race_mask = 434`;
-- quests `6`, `18`, and `783` formed the validator's three-node prerequisite-chain representative;
-- quest `235` (`The Ashenvale Hunt`) exposed a complete three-member close set containing quest IDs
-  `235`, `742`, and `6382` with Turtle selected provenance.
+- quest `7`: creature objective `6` (`Kobold Vermin`) with derived Elwynn Forest spawn geography;
+- quest `28`: game-object objective `177788` (`Shrine of Remulos`) in Moonglade;
+- quest `6`: item objective `182` (`Garrick's Head`);
+- quest `28`: item-use objective `15877` (`Shrine Bauble`) resolving through spell `19719` to
+  game-object `177788` and its geography;
+- quest `25`: area-trigger objective `2926` with source-backed coordinates in Ashenvale and
+  Stonetalon Mountains.
 
-Detailed implementation/validation record: `docs/project/tasks/P3-T03.md`.
+No selected real-data `obj.Z` member exists in the validated source revisions (`Z = 0`); the schema,
+parser, reconciliation and fixture tests still cover direct zone-objective support.
+
+Final tracked quality gate after the last lint-only correction:
+
+```text
+python -m ruff check .
+All checks passed!
+
+pytest --basetemp=.pytest_tmp
+97 passed in 5.31s
+```
+
+The compileall gate was also run with no reported error.
+
+Detailed implementation/validation record: `docs/project/tasks/P3-T04.md`.
 
 ## Canonical local database
 
-The canonical cumulative database remains:
+The canonical cumulative database is:
 
 ```text
 data/generated/octogamedb.sqlite3
 ```
 
-It is now **validated through P3-T03**. P3-T03 validator-reported canonical counts after the successful
-evolution are:
+It is now **validated through P3-T04**, including migration:
 
 ```text
-quests                          6498
-quest_prerequisite_sets         3533
-quest_prerequisite_set_members  3716
-quest_close_sets                303
-quest_close_set_members         1095
-import_batches                  16
-observation_groups              1167121
-canonical_selections            1157241
-source_observations             2059171
+0009_quest_objectives.sql
 ```
 
-Migration `0008_quest_progression.sql` is applied. The prior P3-T02 canonical state was backed up under
-the D-029 lifecycle before mutation. Future tasks must continue to create/replace
-`data/generated/octogamedb_bak.sqlite3` before mutating the canonical DB.
+The immediately preceding P3-T03 canonical state was backed up before mutation at:
 
-See `docs/project/CANONICAL_DB.md`.
+```text
+data/generated/octogamedb_bak.sqlite3
+```
+
+under D-029 / `docs/project/CANONICAL_DB.md`.
+
+Future tasks must continue to replace that one-step backup immediately before any new canonical DB
+mutation.
 
 ## Active task
 
-### P3-T04 — quest objectives and objective geography
+### P3-T05 — quest item requirements and rewards
 
 **Status: READY_FOR_IMPLEMENTATION**
 
 Detailed task:
 
 ```text
-docs/project/tasks/P3-T04.md
+docs/project/tasks/P3-T05.md
 ```
 
-The bounded target is the pfQuest objective family and the geography that can be derived from it:
-`obj.U`, `obj.O`, `obj.I`, `obj.IR`, `obj.A`, `obj.Z`, plus the supporting `quests-itemreq` source
-contract where it is required to interpret `IR` safely.
+The next bounded P3 slice is source-backed quest/item quantity semantics and reward semantics:
 
-P3-T04 must inspect the pinned primary sources and Turtle composition before schema/materialization
-choices. It must not infer objective quantities that the exported pfQuest `obj` lists do not carry.
-Required-item quantities, guaranteed/choice rewards, and item-started quest acquisition remain outside
-this task unless source inspection proves a narrow dependency that cannot be separated safely.
+- required item/source-item requirements and their actual quantities where the reviewed source carries
+  them;
+- guaranteed item rewards;
+- choice item rewards;
+- preservation of guaranteed-vs-choice distinction and source quantities;
+- Turtle effective-view/reconciliation semantics and provenance for only that bounded fact family.
+
+P3-T05 must not retroactively invent quantities for P3-T04 `obj.I` membership merely because a source
+contains some related count field. It must map counts to the precise reviewed source relation that
+carries them.
+
+Item-started quest acquisition (`start.I`), arbitrary quest text and broader repeatability/event/
+profession restrictions remain later bounded work unless primary-source inspection proves an
+inseparable dependency.
 
 ## Routing guard
 
-The next coding conversation should take P3-T04 from `docs/project/tasks/P3-T04.md` after verifying
-that the combined P3-T03 implementation + closeout is present on its actual base revision. Do not
-route back to P3-T03 unless validation evidence is later found invalid or the source revisions change.
+The next coding conversation should take P3-T05 from `docs/project/tasks/P3-T05.md` **only after** the
+human has committed and pushed the combined P3-T04 implementation + this closeout so GitHub `main`
+actually contains the validated P3-T04 state. If `main` still points to `7aba458...`, stop and reconcile
+the unpushed local handoff instead of implementing P3-T05 against stale project state.

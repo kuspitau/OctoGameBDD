@@ -13,15 +13,15 @@ def test_status_command_smoke(tmp_path, capsys):
 
     output = capsys.readouterr().out
     assert f"Database: {db_path}" in output
-    assert "Schema version: 8" in output
-    assert "Applied migrations: 8" in output
+    assert "Schema version: 9" in output
+    assert "Applied migrations: 9" in output
     assert "Registered sources: 0" in output
     assert "Import batches: 0" in output
 
     with connect_database(db_path) as connection:
         assert connection.execute(
             "SELECT COUNT(*) FROM schema_migrations"
-        ).fetchone()[0] == 8
+        ).fetchone()[0] == 9
 
 
 def test_audit_cli_json_commands(golden_audit_case, capsys):

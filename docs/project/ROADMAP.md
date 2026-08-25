@@ -74,10 +74,6 @@ Adds D-028 and reconciles the P3-T01 fact family against the installed Turtle ef
 `quest_presence` and `quest_endpoint_set`, source-correct primitive provenance, protected explicit
 selections, stale managed-endpoint cleanup and same-revision idempotence.
 
-Full local validation completed on 2026-08-24. A fresh cumulative rebuild through P3-T02 produced a
-clean canonical local DB with `6,498` quests, `12,145` creature endpoints and `545` game-object
-endpoints and passed FK/integrity validation.
-
 Detailed record: `docs/project/tasks/P3-T02.md`.
 
 ### P3-T03 — quest restrictions and dependency graph
@@ -88,32 +84,49 @@ Adds D-030 and migration 8 for quest/minimum level, raw race/class masks, explic
 sets, derived follow-ups and explicit per-quest close/exclusive member sets with task-specific
 base/Turtle effective-view provenance.
 
-Full local and canonical validation completed on 2026-08-24. The canonical DB now contains `3,533`
-prerequisite sets / `3,716` materialized prerequisite members and `303` close sets / `1,095`
-materialized close members. The second same-revision pass produced zero inserts, updates and deletes;
-FK/integrity checks passed. One self-prerequisite source diagnostic remains explicit audit evidence;
-there were no unresolved progression targets, duplicate members, cycles or close-set mismatches.
-
 Detailed record: `docs/project/tasks/P3-T03.md`.
 
 ### P3-T04 — quest objectives and objective geography
+
+**VALIDATED.**
+
+Migration 9 and the P3-T04 reconciler model the pfQuest objective families `U/O/I/IR/A/Z`, the
+supporting `quests-itemreq` target-use evidence and area-trigger location evidence with explicit
+source-shape/provenance semantics. Objective geography is derived through existing P1 spawns for
+creature/game-object targets, through item-use targets where available, or represented directly from
+source-backed area-trigger/zone evidence.
+
+Full local and canonical validation completed on 2026-08-25. The canonical DB contains `4,224`
+complete quest objective sets, `1,484` creature objectives, `99` game-object objectives, `5,064` item
+objectives, `226` item-use objectives, `50` area-trigger objectives and no selected real-data direct
+zone objective in the current source revisions. It also contains `496` area-trigger identities with
+`558` locations and `189` item-use target sets with `333` materialized target relations.
+
+The second same-revision canonical pass produced zero inserts, updates and deletes; FK/integrity
+checks passed. `219` unresolved source references remain explicit audit evidence rather than fabricated
+identities.
+
+Detailed record: `docs/project/tasks/P3-T04.md`.
+
+### P3-T05 — quest item requirements and rewards
 
 **READY_FOR_IMPLEMENTATION.**
 
 Next bounded scope:
 
-- inspect and model pfQuest `obj.U`, `obj.O`, `obj.I`, `obj.IR`, `obj.A`, and `obj.Z` semantics;
-- inspect the auxiliary `quests-itemreq` contract needed to interpret item-use objective targets;
-- preserve source-shaped complete objective membership and Turtle effective-view replacement semantics;
-- resolve creature/game-object/item/zone identities through already canonical P1/P2/P3 identities
-  without fabricating targets;
-- derive objective geography from primitive objective targets and existing spawn/zone/map relations;
-- keep objective counts/quantities separate unless a reviewed source actually carries them.
+- inspect the primary pfQuest quest/export/runtime representation of required item/source-item counts;
+- distinguish those quantity-bearing source relations from the P3-T04 objective membership export;
+- model guaranteed item rewards separately from choice item rewards;
+- preserve exact source-backed quantities and absence/empty semantics where meaningful;
+- reconcile the bounded fact family through the installed Turtle effective view with provenance,
+  protected selections, stale managed-row cleanup and same-revision idempotence;
+- expose the resulting requirement/reward relations through quest/item query surfaces.
 
-Required-item quantities, guaranteed rewards, choice rewards and item-started quest acquisition remain
-later bounded P3 work.
+Do not infer a quantity for every P3-T04 `obj.I` member unless primary-source inspection proves a
+one-to-one source relation. Item-started quest acquisition (`start.I`), arbitrary quest text and broader
+quest conditions remain later bounded P3 work.
 
-Detailed task: `docs/project/tasks/P3-T04.md`.
+Detailed task: `docs/project/tasks/P3-T05.md`.
 
 ## P4 — Spells and crafting
 
