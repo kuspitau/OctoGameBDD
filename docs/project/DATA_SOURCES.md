@@ -604,6 +604,71 @@ explicit source-aware policies, and all competing observations remain preserved.
 
 The P1-T02 binary tests use small synthetic WDBC files. Real client DBC files are never committed.
 
+#### P4-T01 spell/recipe semantic contract
+
+P4-T01 inspects public source behavior before any broad crafting migration. The primary pinned
+semantic reference is:
+
+```text
+repository: https://github.com/Penqle/tortoise-wow
+revision:   61a8269151721f6467eddb05e7bed37704d0fc0b
+branch:     main
+```
+
+Relevant files:
+
+```text
+src/game/Database/DBCStructure.h
+src/game/Spells/SpellEntry.h
+src/game/Spells/SpellDefines.h
+src/game/Spells/SpellEffects.cpp
+src/game/Objects/ItemPrototype.h
+src/game/Objects/Creature.h
+src/game/Handlers/NPCHandler.cpp
+sql/base/tw_world_npc_trainer.sql
+sql/base/tw_world_npc_trainer_template.sql
+```
+
+Established source semantics:
+
+- `Spell.Id` is native spell identity; `SpellName` and `Rank` are metadata and do not collapse IDs;
+- `SkillLineAbility.skillId` relates a profession/skill line to `spellId`;
+- `SkillLineAbility.req_skill_value` is the trade-skill requirement for the reviewed source shape;
+- `SPELL_EFFECT_CREATE_ITEM = 24` uses `EffectItemType[slot]` as the created item target;
+- created count comes from the calculated spell-effect value, so `EffectBasePoints` alone is not a
+  universally safe final recipe-output quantity;
+- `SPELL_EFFECT_LEARN_SPELL = 36` uses `EffectTriggerSpell[slot]` as the learned spell target;
+- item spell data is an array of slots carrying `SpellId`, trigger and charge/cooldown semantics;
+- trainer rows preserve an acquisition spell plus independent `reqskill`, `reqskillvalue`, `reqlevel`
+  and cost fields.
+
+This establishes D-034. The reviewed Tortoise source is a semantic/structured Turtle-lineage
+reference, not proof of exact Octo production presence. For P4-T02 actual Octo spell and skill-line
+identity should prefer the configured direct Octo DBC when its layout is verified. The existing
+`[source_paths].octo_dbc` key is sufficient; P4-T01 adds no new local path.
+
+For the exact source revision, preserve effect and item-spell slot/order as provenance. An item or
+trainer acquisition spell is not automatically the recipe spell; a `LEARN_SPELL` effect must prove
+the target. A craft spell becomes a recipe candidate only when source evidence also proves
+profession/skill-line membership and at least one `CREATE_ITEM` effect.
+
+The tracked P4-T01 fixture is intentionally reduced and source-shaped rather than copied from the
+full external source:
+
+```text
+tests/fixtures/p4_t01/source_contract.json
+```
+
+Its deterministic content revision is:
+
+```text
+sha256:cf4661faa4e9f8f7ba7d4f38f2dea1175a02eb4f8236638b7b3704da9b59cf14
+```
+
+CMaNGOS Classic revision `9b682be617ac61c127c23aa60d7b4ffbc0ce37e6`, already pinned for P1-T02,
+remains compatible Vanilla DBC/parser corroboration. No new universal source-priority order is created
+by P4-T01.
+
 ### Octo client WDB cache
 
 Potential files include item/creature/gameobject/quest caches.
@@ -716,6 +781,10 @@ content. Under D-033 it sits below direct Octo live observations and OctoDB wher
 the bounded family, and above the Vanilla CMaNGOS fallback. Conflicts are preserved rather than being
 relabelled or silently overwritten.
 
+For P4-T01 the same pinned revision is also a primary **semantic reference** for spell effects,
+SkillLineAbility, item spell slots and trainer acquisition rows. That use does not change the P3-T05
+source-priority policy and does not relabel Tortoise rows as exact Octo production data.
+
 ### Tortoise-WoW Database Viewer
 
 Pinned technical reference:
@@ -758,119 +827,3 @@ useful corroboration that Tortoise data is practically relevant when auditing Oc
 Questie-Octo is **not** promoted to a primary canonical source for OctoGameBDD by D-033. Its generated
 or presentation-oriented tables remain secondary corroboration unless a future bounded task reviews a
 specific field contract.
-
-### VMaNGOS / CMaNGOS / ClassicDB lineage
-
-Useful for:
-
-- Vanilla baselines;
-- loot templates;
-- quest/world structures;
-- cross-checking missing or unchanged content;
-- identifying custom vs baseline data.
-
-Example ClassicDB repository:
-- `https://github.com/classicdb/database`
-
-#### P3-T05A pinned Vanilla quest item/reward baseline
-
-P3-T05 uses the maintained CMaNGOS Classic lineage rather than an unpinned “Mangos-like” schema:
-
-```text
-cmangos/classic-db
-revision 250a705a462c1acb457d3002359c7e0052c4dafe
-Full_DB/ClassicDB_1_12_1_z2815.sql.gz
-blob 0a77f5230a3d5d6db968678203dfe3b30c34b8a9
-
-cmangos/mangos-classic
-semantic/core revision 9b682be617ac61c127c23aa60d7b4ffbc0ce37e6
-```
-
-At that core revision `QuestDef.cpp` consumes the fixed `quest_template` item/reward slot families:
-
-```text
-ReqItemId[4]          ReqItemCount[4]
-ReqSourceId[4]        ReqSourceCount[4]
-SrcItemId             SrcItemCount
-RewChoiceItemId[6]    RewChoiceItemCount[6]
-RewItemId[4]          RewItemCount[4]
-```
-
-Semantics used by P3-T05 are deliberately distinct:
-
-- `ReqItemId/ReqItemCount`: item/amount required to complete the quest;
-- `SrcItemId/SrcItemCount`: item/amount provided to the player for the quest;
-- `ReqSourceId/ReqSourceCount`: auxiliary source item/drop-control metadata, not a required turn-in
-  amount. `cmangos/classic-db` update `Updates/4804_TDB-0653_quest_angry_scytheclaws.sql` documents a
-  real nonzero `ReqSourceId` with `ReqSourceCount = 0` and states that zero selects normal core/item
-  stack-size drop behavior;
-- `RewItemId/RewItemCount`: guaranteed item rewards;
-- `RewChoiceItemId/RewChoiceItemCount`: choice reward alternatives and their quantities.
-
-A pinned `quest_template` row is complete baseline evidence for those fixed slots. Preserve the native
-slot number even if two slots or families repeat the same item ID. Slot order is source/presentation
-order; choice order is not a gameplay ranking.
-
-For normal requirement/reward slots, zero item ID is an absent slot. A nonzero ID with an unexpected
-zero count is source-shaped anomaly evidence and must not be defaulted. `ReqSourceCount = 0` is the
-explicit exception above and remains a meaningful raw value.
-
-D-033 supersedes D-032's current P3-T05 priority order but not these semantics. CMaNGOS remains the
-pinned Vanilla fallback/semantic baseline beneath direct Octo live evidence, OctoDB structural
-observations and the close Tortoise 1.18.1 source where the field-specific policy provides them.
-Historical disagreements remain provenance. Octo-only quests absent from the Vanilla baseline simply
-have no CMaNGOS observation.
-
-## Research vs local extraction
-
-Distinguish two needs.
-
-### Understanding a public source
-
-When implementing an adapter/parser for a public addon or database:
-
-- inspect the current primary repository/source;
-- follow relevant code references;
-- consult docs/issues/discussions/history when the format or semantics are unclear;
-- do not infer field meaning from memory alone;
-- do not require the user's installed addon solely to learn a public format.
-
-### Accessing the user's local source data
-
-When the actual installed/local source is needed for extraction or Level 2 validation:
-
-- read `docs/project/LOCAL_PATHS.md`;
-- use `config.local.toml` for stable machine-specific paths;
-- generate `get_path.bat` when required paths are not already configured;
-- validate the located source/version before importing.
-
-This distinction allows coding agents to build correct adapters from public evidence while the human
-later validates against their exact Octo installation.
-
-## Source registry requirements
-
-Every importer must register:
-
-- stable source key;
-- human-readable name;
-- source kind;
-- source URL/path when appropriate;
-- source revision/commit/build when available;
-- retrieval/import timestamp;
-- parser/importer version if useful.
-
-Every import run should create an import-batch record with:
-
-- rows read;
-- rows accepted;
-- rows skipped;
-- warnings;
-- errors;
-- inserted/updated counts;
-- source revision.
-
-## Licensing
-
-Before copying/adapting code or redistributing extracted data from third-party projects, verify the relevant license and redistribution terms.
-
-The repository should favor code that can rebuild local data from user-provided/downloaded sources rather than committing large third-party datasets.

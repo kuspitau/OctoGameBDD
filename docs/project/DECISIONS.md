@@ -626,3 +626,55 @@ schema implementation, P3-T05 is gated by P3-T05B. P3-T05B must validate a sourc
 adapter and a conservative direct-Octo live capture path, establish deterministic revisions and
 cross-source golden comparisons, and leave the canonical DB unchanged. Only after P3-T05B is
 validated may P3-T05 resume implementation against D-033.
+
+## D-034 — P4 recipe identity is anchored to a proven crafting spell; learning sources remain separate
+
+**Status:** accepted
+
+P4-T01 refines D-010 from a conceptual distinction into a source-backed identity contract. It does
+not supersede D-010; it specifies how later P4 schema/import work must preserve the distinction.
+
+Primary semantic evidence is pinned Tortoise revision:
+
+```text
+Penqle/tortoise-wow
+main @ 61a8269151721f6467eddb05e7bed37704d0fc0b
+```
+
+with compatible Vanilla DBC semantics corroborated by the already-pinned
+`cmangos/mangos-classic` revision `9b682be617ac61c127c23aa60d7b4ffbc0ce37e6`.
+
+For P4:
+
+- `Spell.Id` is the native spell identity. Rank/name fields are metadata and do not authorize merging
+  different spell IDs.
+- A canonical `Recipe` remains a separate entity type, but its durable native recipe key is anchored
+  to the **crafting spell ID** when source evidence proves both profession/skill-line membership and at
+  least one `CREATE_ITEM` effect for that spell.
+- `SkillLineAbility.skillId -> spellId` establishes profession/skill-line membership for the reviewed
+  DBC shape. `SkillLineAbility.req_skill_value` is the trade-skill requirement and must remain distinct
+  from trainer requirements, character level and spell rank text.
+- `CREATE_ITEM` effect slots point to result item IDs through `EffectItemType[slot]`. Output slot/order
+  is source evidence and multiple output effects must remain representable. Created quantity is based
+  on calculated spell-effect semantics; P4 must not derive a fixed recipe quantity solely from a
+  teaching item or output item ID.
+- An item teaching source is represented first as an item spell slot. The item's `SpellId` is an
+  acquisition spell reference; only a proven `LEARN_SPELL` effect target may resolve that acquisition
+  spell to the learned/crafting spell. Item spell slot/order is provenance-bearing evidence.
+- A trainer row similarly records an acquisition spell plus `reqskill`, `reqskillvalue`, `reqlevel`
+  and cost. Those acquisition requirements do not replace the independent recipe profession/
+  skill-line requirement.
+- The reviewed item source shape contains an array of spell slots, so later P4 code must not encode a
+  structural one-item/one-spell assumption. Whether a particular production item actually teaches
+  several recipe spells is an observation question, not an identity rule.
+- A recipe requires no teaching item. Trainer, quest, known-by-default, or future acquisition paths
+  relate independently to the same recipe/crafting spell identity.
+- Learning/acquisition wrappers are still spells. If an item/trainer spell cannot be connected to a
+  craft spell by a proven learning effect, the relation remains unresolved rather than being joined
+  by matching names or convenient IDs.
+- Completeness remains field/source-specific. A complete direct DBC revision may support bounded
+  spell/skill-line membership for that exact source; trainer/item/world SQL and website/addon surfaces
+  must not be treated as universal negative evidence without a separate completeness decision.
+
+P4-T01 adds no canonical migration. The first schema implementation under this decision is routed to
+P4-T02 and must keep effect slots, source revision/provenance and unresolved identities auditable.

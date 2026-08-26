@@ -180,20 +180,40 @@ Goal:
 
 ### P4-T01 — spell/recipe source and identity contract
 
+**VALIDATED.**
+
+D-034 now establishes the bounded P4 identity contract from pinned primary source behavior:
+
+- `Spell.Id` remains native spell identity;
+- recipe identity is separate but anchored to a proven crafting spell ID;
+- profession/skill-line membership comes from `SkillLineAbility.skillId -> spellId`;
+- `req_skill_value` remains distinct from trainer acquisition requirements and character level;
+- teaching items/trainers point to acquisition spells and require proven `LEARN_SPELL` targets;
+- crafted outputs are `CREATE_ITEM` effect-slot relations and may be multiple/variable;
+- effect/item-spell slots are provenance-bearing and are not flattened.
+
+A reduced source-shaped normalizer/fixture/test suite locks those distinctions without changing the
+canonical schema or migration-10 local DB. Focused agent-side tests passed, followed by successful
+human local integration validation on 2026-08-26: repository pytest, Ruff across `src`, `tests` and
+`scripts`, compile checks, the deterministic P4-T01 validator, and protected-DB byte-identity checks
+all passed. No source-specific/full-data rerun was required.
+
+Detailed record: `docs/project/tasks/P4-T01.md`.
+
+### P4-T02 — canonical spell / skill-line / recipe identity slice
+
 **READY_FOR_IMPLEMENTATION.**
 
-Before broad crafting ingestion, establish the exact source and identity contract for native spells,
-craft/recipe spells, teaching recipe items, crafted result items, profession/skill-line membership and
-skill/rank requirements.
+Implement the first canonical P4 migration/import slice under D-034: spell identity, skill-line
+identity, recipe identity/membership and crafted-output relations. Prefer verified direct Octo DBC for
+actual Octo presence/names while retaining pinned Tortoise/CMaNGOS as semantic/parser references.
 
-P4-T01 is deliberately bounded to evidence and identity semantics. It must inspect primary/current
-source behavior before fixing recipe keys or conflating recipe items with spells/results. It may add
-small extraction/normalization probes and source-shaped fixtures needed to prove the contract, but
-broad reagents, learning-source acquisition, economics and P6-scale ingestion remain later P4 work.
+Keep reagents and learning/acquisition graphs outside this task unless a source/schema constraint makes
+them inseparable. Any canonical evolution must use a disposable migration-10 copy first and then D-029.
 
-Detailed task: `docs/project/tasks/P4-T01.md`.
+Detailed task: `docs/project/tasks/P4-T02.md`.
 
-P4-T01 is the active task after P3-T05 validation/canonical closeout.
+P4-T01 is closed as `VALIDATED`; P4-T02 is now the active prepared task.
 
 ## P5 — Resolution, auditing and coverage
 

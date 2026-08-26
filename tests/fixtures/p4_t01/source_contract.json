@@ -1,0 +1,127 @@
+{
+  "contract_schema": "p4-t01-source-contract/1",
+  "source_key": "p4-t01-source-shaped-fixture",
+  "source_revision": "tortoise:61a8269151721f6467eddb05e7bed37704d0fc0b",
+  "spells": [
+    {
+      "Id": 1000,
+      "SpellName": "Example Forging Process",
+      "Rank": "",
+      "effects": [
+        {
+          "effect_index": 0,
+          "Effect": 24,
+          "EffectBasePoints": 0,
+          "EffectDieSides": 1,
+          "EffectItemType": 2000,
+          "EffectTriggerSpell": 0
+        },
+        {
+          "effect_index": 2,
+          "Effect": 24,
+          "EffectBasePoints": 1,
+          "EffectDieSides": 2,
+          "EffectItemType": 2001,
+          "EffectTriggerSpell": 0
+        }
+      ]
+    },
+    {
+      "Id": 1100,
+      "SpellName": "Example Alchemy Process",
+      "Rank": "Rank 2",
+      "effects": [
+        {
+          "effect_index": 1,
+          "Effect": 24,
+          "EffectBasePoints": 0,
+          "EffectDieSides": 1,
+          "EffectItemType": 2100,
+          "EffectTriggerSpell": 0
+        }
+      ]
+    },
+    {
+      "Id": 9000,
+      "SpellName": "Learn Example Forging Process",
+      "Rank": "",
+      "effects": [
+        {
+          "effect_index": 1,
+          "Effect": 36,
+          "EffectBasePoints": 0,
+          "EffectDieSides": 0,
+          "EffectItemType": 0,
+          "EffectTriggerSpell": 1000
+        }
+      ]
+    },
+    {
+      "Id": 9001,
+      "SpellName": "Trainer Learn Example Forging Process",
+      "Rank": "",
+      "effects": [
+        {
+          "effect_index": 0,
+          "Effect": 36,
+          "EffectBasePoints": 0,
+          "EffectDieSides": 0,
+          "EffectItemType": 0,
+          "EffectTriggerSpell": 1000
+        }
+      ]
+    },
+    {
+      "Id": 9999,
+      "SpellName": "Unrelated Item Use Spell",
+      "Rank": "",
+      "effects": []
+    }
+  ],
+  "skill_line_abilities": [
+    {
+      "id": 5000,
+      "skillId": 164,
+      "spellId": 1000,
+      "req_skill_value": 80,
+      "forward_spellid": 0,
+      "min_value": 80,
+      "max_value": 160
+    },
+    {
+      "id": 5001,
+      "skillId": 171,
+      "spellId": 1100,
+      "req_skill_value": 125,
+      "forward_spellid": 0,
+      "min_value": 125,
+      "max_value": 205
+    }
+  ],
+  "item_spells": [
+    {
+      "item_id": 3000,
+      "slot": 0,
+      "SpellId": 9000,
+      "SpellTrigger": 0,
+      "SpellCharges": 1
+    },
+    {
+      "item_id": 3000,
+      "slot": 3,
+      "SpellId": 9999,
+      "SpellTrigger": 0,
+      "SpellCharges": 0
+    }
+  ],
+  "trainer_spells": [
+    {
+      "entry": 4000,
+      "spell": 9001,
+      "spellcost": 2500,
+      "reqskill": 164,
+      "reqskillvalue": 75,
+      "reqlevel": 10
+    }
+  ]
+}

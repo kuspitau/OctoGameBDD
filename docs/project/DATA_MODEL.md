@@ -668,3 +668,82 @@ A canonical winner must not delete competing source observations. Materialized-r
 Vendors and trainers should initially be represented as roles/relations of creatures (or game objects if evidence requires it), rather than creating duplicate identity records for the same NPC.
 
 Promote to separate first-class entities only if a demonstrated requirement justifies it.
+
+## P4-T01 spell/recipe identity contract
+
+D-034 establishes the source-backed boundary that P4 schema work must implement.
+
+The durable identity chain is:
+
+```text
+SkillLineAbility.skillId
+        |
+        v
+crafting Spell.Id -- CREATE_ITEM(effect slot) --> result Item ID
+        ^
+        |
+LEARN_SPELL(effect slot)
+        |
+acquisition Spell.Id
+    ^              ^
+    |              |
+item spell slot   trainer row
+```
+
+The entities are not collapsed:
+
+- `Spell` is a native spell row identified by `Spell.Id`;
+- `Recipe` is a separate process entity whose durable native recipe key is anchored to a proven
+  crafting spell ID;
+- a teaching `Item` is an acquisition source, not the recipe;
+- an acquisition/learning spell is still a `Spell`, and may be distinct from the crafting spell;
+- a result `Item` is reached through a `CREATE_ITEM` effect slot, not by recipe/item-name matching.
+
+A spell qualifies as a recipe in the bounded P4 contract only when source evidence proves both:
+
+```text
+SkillLineAbility.spellId == Spell.Id
+and
+Spell.Effect[slot] == CREATE_ITEM
+```
+
+Profession/skill requirement semantics are separate:
+
+```text
+SkillLineAbility.skillId          -> profession/skill-line native identity
+SkillLineAbility.req_skill_value  -> required profession/trade-skill value
+trainer.reqskill                  -> trainer acquisition prerequisite skill line
+trainer.reqskillvalue             -> trainer acquisition prerequisite value
+trainer.reqlevel                  -> trainer acquisition character-level requirement
+Spell.Rank                        -> display/rank metadata
+```
+
+These values must not be copied into one generic `required_level` field.
+
+Output relations are effect-slot shaped. A future canonical relation should preserve at minimum:
+
+```text
+recipe/craft_spell_id
+result_item_id
+effect_slot
+source/revision/provenance
+```
+
+and may later add source-backed quantity semantics. P4-T01 deliberately does not define a fixed final
+output quantity column from `EffectBasePoints` alone because the reviewed core computes create count
+from the calculated spell-effect value. Multiple `CREATE_ITEM` slots remain representable.
+
+Learning/acquisition relations are also slot shaped. Item spell slot and `LEARN_SPELL` effect slot are
+both provenance-bearing evidence. A later acquisition graph may model:
+
+```text
+teaching item -> item spell slot -> acquisition spell
+acquisition spell -> LEARN_SPELL effect slot -> craft spell/recipe
+trainer creature -> trainer spell row -> acquisition spell
+```
+
+A missing teaching item is not missing recipe identity. Quest, trainer, automatic/known-by-default or
+other learning sources may attach later to the same recipe independently.
+
+P4-T01 adds no canonical tables. P4-T02 is responsible for the first minimal migration implementing
+spell, skill-line, recipe identity/membership and crafted-output relations under this contract.
