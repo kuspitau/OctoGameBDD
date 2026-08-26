@@ -60,8 +60,6 @@ def _write_standard_vanilla_173_spell_variant(source: Path, target: Path) -> Non
     target.write_bytes(header + out_records + strings)
 
 
-
-
 def _rewrite_skill_line_ability_skill_id(path: Path, record_id: int, skill_line_id: int) -> None:
     data = bytearray(path.read_bytes())
     magic, record_count, field_count, record_size, string_size = struct.unpack_from(
@@ -106,6 +104,7 @@ def _rewrite_skill_line_ability_spell_id(path: Path, record_id: int, spell_id: i
     expected_size = 20 + record_count * record_size + string_size
     assert len(data) == expected_size
     path.write_bytes(data)
+
 
 def _seed_items(connection: sqlite3.Connection) -> None:
     connection.executemany(
@@ -283,8 +282,8 @@ def test_revision_is_deterministic_and_content_sensitive(tmp_path: Path) -> None
 def test_fresh_database_migrates_to_recipe_identity_schema(tmp_path: Path) -> None:
     with connect_database(tmp_path / "fresh.sqlite3") as connection:
         applied = apply_migrations(connection)
-        assert applied[-1].version == 11
-        assert connection.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0] == 11
+        assert any(migration.version == 11 for migration in applied)
+        assert connection.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0] >= 11
         table_names = {
             row[0]
             for row in connection.execute(

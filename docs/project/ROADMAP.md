@@ -237,13 +237,49 @@ Detailed record and exact validation/promotion commands: `docs/project/tasks/P4-
 
 ### P4-T03 — recipe reagents and quantities
 
-**READY_FOR_IMPLEMENTATION.**
+**VALIDATED.**
 
-Next bounded P4 slice: model recipe reagent item IDs and required quantities without mixing in recipe
-learning/acquisition sources. Begin by reviewing primary source semantics and D-034/P4-T02 boundaries,
-then choose the smallest provenance-bearing schema/import slice that preserves native IDs and
-variable/optional semantics where the source requires them. Trainer/vendor/item/quest learning
-sources remain a later separate task.
+Migration 12 and the direct-Octo reagent importer implement the bounded reagent slice without mixing
+in recipe learning/acquisition sources:
+
+- each positive `Spell.Reagent[0..7]` item ID is retained with its native slot/index;
+- the exact matching `Spell.ReagentCount[0..7]` value is retained as `required_quantity`;
+- all eight slots are scanned independently rather than truncating at the first empty slot;
+- native reagent item IDs remain exact even when canonical `items` identity is unresolved;
+- a positive reagent with quantity `0` is preserved and reported instead of guessed away;
+- managed provenance selection does not overwrite a foreign/custom canonical selection;
+- the importer requires the exact same three-file DBC revision as the latest successful P4-T02
+  `octo-dbc-recipes/4` identity import;
+- a later different DBC revision is rejected until explicit cross-revision reagent reconciliation
+  semantics are designed.
+
+Primary-source review confirmed reagent IDs/counts at physical Spell fields `42..49` / `50..57` and
+current Octo client offsets `0xA8` / `0xC8`. Both reviewed Spell layouts remain supported (`176/704`,
+`173/692`).
+
+Human Level-2 validation completed on 2026-08-26 after full repository pytest/Ruff/compile gates.
+The real configured Octo DBC revision was
+`sha256:f82d41ddbb77f5958d36b2483786c819de512128ef736142c758469718f7274d`.
+The disposable proof and guarded promotion both passed with 1,739 recipes, 5,801 reagent relations,
+1,721 recipes with reagents, 85 unresolved canonical reagent-item targets and zero zero-quantity or
+negative reagent slots. Same-input second import was `0/0`, FK/integrity checks passed, and the D-029
+promotion advanced the canonical DB to migration 12.
+
+Final canonical SHA-256 is
+`6f9d9c44593225a67576df3be8caa06cbf157fbfb19233b9a932a83612ae5261`; rollback is the exact
+migration-11 canonical `3e2a1b03dd688fc1b944665fcfa79cde68aacb537790f0c580480049a19ad8e7`.
+
+Detailed record: `docs/project/tasks/P4-T03.md`.
+
+### P4-T04 — recipe learning/acquisition sources
+
+**READY_FOR_RESEARCH_AND_IMPLEMENTATION.**
+
+This is the next bounded P4 slice. Establish primary-source semantics and then materialize proven
+recipe learning/acquisition relations (trainer, vendor, teaching item, quest or other evidenced
+source) without conflating acquisition spells/items with canonical recipe identity. Reuse D-034,
+native IDs and provenance/selection rules. Derived recipe availability should remain distinct from raw
+acquisition evidence until its own contract is explicit.
 
 ## P5 — Resolution, auditing and coverage
 

@@ -29,38 +29,41 @@ Both remain ignored by Git and must never be included in `changes.zip`.
 
 ## Current baseline
 
-As of the P4-T02 closeout on 2026-08-26, the human has validated the cumulative local database
-through **P4-T02 / migration 11**.
+As of the P4-T03 closeout on 2026-08-26, the human has validated the cumulative local database
+through **P4-T03 / migration 12**.
 
 Latest applied migration:
 
 ```text
-0011_recipe_identity.sql
+0012_recipe_reagents.sql
 ```
 
-P4-T02 added the canonical recipe-identity slice:
+P4-T03 extends the validated recipe identity slice with:
 
 ```text
-spells
-skill_lines
-recipes
-recipe_skill_lines
-recipe_outputs
+recipe_reagents
 ```
+
+Each row preserves the native reagent item ID, native Spell reagent slot/index and exact matching
+`Spell.ReagentCount` quantity. Canonical `item_id` remains nullable when the item identity is not yet
+materialized; unresolved native IDs are retained as evidence rather than replaced by placeholders.
 
 The real canonical database was promoted only after successful disposable Level-2 validation and a
-non-destructive promotion simulation. Final post-promotion checks are:
+non-destructive shadow promotion using the real local data/source files. Final post-promotion checks
+are:
 
 ```text
-schema_version                         = 11
-recipe_count                           = 1739
-represented_skill_line_count           = 15
-output_count                           = 1739
-unresolved_output_count                = 114
-orphan_spell_skill_line_ability_count  = 1
-orphan_skill_line_ability_count        = 5
-foreign_key_check                      = []
-integrity_check                        = ok
+schema_version                      = 12
+recipe_count                        = 1739
+recipe_reagent_count                = 5801
+recipes_with_reagents               = 1721
+unresolved_reagent_count            = 85
+zero_quantity_reagent_count         = 0
+ignored_negative_reagent_slot_count = 0
+protected_selection_count           = 0
+matching_successful_import_batches  = 2
+foreign_key_check                   = []
+integrity_check                     = ok
 ```
 
 The second import during guarded promotion was canonically idempotent:
@@ -70,7 +73,7 @@ rows_inserted = 0
 rows_updated  = 0
 ```
 
-Validated P4-T02 Octo DBC source revision:
+Validated P4-T03 Octo DBC source revision:
 
 ```text
 sha256:f82d41ddbb77f5958d36b2483786c819de512128ef736142c758469718f7274d
@@ -84,29 +87,34 @@ SkillLine.dbc          22 fields /  88 bytes /   136 records
 SkillLineAbility.dbc   15 fields /  60 bytes /  6795 records
 ```
 
-Audited cross-file source anomalies are retained explicitly and did not cause fabricated identities:
-
-```text
-missing spell targets:      [46530]
-missing skill-line targets: [549, 761, 763]
-recipe-qualified missing skill-line memberships: 0
-```
-
-The `114` unresolved recipe output targets preserve exact native item IDs with nullable canonical
-`item_id`; they are warnings/provenance evidence, not placeholder items.
+The `85` unresolved reagent targets preserve exact native item IDs, reagent slots and required
+quantities with nullable canonical `item_id`. They are warnings/provenance evidence, not fabricated
+item identities or import failures.
 
 ### Current rollback/canonical hashes
 
 ```text
-migration-10 rollback backup:
-9c637ab40c2c5e3c2843e6c7d52fb5c75bbe05f57d05e2ea4d48ae7bd03b127d
+migration-11 rollback backup:
+3e2a1b03dd688fc1b944665fcfa79cde68aacb537790f0c580480049a19ad8e7
 
-validated migration-11 canonical:
+validated migration-12 canonical:
+6f9d9c44593225a67576df3be8caa06cbf157fbfb19233b9a932a83612ae5261
+```
+
+The `_bak` is the exact byte-for-byte canonical database immediately before P4-T03 promotion. It may
+remain until the next validated canonical mutation cycle replaces it.
+
+## Historical P4-T02 baseline
+
+P4-T02 validated migration 11 / `0011_recipe_identity.sql`. Its canonical hash was:
+
+```text
 3e2a1b03dd688fc1b944665fcfa79cde68aacb537790f0c580480049a19ad8e7
 ```
 
-The `_bak` is the exact byte-for-byte canonical database immediately before P4-T02 promotion. It may
-remain until the next validated canonical mutation cycle replaces it.
+That exact file is now the current D-029 rollback backup after P4-T03 promotion. P4-T02 validated
+1,739 recipes, 15 represented skill lines, 1,739 outputs, 114 unresolved output targets and the same
+Octo DBC source revision used by P4-T03.
 
 ## Historical P3-T05 baseline
 
@@ -116,9 +124,8 @@ P3-T05 had previously validated migration 10 / `0010_quest_item_facts.sql`. Its 
 9c637ab40c2c5e3c2843e6c7d52fb5c75bbe05f57d05e2ea4d48ae7bd03b127d
 ```
 
-That exact file is now the current D-029 rollback backup after P4-T02 promotion. Earlier P3 counts,
-source revisions and D-033 evidence remain documented in the corresponding P3 task closeouts rather
-than duplicated here.
+Earlier P3 counts, source revisions and D-033 evidence remain documented in the corresponding P3 task
+closeouts rather than duplicated here.
 
 ## Before mutating the canonical DB
 
@@ -193,6 +200,12 @@ merely because GitHub cannot expose it. The expected local path is:
 
 ```text
 data/generated/octogamedb.sqlite3
+```
+
+The expected current validated baseline is migration 12 with SHA-256:
+
+```text
+6f9d9c44593225a67576df3be8caa06cbf157fbfb19233b9a932a83612ae5261
 ```
 
 If local validation needs that file and the conversation cannot inspect the user's filesystem, give
