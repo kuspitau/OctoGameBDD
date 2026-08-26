@@ -18,6 +18,7 @@ CURRENT_MIGRATIONS = (
     (8, "0008_quest_progression.sql"),
     (9, "0009_quest_objectives.sql"),
     (10, "0010_quest_item_facts.sql"),
+    (11, "0011_recipe_identity.sql"),
 )
 
 OBJECTIVE_TABLES = (
@@ -49,7 +50,7 @@ def test_fresh_initialization_creates_foundation_schema(tmp_path):
     db_path = tmp_path / "nested" / "octogamedb.sqlite3"
     with connect_database(db_path) as connection:
         applied = apply_migrations(connection)
-        assert [migration.version for migration in applied] == list(range(1, 11))
+        assert [migration.version for migration in applied] == list(range(1, 12))
         tables = {
             row["name"]
             for row in connection.execute(
@@ -94,7 +95,7 @@ def test_fresh_initialization_creates_foundation_schema(tmp_path):
 def test_repeat_initialization_is_idempotent(tmp_path):
     db_path = tmp_path / "octogamedb.sqlite3"
     with connect_database(db_path) as connection:
-        assert len(apply_migrations(connection)) == 10
+        assert len(apply_migrations(connection)) == 11
         assert apply_migrations(connection) == ()
         assert get_applied_migrations(connection) == CURRENT_MIGRATIONS
 
@@ -346,7 +347,7 @@ def test_failed_migration_is_not_recorded(tmp_path, monkeypatch):
 def test_existing_version_one_database_upgrades_to_current_schema(tmp_path, monkeypatch):
     db_path = tmp_path / "upgrade.sqlite3"
     all_migrations = migration_module.discover_migrations()
-    assert [migration.version for migration in all_migrations] == list(range(1, 11))
+    assert [migration.version for migration in all_migrations] == list(range(1, 12))
     monkeypatch.setattr(migration_module, "discover_migrations", lambda: (all_migrations[0],))
     with connect_database(db_path) as connection:
         assert [migration.version for migration in apply_migrations(connection)] == [1]
@@ -354,7 +355,7 @@ def test_existing_version_one_database_upgrades_to_current_schema(tmp_path, monk
     monkeypatch.setattr(migration_module, "discover_migrations", lambda: all_migrations)
     with connect_database(db_path) as connection:
         assert [migration.version for migration in apply_migrations(connection)] == [
-            2, 3, 4, 5, 6, 7, 8, 9, 10
+            2, 3, 4, 5, 6, 7, 8, 9, 10, 11
         ]
         assert get_applied_migrations(connection) == CURRENT_MIGRATIONS
         for table in (
@@ -391,7 +392,7 @@ def test_existing_version_four_database_upgrades_reference_vendor_quest_progress
     monkeypatch.setattr(migration_module, "discover_migrations", lambda: all_migrations)
     with connect_database(db_path) as connection:
         assert [migration.version for migration in apply_migrations(connection)] == [
-            5, 6, 7, 8, 9, 10
+            5, 6, 7, 8, 9, 10, 11
         ]
         for table in (
             "reference_loot_creatures",
@@ -424,8 +425,8 @@ def test_existing_version_five_database_upgrades_vendor_quest_progression_and_ob
         ).fetchone()[0] == 0
     monkeypatch.setattr(migration_module, "discover_migrations", lambda: all_migrations)
     with connect_database(db_path) as connection:
-        assert [migration.version for migration in apply_migrations(connection)] == [6, 7, 8, 9, 10]
-        assert get_applied_migrations(connection)[-1] == (10, "0010_quest_item_facts.sql")
+        assert [migration.version for migration in apply_migrations(connection)] == [6, 7, 8, 9, 10, 11]
+        assert get_applied_migrations(connection)[-1] == (11, "0011_recipe_identity.sql")
         for table in (
             "vendor_items",
             "quests",
@@ -456,8 +457,8 @@ def test_existing_version_six_database_upgrades_quest_progression_and_objectives
         ).fetchone()[0] == 0
     monkeypatch.setattr(migration_module, "discover_migrations", lambda: all_migrations)
     with connect_database(db_path) as connection:
-        assert [migration.version for migration in apply_migrations(connection)] == [7, 8, 9, 10]
-        assert get_applied_migrations(connection)[-1] == (10, "0010_quest_item_facts.sql")
+        assert [migration.version for migration in apply_migrations(connection)] == [7, 8, 9, 10, 11]
+        assert get_applied_migrations(connection)[-1] == (11, "0011_recipe_identity.sql")
         for table in (
             "quests",
             "quest_creature_endpoints",
@@ -487,7 +488,7 @@ def test_existing_version_seven_database_upgrades_progression_and_objectives_sch
         assert "quest_level" not in columns
     monkeypatch.setattr(migration_module, "discover_migrations", lambda: all_migrations)
     with connect_database(db_path) as connection:
-        assert [migration.version for migration in apply_migrations(connection)] == [8, 9, 10]
+        assert [migration.version for migration in apply_migrations(connection)] == [8, 9, 10, 11]
         row = connection.execute(
             """
             SELECT name, quest_level, minimum_level, race_mask, class_mask
@@ -527,7 +528,7 @@ def test_existing_version_eight_database_upgrades_objective_schema(tmp_path, mon
         ).fetchone()[0] == 0
     monkeypatch.setattr(migration_module, "discover_migrations", lambda: all_migrations)
     with connect_database(db_path) as connection:
-        assert [migration.version for migration in apply_migrations(connection)] == [9, 10]
+        assert [migration.version for migration in apply_migrations(connection)] == [9, 10, 11]
         assert get_applied_migrations(connection) == CURRENT_MIGRATIONS
         for table in (*OBJECTIVE_TABLES, *QUEST_ITEM_FACT_TABLES):
             assert connection.execute(
@@ -567,7 +568,7 @@ def test_existing_version_nine_database_upgrades_quest_item_facts_schema(tmp_pat
         ).fetchone()[0] == 0
     monkeypatch.setattr(migration_module, "discover_migrations", lambda: all_migrations)
     with connect_database(db_path) as connection:
-        assert [migration.version for migration in apply_migrations(connection)] == [10]
+        assert [migration.version for migration in apply_migrations(connection)] == [10, 11]
         assert get_applied_migrations(connection) == CURRENT_MIGRATIONS
         for table in QUEST_ITEM_FACT_TABLES:
             assert connection.execute(

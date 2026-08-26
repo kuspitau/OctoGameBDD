@@ -189,7 +189,7 @@ def test_migration_materializes_distinct_families_and_reqsource_zero(tmp_path):
         view = quest_item_facts_by_id(connection, 100)
 
         assert summary.status == "succeeded"
-        assert connection.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0] == 10
+        assert connection.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0] == 11
         assert view["required_items"][0]["quantity"] == 3
         assert view["required_items"][0]["objective_membership"] is True
         assert view["required_sources"][0]["raw_source_count"] == 0

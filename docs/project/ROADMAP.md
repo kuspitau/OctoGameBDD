@@ -202,18 +202,48 @@ Detailed record: `docs/project/tasks/P4-T01.md`.
 
 ### P4-T02 — canonical spell / skill-line / recipe identity slice
 
+**VALIDATED.**
+
+Migration 11 and the direct-Octo DBC importer now implement the bounded D-034 canonical slice:
+
+- native `spells` identity plus available name/rank metadata without rank merging;
+- native `skill_lines` identity plus available names;
+- separate `recipes` identity anchored exactly to the proven crafting spell ID;
+- native `SkillLineAbility.id` membership plus `req_skill_value`;
+- one `recipe_outputs` row per `CREATE_ITEM` effect slot;
+- exact native output item target retention even when the canonical `items` identity is unresolved;
+- no fabricated fixed output quantity;
+- deterministic three-file DBC revision, explicit exact-layout/completeness metadata and provenance;
+- preservation of canonical selections governed by a foreign/custom selection policy.
+
+The parser remains fail-closed and recognizes two explicitly reviewed `Spell.dbc` forms:
+`176/704` from the P4-T01 Tortoise reference and `173/692` from standard Vanilla 1.12, the latter
+observed directly in the configured Octo client. SkillLine remains `22/88` and SkillLineAbility
+`15/60`. Real-source cross-file orphans outside recipe qualification are reported explicitly without
+fabricating spell/skill identities; recipe-qualified missing skill-line identities remain fatal.
+
+Human Level-2 validation completed on 2026-08-26 with source revision
+`sha256:f82d41ddbb77f5958d36b2483786c819de512128ef736142c758469718f7274d`: 1,739 recipes,
+15 represented skill lines, 1,739 outputs and 114 unresolved canonical item targets. The second import
+was canonically idempotent, FK/integrity checks passed, and the guarded D-029 promotion advanced the
+canonical local DB to migration 11. Final canonical SHA-256 is
+`3e2a1b03dd688fc1b944665fcfa79cde68aacb537790f0c580480049a19ad8e7`; the rollback is the exact
+migration-10 canonical `9c637ab40c2c5e3c2843e6c7d52fb5c75bbe05f57d05e2ea4d48ae7bd03b127d`.
+
+The next bounded P4 task is P4-T03 recipe reagents/quantities; learning/acquisition sources remain a
+separate later task.
+
+Detailed record and exact validation/promotion commands: `docs/project/tasks/P4-T02.md`.
+
+### P4-T03 — recipe reagents and quantities
+
 **READY_FOR_IMPLEMENTATION.**
 
-Implement the first canonical P4 migration/import slice under D-034: spell identity, skill-line
-identity, recipe identity/membership and crafted-output relations. Prefer verified direct Octo DBC for
-actual Octo presence/names while retaining pinned Tortoise/CMaNGOS as semantic/parser references.
-
-Keep reagents and learning/acquisition graphs outside this task unless a source/schema constraint makes
-them inseparable. Any canonical evolution must use a disposable migration-10 copy first and then D-029.
-
-Detailed task: `docs/project/tasks/P4-T02.md`.
-
-P4-T01 is closed as `VALIDATED`; P4-T02 is now the active prepared task.
+Next bounded P4 slice: model recipe reagent item IDs and required quantities without mixing in recipe
+learning/acquisition sources. Begin by reviewing primary source semantics and D-034/P4-T02 boundaries,
+then choose the smallest provenance-bearing schema/import slice that preserves native IDs and
+variable/optional semantics where the source requires them. Trainer/vendor/item/quest learning
+sources remain a later separate task.
 
 ## P5 — Resolution, auditing and coverage
 
