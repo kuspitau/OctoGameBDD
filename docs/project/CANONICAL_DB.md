@@ -29,39 +29,43 @@ Both remain ignored by Git and must never be included in `changes.zip`.
 
 ## Current baseline
 
-As of the P4-T03 closeout on 2026-08-26, the human has validated the cumulative local database
-through **P4-T03 / migration 12**.
+As of the P4-T04 closeout on 2026-08-26, the human has validated the cumulative local database
+through **P4-T04 / migration 13**.
 
 Latest applied migration:
 
 ```text
-0012_recipe_reagents.sql
+0013_recipe_acquisition_sources.sql
 ```
 
-P4-T03 extends the validated recipe identity slice with:
+P4-T04 extends the validated recipe identity/reagent slice with explicit acquisition relations:
 
 ```text
-recipe_reagents
+recipe_teaching_items
+recipe_trainer_sources
+recipe_quest_learning_sources
 ```
 
-Each row preserves the native reagent item ID, native Spell reagent slot/index and exact matching
-`Spell.ReagentCount` quantity. Canonical `item_id` remains nullable when the item identity is not yet
-materialized; unresolved native IDs are retained as evidence rather than replaced by placeholders.
+These tables preserve native acquisition-source IDs, wrapper spell IDs and explicit learning-proof
+provenance. Teaching-item vendor/loot/quest/geography availability remains derived through existing
+item/source relations rather than being duplicated into recipe acquisition tables.
 
 The real canonical database was promoted only after successful disposable Level-2 validation and a
-non-destructive shadow promotion using the real local data/source files. Final post-promotion checks
-are:
+guarded shadow promotion using the real local data/source files. Final post-promotion checks are:
 
 ```text
-schema_version                      = 12
+schema_version                      = 13
 recipe_count                        = 1739
-recipe_reagent_count                = 5801
-recipes_with_reagents               = 1721
-unresolved_reagent_count            = 85
-zero_quantity_reagent_count         = 0
-ignored_negative_reagent_slot_count = 0
-protected_selection_count           = 0
-matching_successful_import_batches  = 2
+teaching_item_count                 = 1065
+trainer_source_count                = 6376
+direct_trainer_source_count         = 5834
+template_trainer_source_count       = 542
+quest_learning_source_count         = 16
+dbc_proven_acquisition_count        = 7457
+server_fallback_acquisition_count   = 0
+unresolved_teaching_item_count      = 28
+unresolved_trainer_count            = 737
+unresolved_quest_learning_count     = 0
 foreign_key_check                   = []
 integrity_check                     = ok
 ```
@@ -73,13 +77,20 @@ rows_inserted = 0
 rows_updated  = 0
 ```
 
-Validated P4-T03 Octo DBC source revision:
+Validated P4-T04 source revisions:
 
 ```text
+Octo DBC:
 sha256:f82d41ddbb77f5958d36b2483786c819de512128ef736142c758469718f7274d
+
+Tortoise semantic/source commit:
+61a8269151721f6467eddb05e7bed37704d0fc0b
+
+Bounded Tortoise SQL manifest:
+12b7c285b025d228768f0954a12a803a73cf6326d96a71e271308d3baac010b4
 ```
 
-Validated source layouts/counts:
+Validated Octo DBC layouts/counts remain:
 
 ```text
 Spell.dbc             173 fields / 692 bytes / 28001 records
@@ -87,22 +98,49 @@ SkillLine.dbc          22 fields /  88 bytes /   136 records
 SkillLineAbility.dbc   15 fields /  60 bytes /  6795 records
 ```
 
-The `85` unresolved reagent targets preserve exact native item IDs, reagent slots and required
-quantities with nullable canonical `item_id`. They are warnings/provenance evidence, not fabricated
-item identities or import failures.
+The 28 unresolved teaching-item identities and 737 unresolved trainer relations preserve exact native
+IDs with nullable canonical foreign keys. They are reviewed coverage/provenance warnings, not
+fabricated identities or import failures. No quest-learning source remained unresolved and no trainer-template ID remained unmapped.
+
+All 7,457 selected learning proofs in this validated materialization came from exact matching Octo DBC
+`LEARN_SPELL` evidence. D-035 retains pinned Tortoise `spell_learn_spell` as a lower-authority fallback
+for future source snapshots when no matching Octo DBC edge exists; that fallback was not needed here.
 
 ### Current rollback/canonical hashes
 
 ```text
-migration-11 rollback backup:
-3e2a1b03dd688fc1b944665fcfa79cde68aacb537790f0c580480049a19ad8e7
+migration-12 rollback backup:
+6f9d9c44593225a67576df3be8caa06cbf157fbfb19233b9a932a83612ae5261
 
-validated migration-12 canonical:
+validated migration-13 canonical:
+623e29d83abd20335506d2a23dcbd525331de4f1bc10d38fccd7aa550a7613d7
+```
+
+The `_bak` is the exact byte-for-byte canonical database immediately before P4-T04 promotion. It may
+remain until the next validated canonical mutation cycle replaces it.
+
+The canonical hash above is the authoritative observed real promotion result. A disposable shadow
+promotion may have a different byte-level hash because it is a separate generated SQLite artifact;
+shadow hashes are validation evidence, not acceptance constants for the real canonical file.
+
+## Historical P4-T03 baseline
+
+P4-T03 validated migration 12 / `0012_recipe_reagents.sql`. Its canonical hash was:
+
+```text
 6f9d9c44593225a67576df3be8caa06cbf157fbfb19233b9a932a83612ae5261
 ```
 
-The `_bak` is the exact byte-for-byte canonical database immediately before P4-T03 promotion. It may
-remain until the next validated canonical mutation cycle replaces it.
+That exact file is now the current D-029 rollback backup after P4-T04 promotion. P4-T03 validated:
+
+```text
+recipe_count                   = 1739
+recipe_reagent_count           = 5801
+recipes_with_reagents          = 1721
+unresolved_reagent_count       = 85
+zero_quantity_reagent_count    = 0
+ignored_negative_reagent_slots = 0
+```
 
 ## Historical P4-T02 baseline
 
@@ -112,9 +150,8 @@ P4-T02 validated migration 11 / `0011_recipe_identity.sql`. Its canonical hash w
 3e2a1b03dd688fc1b944665fcfa79cde68aacb537790f0c580480049a19ad8e7
 ```
 
-That exact file is now the current D-029 rollback backup after P4-T03 promotion. P4-T02 validated
-1,739 recipes, 15 represented skill lines, 1,739 outputs, 114 unresolved output targets and the same
-Octo DBC source revision used by P4-T03.
+P4-T02 validated 1,739 recipes, 15 represented skill lines, 1,739 outputs, 114 unresolved output
+targets and the same Octo DBC source revision later used by P4-T03/P4-T04.
 
 ## Historical P3-T05 baseline
 
@@ -202,10 +239,10 @@ merely because GitHub cannot expose it. The expected local path is:
 data/generated/octogamedb.sqlite3
 ```
 
-The expected current validated baseline is migration 12 with SHA-256:
+The expected current validated baseline is migration 13 with SHA-256:
 
 ```text
-6f9d9c44593225a67576df3be8caa06cbf157fbfb19233b9a932a83612ae5261
+623e29d83abd20335506d2a23dcbd525331de4f1bc10d38fccd7aa550a7613d7
 ```
 
 If local validation needs that file and the conversation cannot inspect the user's filesystem, give

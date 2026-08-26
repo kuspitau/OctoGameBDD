@@ -115,8 +115,11 @@ def _seed_identity(
 def test_fresh_database_migrates_to_recipe_reagent_schema(tmp_path: Path) -> None:
     with connect_database(tmp_path / "fresh.sqlite3") as connection:
         applied = apply_migrations(connection)
-        assert applied[-1].version == 12
-        assert connection.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0] == 12
+        assert any(
+            migration.version == 12 and migration.name == "0012_recipe_reagents.sql"
+            for migration in applied
+        )
+        assert connection.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0] >= 12
         columns = {
             row[1]: row[2]
             for row in connection.execute("PRAGMA table_info(recipe_reagents)").fetchall()
@@ -211,7 +214,6 @@ def test_same_revision_rerun_is_canonically_idempotent(tmp_path: Path) -> None:
         ).fetchone()[0] == 2
 
 
-
 def test_explicit_source_revision_must_match_source_bytes(tmp_path: Path) -> None:
     root = tmp_path / "dbc"
     _write_source(root)
@@ -226,6 +228,7 @@ def test_explicit_source_revision_must_match_source_bytes(tmp_path: Path) -> Non
             "SELECT COUNT(*) FROM import_batches WHERE importer_version = ?",
             (IMPORTER_VERSION,),
         ).fetchone()[0] == 0
+
 
 def test_identity_revision_mismatch_fails_before_reagent_batch(tmp_path: Path) -> None:
     root = tmp_path / "dbc"

@@ -678,3 +678,52 @@ For P4:
 
 P4-T01 adds no canonical migration. The first schema implementation under this decision is routed to
 P4-T02 and must keep effect slots, source revision/provenance and unresolved identities auditable.
+
+## D-035 — P4 acquisition learning edges may use an explicit server dependency fallback
+
+**Status:** accepted
+
+P4-T04 primary-source review found that one sentence of D-034 was too narrow: a wrapper spell can
+cause another spell to be learned through the server `spell_learn_spell` dependency table even when
+the wrapper has no matching DBC `SPELL_EFFECT_LEARN_SPELL` edge. D-035 supersedes D-034 **only for
+how an acquisition wrapper -> learned-spell edge may be proven**. D-034's recipe identity,
+profession/output semantics and separation of acquisition sources remain unchanged.
+
+At pinned Tortoise revision:
+
+```text
+Penqle/tortoise-wow
+main @ 61a8269151721f6467eddb05e7bed37704d0fc0b
+```
+
+`SpellMgr::LoadSpellLearnSpells()` loads `spell_learn_spell(entry, SpellID, Active)` into the same
+server dependency map that also receives DBC `LEARN_SPELL` dependencies. `Player` learns non-auto
+child spells from that dependency map when the parent spell is learned. The loader explicitly checks
+for database rows that duplicate DBC learning edges, confirming that both are representations of the
+same semantic family rather than unrelated metadata.
+
+For P4 acquisition resolution:
+
+1. a matching `LEARN_SPELL` edge from the exact Octo `Spell.dbc` revision already validated by P4-T02
+   is the preferred proof;
+2. when that exact-client edge is absent, the pinned Tortoise `spell_learn_spell` row may prove the
+   wrapper -> learned recipe edge as lower-authority close-lineage server evidence;
+3. if both sources prove the same wrapper/learned pair, the canonical relation keeps the Octo DBC
+   proof kind and retains the server row as corroborating provenance;
+4. a Tortoise-only fallback is never relabelled exact Octo production truth and source absence is not
+   universal negative evidence;
+5. wrapper or learned spell IDs must still exist in the relevant canonical/source contract; names and
+   convenient numeric coincidences never authorize a relation.
+
+P4-T04 also fixes two acquisition-source semantics from the same primary review:
+
+- quest completion casts `RewSpellCast` when nonzero, otherwise `RewSpell`, and the server's quest
+  learning path scans **all** spell effect slots for `LEARN_SPELL`; there is no slot-0-only rule;
+- `npc_trainer_template` rows become actual trainer acquisition endpoints only through creatures whose
+  `creature_template.trainer_id` references that template. The template ID remains provenance; recipe
+  geography is derived from the resulting creature's existing P1 spawns.
+
+Migration 13 materializes one semantic acquisition row per item-slot/trainer-creature/quest wrapper
+path. It records whether the selected learning proof is exact Octo DBC or Tortoise server fallback,
+while preserving corroborating proof details in provenance. No derived vendor/loot/zone relation is
+copied into the recipe tables.

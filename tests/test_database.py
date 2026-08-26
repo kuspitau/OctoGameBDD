@@ -20,6 +20,7 @@ CURRENT_MIGRATIONS = (
     (10, "0010_quest_item_facts.sql"),
     (11, "0011_recipe_identity.sql"),
     (12, "0012_recipe_reagents.sql"),
+    (13, "0013_recipe_acquisition_sources.sql"),
 )
 CURRENT_MIGRATION_VERSIONS = [version for version, _ in CURRENT_MIGRATIONS]
 
@@ -45,6 +46,12 @@ QUEST_ITEM_FACT_TABLES = (
     "quest_reward_items",
     "quest_choice_reward_sets",
     "quest_choice_reward_items",
+)
+
+RECIPE_ACQUISITION_TABLES = (
+    "recipe_teaching_items",
+    "recipe_trainer_sources",
+    "recipe_quest_learning_sources",
 )
 
 
@@ -90,6 +97,7 @@ def test_fresh_initialization_creates_foundation_schema(tmp_path):
         "quest_close_sets",
         "quest_close_set_members",
         "recipe_reagents",
+        *RECIPE_ACQUISITION_TABLES,
         *OBJECTIVE_TABLES,
         *QUEST_ITEM_FACT_TABLES,
     } <= tables
@@ -189,6 +197,15 @@ def test_foreign_keys_are_enforced(tmp_path):
         with pytest.raises(sqlite3.IntegrityError):
             connection.execute(
                 "INSERT INTO quest_choice_reward_sets(quest_id, selected_member_count) VALUES (1, 1)"
+            )
+        with pytest.raises(sqlite3.IntegrityError):
+            connection.execute(
+                """
+                INSERT INTO recipe_teaching_items(
+                    recipe_id, native_item_id, item_spell_slot, acquisition_spell_id,
+                    learning_proof_kind, learn_effect_index
+                ) VALUES (1, 1, 0, 1, 'octo_dbc_learn_spell', 0)
+                """
             )
 
 
@@ -374,6 +391,7 @@ def test_existing_version_one_database_upgrades_to_current_schema(tmp_path, monk
             "quest_close_sets",
             "quest_close_set_members",
             "recipe_reagents",
+            *RECIPE_ACQUISITION_TABLES,
             *OBJECTIVE_TABLES,
             *QUEST_ITEM_FACT_TABLES,
         ):
@@ -404,6 +422,7 @@ def test_existing_version_four_database_upgrades_reference_vendor_quest_progress
             "area_triggers",
             "item_use_target_sets",
             "recipe_reagents",
+            *RECIPE_ACQUISITION_TABLES,
             *QUEST_ITEM_FACT_TABLES,
         ):
             assert connection.execute(
@@ -435,6 +454,7 @@ def test_existing_version_five_database_upgrades_vendor_quest_progression_and_ob
             "quest_prerequisite_sets",
             "quest_objective_sets",
             "recipe_reagents",
+            *RECIPE_ACQUISITION_TABLES,
             *QUEST_ITEM_FACT_TABLES,
         ):
             assert connection.execute(
@@ -469,6 +489,7 @@ def test_existing_version_six_database_upgrades_quest_progression_and_objectives
             "quest_close_sets",
             "quest_objective_sets",
             "recipe_reagents",
+            *RECIPE_ACQUISITION_TABLES,
             *QUEST_ITEM_FACT_TABLES,
         ):
             assert connection.execute(
@@ -505,6 +526,7 @@ def test_existing_version_seven_database_upgrades_progression_and_objectives_sch
             "quest_close_sets",
             "quest_close_set_members",
             "recipe_reagents",
+            *RECIPE_ACQUISITION_TABLES,
             *OBJECTIVE_TABLES,
             *QUEST_ITEM_FACT_TABLES,
         ):
@@ -534,7 +556,7 @@ def test_existing_version_eight_database_upgrades_objective_schema(tmp_path, mon
     with connect_database(db_path) as connection:
         assert [migration.version for migration in apply_migrations(connection)] == CURRENT_MIGRATION_VERSIONS[8:]
         assert get_applied_migrations(connection) == CURRENT_MIGRATIONS
-        for table in (*OBJECTIVE_TABLES, *QUEST_ITEM_FACT_TABLES):
+        for table in (*OBJECTIVE_TABLES, *QUEST_ITEM_FACT_TABLES, *RECIPE_ACQUISITION_TABLES):
             assert connection.execute(
                 "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = ?",
                 (table,),
@@ -579,7 +601,7 @@ def test_existing_version_nine_database_upgrades_quest_item_facts_schema(tmp_pat
     with connect_database(db_path) as connection:
         assert [migration.version for migration in apply_migrations(connection)] == CURRENT_MIGRATION_VERSIONS[9:]
         assert get_applied_migrations(connection) == CURRENT_MIGRATIONS
-        for table in QUEST_ITEM_FACT_TABLES:
+        for table in (*QUEST_ITEM_FACT_TABLES, *RECIPE_ACQUISITION_TABLES):
             assert connection.execute(
                 "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = ?",
                 (table,),

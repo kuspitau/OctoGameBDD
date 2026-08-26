@@ -4,24 +4,28 @@ import json
 
 from octogamedb.__main__ import main
 from octogamedb.db import connect_database
+from octogamedb.db.migrations import discover_migrations
 
 
 def test_status_command_smoke(tmp_path, capsys):
     db_path = tmp_path / "status.sqlite3"
+    migrations = discover_migrations()
+    expected_version = migrations[-1].version
+    expected_count = len(migrations)
 
     assert main(["status", "--db", str(db_path)]) == 0
 
     output = capsys.readouterr().out
     assert f"Database: {db_path}" in output
-    assert "Schema version: 12" in output
-    assert "Applied migrations: 12" in output
+    assert f"Schema version: {expected_version}" in output
+    assert f"Applied migrations: {expected_count}" in output
     assert "Registered sources: 0" in output
     assert "Import batches: 0" in output
 
     with connect_database(db_path) as connection:
         assert connection.execute(
             "SELECT COUNT(*) FROM schema_migrations"
-        ).fetchone()[0] == 12
+        ).fetchone()[0] == expected_count
 
 
 def test_audit_cli_json_commands(golden_audit_case, capsys):
