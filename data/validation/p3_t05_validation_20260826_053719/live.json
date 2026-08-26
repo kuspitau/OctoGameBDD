@@ -1,0 +1,236 @@
+{
+  "capture_hash": "71de2543b3b7e008dd229d82cb5372e163e08c117cc3b354229ff2b0ef71dedc",
+  "format": "octogamedb-p3-t05b-live-v1",
+  "quests": {
+    "40675": {
+      "capture_metadata": {
+        "captured_at": "2026-08-25T22:28:41Z",
+        "classicapi_revision": "e793f80f6b45ed49a94dc8abdc9fcac4fe6b03dd",
+        "client_build": "1.18.1/7272/Mar 20 2026",
+        "realm": "N'Zoth"
+      },
+      "choice_reward_items": {
+        "items": [],
+        "status": "unknown"
+      },
+      "error": null,
+      "evidence": [],
+      "quest_id": 40675,
+      "record_hash": "7b98c12728803b9af422a5186294c21315921552363cce6d0d5731aeb180a66b",
+      "required_items": {
+        "items": [],
+        "status": "unknown"
+      },
+      "required_sources": {
+        "items": [],
+        "status": "unknown"
+      },
+      "reward_items": {
+        "items": [],
+        "status": "unknown"
+      },
+      "source_item": {
+        "count": null,
+        "count_status": "unknown",
+        "id_status": "unknown",
+        "item_id": null
+      },
+      "status": "success"
+    },
+    "40788": {
+      "capture_metadata": {
+        "captured_at": "2026-08-25T22:28:40Z",
+        "classicapi_revision": "e793f80f6b45ed49a94dc8abdc9fcac4fe6b03dd",
+        "client_build": "1.18.1/7272/Mar 20 2026",
+        "realm": "N'Zoth"
+      },
+      "choice_reward_items": {
+        "items": [],
+        "status": "unknown"
+      },
+      "error": null,
+      "evidence": [
+        {
+          "fact_family": "required_item",
+          "fact_key": "required_item:61096",
+          "item_id": 61096,
+          "slot": 1,
+          "value": 8
+        }
+      ],
+      "quest_id": 40788,
+      "record_hash": "049651b6ecb9d40e9f736f30ec57d90b7b76d08c3cd23e5e35b0f857918e43e1",
+      "required_items": {
+        "items": [
+          {
+            "count": 8,
+            "item_id": 61096
+          }
+        ],
+        "status": "observed_positive"
+      },
+      "required_sources": {
+        "items": [],
+        "status": "unknown"
+      },
+      "reward_items": {
+        "items": [],
+        "status": "unknown"
+      },
+      "source_item": {
+        "count": null,
+        "count_status": "unknown",
+        "id_status": "unknown",
+        "item_id": null
+      },
+      "status": "success"
+    },
+    "815": {
+      "capture_metadata": {
+        "captured_at": "2026-08-25T22:28:39Z",
+        "classicapi_revision": "e793f80f6b45ed49a94dc8abdc9fcac4fe6b03dd",
+        "client_build": "1.18.1/7272/Mar 20 2026",
+        "realm": "N'Zoth"
+      },
+      "choice_reward_items": {
+        "items": [],
+        "status": "unknown"
+      },
+      "error": null,
+      "evidence": [
+        {
+          "fact_family": "required_item",
+          "fact_key": "required_item:4890",
+          "item_id": 4890,
+          "slot": 1,
+          "value": 3
+        },
+        {
+          "fact_family": "reward_item",
+          "fact_key": "reward_item:4540",
+          "item_id": 4540,
+          "slot": 1,
+          "value": 5
+        },
+        {
+          "fact_family": "reward_item",
+          "fact_key": "reward_item:117",
+          "item_id": 117,
+          "slot": 2,
+          "value": 5
+        }
+      ],
+      "quest_id": 815,
+      "record_hash": "81ff9fd9b70cf9e1a9f8c4376f8a9e5190ad84ac6424529260a65a4cbdb7636b",
+      "required_items": {
+        "items": [
+          {
+            "count": 3,
+            "item_id": 4890
+          }
+        ],
+        "status": "observed_positive"
+      },
+      "required_sources": {
+        "items": [],
+        "status": "unknown"
+      },
+      "reward_items": {
+        "items": [
+          {
+            "count": 5,
+            "item_id": 4540
+          },
+          {
+            "count": 5,
+            "item_id": 117
+          }
+        ],
+        "status": "observed_positive"
+      },
+      "source_item": {
+        "count": null,
+        "count_status": "unknown",
+        "id_status": "unknown",
+        "item_id": null
+      },
+      "status": "success"
+    },
+    "818": {
+      "capture_metadata": {
+        "captured_at": "2026-08-25T22:28:38Z",
+        "classicapi_revision": "e793f80f6b45ed49a94dc8abdc9fcac4fe6b03dd",
+        "client_build": "1.18.1/7272/Mar 20 2026",
+        "realm": "N'Zoth"
+      },
+      "choice_reward_items": {
+        "items": [],
+        "status": "unknown"
+      },
+      "error": null,
+      "evidence": [
+        {
+          "fact_family": "required_item",
+          "fact_key": "required_item:4887",
+          "item_id": 4887,
+          "slot": 1,
+          "value": 4
+        },
+        {
+          "fact_family": "required_item",
+          "fact_key": "required_item:4888",
+          "item_id": 4888,
+          "slot": 2,
+          "value": 8
+        },
+        {
+          "fact_family": "reward_item",
+          "fact_key": "reward_item:4941",
+          "item_id": 4941,
+          "slot": 1,
+          "value": 10
+        }
+      ],
+      "quest_id": 818,
+      "record_hash": "f3273c33d4122a2f9972f7810eacf3f282b62be46d97eab6b4ebfc0121ef6049",
+      "required_items": {
+        "items": [
+          {
+            "count": 4,
+            "item_id": 4887
+          },
+          {
+            "count": 8,
+            "item_id": 4888
+          }
+        ],
+        "status": "observed_positive"
+      },
+      "required_sources": {
+        "items": [],
+        "status": "unknown"
+      },
+      "reward_items": {
+        "items": [
+          {
+            "count": 10,
+            "item_id": 4941
+          }
+        ],
+        "status": "observed_positive"
+      },
+      "source_item": {
+        "count": null,
+        "count_status": "unknown",
+        "id_status": "unknown",
+        "item_id": null
+      },
+      "status": "success"
+    }
+  },
+  "raw_saved_variables_sha256": "88244328933de4749160a153bf6d80d6bed764d65b0ba9ed51b1084d1f7ac494",
+  "record_count": 4,
+  "semantic_reference_revision": "e793f80f6b45ed49a94dc8abdc9fcac4fe6b03dd",
+  "source_key": "octo-live-quest-query",
+  "source_repository": "https://github.com/brues-code/ClassicAPI"
+}

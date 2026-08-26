@@ -1,0 +1,28 @@
+{
+  "backup_sha256": "3dc2a49092d108a1274e55e3052b3ba74711b5ec0f675c9ff2a201c287617443",
+  "canonical_comparison_hash": "ac376ec58584c59446eb6c6d448b6f6565fb3f14593c27b60c13e539e43cea50",
+  "canonical_counts": {
+    "choice_reward_item": 2424,
+    "provided_item": 1320,
+    "required_item": 6100,
+    "required_source": 2961,
+    "reward_item": 2072
+  },
+  "database": "C:\\Games\\OctoGameDB_project\\OctoGameDB\\data\\generated\\octogamedb.sqlite3",
+  "database_sha256": "9c637ab40c2c5e3c2843e6c7d52fb5c75bbe05f57d05e2ea4d48ae7bd03b127d",
+  "failed_import_batches": 0,
+  "foreign_key_check": [],
+  "integrity_check": [
+    "ok"
+  ],
+  "invalid_required_quantity_count": 0,
+  "migration_10_name": "0010_quest_item_facts.sql",
+  "schema_version": 10,
+  "source_observation_counts": {
+    "cmangos-vanilla": 24,
+    "octo-live-quest-query": 27,
+    "octodb": 32,
+    "tortoise-world-sql": 50330
+  },
+  "validated_comparison_hash": "ac376ec58584c59446eb6c6d448b6f6565fb3f14593c27b60c13e539e43cea50"
+}

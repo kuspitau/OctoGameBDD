@@ -1,0 +1,117 @@
+{
+  "choice_rewards": {
+    "items": [],
+    "materialized_member_count": 0,
+    "selected_member_count": 0,
+    "semantics": "choose_one"
+  },
+  "conflicts": [
+    {
+      "distinct_value_count": 2,
+      "evidence": [
+        {
+          "observation_id": 2133723,
+          "raw_identifier": "1045:required_source:5388:slot:1",
+          "selected": false,
+          "source_key": "cmangos-vanilla",
+          "source_revision": "250a705a462c1acb457d3002359c7e0052c4dafe:0a77f5230a3d5d6db968678203dfe3b30c34b8a9",
+          "source_slot": 1,
+          "value": {
+            "attributes": {
+              "raw_source_count": 0
+            },
+            "target": {
+              "key": "5388",
+              "kind": "item"
+            }
+          }
+        },
+        {
+          "observation_id": 2090779,
+          "raw_identifier": "1045:required_source:5388:slot:1",
+          "selected": true,
+          "source_key": "tortoise-world-sql",
+          "source_revision": "61a8269151721f6467eddb05e7bed37704d0fc0b|content:dce8653d8daf829e3b28f585ed4e200cc32f32819ffaa6f92aa4c4ce7bd14299",
+          "source_slot": 1,
+          "value": {
+            "attributes": {
+              "raw_source_count": 1
+            },
+            "target": {
+              "key": "5388",
+              "kind": "item"
+            }
+          }
+        }
+      ],
+      "fact_instance_key": "5388",
+      "fact_key": "quest_required_source"
+    }
+  ],
+  "guaranteed_rewards": [],
+  "objective_membership": {
+    "equivalence_assumed": false,
+    "item_ids": [
+      5388
+    ],
+    "objective_only_item_ids": [
+      5388
+    ],
+    "required_item_ids_not_in_objectives": []
+  },
+  "provided_item": {
+    "count_selection": {
+      "observation_id": 2090781,
+      "selection_policy": "p3-t05-d033-source_item_count",
+      "source_key": "tortoise-world-sql",
+      "source_revision": "61a8269151721f6467eddb05e7bed37704d0fc0b|content:dce8653d8daf829e3b28f585ed4e200cc32f32819ffaa6f92aa4c4ce7bd14299"
+    },
+    "item_id": 5462,
+    "item_name": "Dartol's Rod of Transformation",
+    "quantity": 1,
+    "quantity_status": "known",
+    "resolved": true,
+    "selection": {
+      "observation_id": 2090780,
+      "selection_policy": "p3-t05-d033-source_item_id",
+      "source_key": "tortoise-world-sql",
+      "source_revision": "61a8269151721f6467eddb05e7bed37704d0fc0b|content:dce8653d8daf829e3b28f585ed4e200cc32f32819ffaa6f92aa4c4ce7bd14299"
+    },
+    "source_evidence": [
+      {
+        "observation_id": 2090780,
+        "raw_identifier": "1045:source_item_id:5462:noslot",
+        "selected": true,
+        "source_slot": null
+      }
+    ],
+    "source_slots": []
+  },
+  "required_items": [],
+  "required_sources": [
+    {
+      "item_id": 5388,
+      "item_name": "Ran Bloodtooth's Skull",
+      "raw_source_count": 1,
+      "resolved": true,
+      "selection": {
+        "observation_id": 2090779,
+        "selection_policy": "p3-t05-d033-required_source",
+        "source_key": "tortoise-world-sql",
+        "source_revision": "61a8269151721f6467eddb05e7bed37704d0fc0b|content:dce8653d8daf829e3b28f585ed4e200cc32f32819ffaa6f92aa4c4ce7bd14299"
+      },
+      "source_evidence": [
+        {
+          "observation_id": 2090779,
+          "raw_identifier": "1045:required_source:5388:slot:1",
+          "selected": true,
+          "source_slot": 1
+        }
+      ],
+      "source_slots": [
+        1
+      ],
+      "value_status": "known"
+    }
+  ]
+}

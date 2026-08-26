@@ -2,9 +2,8 @@
 
 Task IDs are stable handoff references. Do not renumber completed tasks.
 
-Detailed historical/source/validation facts live in the task documents and `CURRENT_STATE.md`. This
-roadmap keeps the phase order and the next bounded work visible without duplicating every closeout
-metric.
+Detailed historical/source/validation facts live in task documents and `CURRENT_STATE.md`. This
+roadmap keeps phase order and the next bounded work visible without duplicating every closeout metric.
 
 ## P0 — Repository and data foundation
 
@@ -96,15 +95,9 @@ source-shape/provenance semantics. Objective geography is derived through existi
 creature/game-object targets, through item-use targets where available, or represented directly from
 source-backed area-trigger/zone evidence.
 
-Full local and canonical validation completed on 2026-08-25. The canonical DB contains `4,224`
-complete quest objective sets, `1,484` creature objectives, `99` game-object objectives, `5,064` item
-objectives, `226` item-use objectives, `50` area-trigger objectives and no selected real-data direct
-zone objective in the current source revisions. It also contains `496` area-trigger identities with
-`558` locations and `189` item-use target sets with `333` materialized target relations.
-
-The second same-revision canonical pass produced zero inserts, updates and deletes; FK/integrity
-checks passed. `219` unresolved source references remain explicit audit evidence rather than fabricated
-identities.
+Full local and canonical validation completed on 2026-08-25. The second same-revision canonical pass
+produced zero inserts, updates and deletes; FK/integrity checks passed. Unresolved source references
+remain explicit audit evidence rather than fabricated identities.
 
 Detailed record: `docs/project/tasks/P3-T04.md`.
 
@@ -112,17 +105,9 @@ Detailed record: `docs/project/tasks/P3-T04.md`.
 
 **VALIDATED.**
 
-P3-T05A resolved D-031's source gate using the sources known at that point:
-
-- native-ID OctoDB quest pages as Octo-specific partial positive observations;
-- content-addressed cached OctoDB pages rather than page absence as negative evidence;
-- pinned CMaNGOS ClassicDB Vanilla fallback;
-- explicit separation of `ReqItem`, `SrcItem`, auxiliary `ReqSource`, guaranteed `RewItem` and choice
-  `RewChoiceItem` semantics;
-- preservation of `ReqSourceCount = 0` as valid source/drop-control semantics.
-
-D-032 remains the historical decision for this investigation. Its current P3-T05 source-priority
-portion is superseded by D-033 after the later P3-T05B routing audit.
+P3-T05A established the semantic separation of `ReqItem`, `SrcItem`, auxiliary `ReqSource`, guaranteed
+`RewItem` and choice `RewChoiceItem`, including preservation of `ReqSourceCount = 0`. D-032 remains
+historical where later D-033 did not supersede it.
 
 Detailed record: `docs/project/tasks/P3-T05A.md`.
 
@@ -141,32 +126,48 @@ P3-T05B implemented and locally validated the D-033 acquisition bridge without c
 - deterministic four-source comparison with D-033 family-specific selection, conflict retention and
   conservative unknown/absence semantics;
 - real `ReqSource` audit preserving explicit zero-count semantics;
-- canonical SQLite hash unchanged across the validation.
+- canonical SQLite hash unchanged across validation.
 
 Level-2 validation completed on 2026-08-26. Detailed record:
 `docs/project/tasks/P3-T05B.md`.
 
 ### P3-T05 — quest item requirements and rewards
 
-**READY_FOR_IMPLEMENTATION.**
+**VALIDATED.**
 
-P3-T05 is now the active bounded task. Its canonical direction remains explicit
-required/source/provided/guaranteed/choice item relations with exact quantities where source-backed,
-source slot/order, provenance, unresolved native IDs and safe reconciliation.
+Migration 10 now models the bounded P3 quest/item quantity and reward families while preserving D-033
+and the validated P3-T05B acquisition contract:
 
-Implementation should consume:
+- ordinary required item + explicit quantity;
+- auxiliary `ReqSource` + raw source-count semantics;
+- quest-provided/source item with nullable quantity when count evidence is unknown;
+- guaranteed reward item + quantity;
+- explicit choose-one reward set + quantity-bearing members;
+- source-family/slot/duplicate primitive provenance before normalization;
+- conservative partial-source absence and complete managed-fallback replacement;
+- unresolved native targets retained as audit/provenance rather than fabricated identities;
+- P3-T04 objective membership kept distinct from P3-T05 quantity evidence.
 
-- direct Octo live positive observations for the field families actually exposed;
-- OctoDB structural positive observations;
-- pinned Tortoise source-shaped SQL as close Turtle-lineage fallback/coverage;
-- pinned CMaNGOS as Vanilla fallback/semantics baseline;
-- all conflicts retained under D-006/D-033.
+Full local validation completed on 2026-08-26. The disposable and real canonical runs both reached
+schema version 10, the second same-input reconciliation produced zero canonical inserts/updates/deletes,
+FK/integrity checks passed, no same-priority ambiguity or reconciliation anomaly remained, and the
+D-029 backup was verified byte-identical to the migration-9 baseline before canonical evolution.
 
-Detailed task: `docs/project/tasks/P3-T05.md`.
+Final P3-T05 canonical family counts:
+
+```text
+quest_required_items       6100
+quest_required_sources     2961
+quest_provided_items       1320
+quest_reward_items         2072
+quest_choice_reward_items  2424
+```
+
+Detailed record: `docs/project/tasks/P3-T05.md`.
 
 ## P4 — Spells and crafting
 
-Implement:
+Goal:
 
 - spells required for item/recipe relationships;
 - recipes;
@@ -176,6 +177,23 @@ Implement:
 - learning/acquisition sources;
 - recipe item / teaching spell / crafted item distinctions;
 - derived recipe availability.
+
+### P4-T01 — spell/recipe source and identity contract
+
+**READY_FOR_IMPLEMENTATION.**
+
+Before broad crafting ingestion, establish the exact source and identity contract for native spells,
+craft/recipe spells, teaching recipe items, crafted result items, profession/skill-line membership and
+skill/rank requirements.
+
+P4-T01 is deliberately bounded to evidence and identity semantics. It must inspect primary/current
+source behavior before fixing recipe keys or conflating recipe items with spells/results. It may add
+small extraction/normalization probes and source-shaped fixtures needed to prove the contract, but
+broad reagents, learning-source acquisition, economics and P6-scale ingestion remain later P4 work.
+
+Detailed task: `docs/project/tasks/P4-T01.md`.
+
+P4-T01 is the active task after P3-T05 validation/canonical closeout.
 
 ## P5 — Resolution, auditing and coverage
 
@@ -224,8 +242,8 @@ For each new domain/fact family:
 
 1. inspect primary source semantics;
 2. distinguish source authority from source completeness/coverage;
-3. prefer direct current Octo observations for the fields they actually expose, without generalizing
-   them to invisible server-side fields;
+3. prefer direct current Octo observations for fields they actually expose, without generalizing them
+   to invisible server-side fields;
 4. use small representative fixtures;
 5. validate schema/provenance/effective-view behavior;
 6. add golden cases and explicit conflict cases;

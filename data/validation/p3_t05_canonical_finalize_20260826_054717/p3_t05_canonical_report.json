@@ -1,0 +1,3113 @@
+{
+  "checks": {
+    "canonical_counts": {
+      "choice_reward_item": 2424,
+      "provided_item": 1320,
+      "required_item": 6100,
+      "required_source": 2961,
+      "reward_item": 2072
+    },
+    "foreign_key_check": [],
+    "integrity_check": [
+      "ok"
+    ],
+    "p3_t05_schema_ready": true,
+    "schema_version": 10
+  },
+  "first": {
+    "details": {
+      "ambiguous_same_priority": [],
+      "anomalies": [],
+      "canonical_counts": {
+        "choice_reward_item": 2424,
+        "provided_item": 1320,
+        "required_item": 6100,
+        "required_source": 2961,
+        "reward_item": 2072
+      },
+      "canonical_rows_deleted": 0,
+      "comparison_hash": "ac376ec58584c59446eb6c6d448b6f6565fb3f14593c27b60c13e539e43cea50",
+      "cross_source_conflicts": [
+        {
+          "fact_key": "required_source:5388",
+          "family": "required_source",
+          "quest_id": 1045
+        },
+        {
+          "fact_key": "reward_item:117",
+          "family": "reward_item",
+          "quest_id": 815
+        },
+        {
+          "fact_key": "reward_item:4540",
+          "family": "reward_item",
+          "quest_id": 815
+        },
+        {
+          "fact_key": "reward_item:4941",
+          "family": "reward_item",
+          "quest_id": 818
+        }
+      ],
+      "priority_contract": {
+        "choice_reward_item": [
+          "octo-live-quest-query",
+          "octodb",
+          "tortoise-world-sql",
+          "cmangos-vanilla"
+        ],
+        "required_item": [
+          "octo-live-quest-query",
+          "octodb",
+          "tortoise-world-sql",
+          "cmangos-vanilla"
+        ],
+        "required_source": [
+          "tortoise-world-sql",
+          "cmangos-vanilla"
+        ],
+        "reward_item": [
+          "octo-live-quest-query",
+          "octodb",
+          "tortoise-world-sql",
+          "cmangos-vanilla"
+        ],
+        "source_item_count": [
+          "octodb",
+          "tortoise-world-sql",
+          "cmangos-vanilla"
+        ],
+        "source_item_id": [
+          "octo-live-quest-query",
+          "octodb",
+          "tortoise-world-sql",
+          "cmangos-vanilla"
+        ]
+      },
+      "protected_canonical_rows_retained": 0,
+      "protected_selection_events": [],
+      "source_revisions": {
+        "cmangos-vanilla": "250a705a462c1acb457d3002359c7e0052c4dafe:0a77f5230a3d5d6db968678203dfe3b30c34b8a9",
+        "octo-live-quest-query": "e793f80f6b45ed49a94dc8abdc9fcac4fe6b03dd|capture:71de2543b3b7e008dd229d82cb5372e163e08c117cc3b354229ff2b0ef71dedc",
+        "octodb": "0f81f0908cc3b8082ae2897901b88c61f24c916c04bf3c4c6b627eb09f53e533",
+        "tortoise-world-sql": "61a8269151721f6467eddb05e7bed37704d0fc0b|content:dce8653d8daf829e3b28f585ed4e200cc32f32819ffaa6f92aa4c4ce7bd14299"
+      },
+      "unresolved_item_or_quest_targets": [
+        {
+          "family": "choice_reward_item",
+          "item_id": 33000,
+          "quest_id": 41459,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33001,
+          "quest_id": 41460,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33002,
+          "quest_id": 41461,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33003,
+          "quest_id": 41462,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33004,
+          "quest_id": 41463,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33005,
+          "quest_id": 41464,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33006,
+          "quest_id": 41465,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33007,
+          "quest_id": 41466,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33008,
+          "quest_id": 41451,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33009,
+          "quest_id": 41452,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33010,
+          "quest_id": 41453,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33011,
+          "quest_id": 41454,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33012,
+          "quest_id": 41455,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33013,
+          "quest_id": 41456,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33014,
+          "quest_id": 41457,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33015,
+          "quest_id": 41458,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33016,
+          "quest_id": 8592,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33017,
+          "quest_id": 8594,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33018,
+          "quest_id": 8603,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33019,
+          "quest_id": 8593,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33020,
+          "quest_id": 8596,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33162,
+          "quest_id": 9113,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33163,
+          "quest_id": 9114,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33164,
+          "quest_id": 9111,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33165,
+          "quest_id": 9118,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33166,
+          "quest_id": 9116,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33167,
+          "quest_id": 9117,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33168,
+          "quest_id": 9112,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33169,
+          "quest_id": 9115,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33170,
+          "quest_id": 41450,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33171,
+          "quest_id": 41596,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33172,
+          "quest_id": 41597,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33173,
+          "quest_id": 41598,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33174,
+          "quest_id": 41599,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33175,
+          "quest_id": 41600,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33176,
+          "quest_id": 41601,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 42076,
+          "quest_id": 747,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 42077,
+          "quest_id": 750,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 42078,
+          "quest_id": 3376,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 42079,
+          "quest_id": 60150,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 42080,
+          "quest_id": 746,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 42081,
+          "quest_id": 772,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 42082,
+          "quest_id": 744,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 42083,
+          "quest_id": 765,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "quest",
+          "quest_id": 39980,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 39981,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 40273,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 40915,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 40916,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41898,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41899,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41900,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41901,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41902,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41903,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41904,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41905,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41906,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41907,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41908,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41909,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41910,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41911,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41912,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41913,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41914,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41915,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41916,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41917,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41918,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41919,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41920,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41921,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41922,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41923,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41924,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41925,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41926,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41927,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41928,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41929,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41930,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41931,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41932,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41933,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41934,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41935,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41936,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41937,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41938,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41939,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41940,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41941,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41942,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41943,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41944,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41945,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41946,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41947,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41948,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41949,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41950,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41951,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41952,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41953,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41954,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41955,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41956,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41957,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41958,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41959,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41960,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41961,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41962,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41963,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41964,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41965,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41966,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41967,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41968,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41969,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41970,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41972,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41973,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41974,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41975,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41976,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41977,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41978,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41979,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41980,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41981,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41982,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41983,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41984,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41985,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41986,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41987,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41988,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41989,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41990,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41991,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41992,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41993,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41994,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41995,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41996,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41997,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41998,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41999,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42000,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42001,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42002,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42003,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42004,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42005,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42006,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42007,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42008,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42009,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42010,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42011,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42012,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42013,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42014,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42015,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42016,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42017,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42018,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42019,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42020,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42021,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42022,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42023,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42024,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42025,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42026,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42027,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42028,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42029,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42030,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42031,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42032,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42033,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42034,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42035,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42036,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42037,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42038,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42039,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42040,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42041,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42042,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42043,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42044,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42045,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42046,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42047,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42048,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42049,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42050,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42051,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42052,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42053,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42054,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42055,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42056,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42057,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42058,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42059,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42060,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42061,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42062,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42063,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42064,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42065,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42066,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42067,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42068,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42069,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42070,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42071,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42072,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42073,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42074,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42075,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42076,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42077,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42078,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42079,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42080,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42081,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42082,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42083,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42084,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42085,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42086,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42087,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42088,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42089,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42090,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42091,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42092,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42093,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42094,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42095,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42096,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42097,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42098,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42099,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42100,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42101,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 50215,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 50220,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "required_item",
+          "item_id": 115,
+          "quest_id": 8249,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "required_item",
+          "item_id": 31830,
+          "quest_id": 4728,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "required_item",
+          "item_id": 31831,
+          "quest_id": 4730,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "required_item",
+          "item_id": 31832,
+          "quest_id": 4733,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "required_item",
+          "item_id": 31833,
+          "quest_id": 4727,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "required_item",
+          "item_id": 31834,
+          "quest_id": 4732,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "required_item",
+          "item_id": 31835,
+          "quest_id": 4731,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "required_source",
+          "item_id": 115,
+          "quest_id": 8249,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "source_item_id",
+          "item_id": 31830,
+          "quest_id": 4728,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "source_item_id",
+          "item_id": 31831,
+          "quest_id": 4730,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "source_item_id",
+          "item_id": 31832,
+          "quest_id": 4733,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "source_item_id",
+          "item_id": 31833,
+          "quest_id": 4727,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "source_item_id",
+          "item_id": 31834,
+          "quest_id": 4732,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "source_item_id",
+          "item_id": 31835,
+          "quest_id": 4731,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        }
+      ]
+    },
+    "error_count": 0,
+    "rows_accepted": 6719,
+    "rows_inserted": 15852,
+    "rows_read": 6719,
+    "rows_skipped": 0,
+    "rows_updated": 975,
+    "source_key": "p3-t05-d033",
+    "source_revision": "ac376ec58584c59446eb6c6d448b6f6565fb3f14593c27b60c13e539e43cea50",
+    "status": "succeeded",
+    "warning_count": 268
+  },
+  "second": {
+    "details": {
+      "ambiguous_same_priority": [],
+      "anomalies": [],
+      "canonical_counts": {
+        "choice_reward_item": 2424,
+        "provided_item": 1320,
+        "required_item": 6100,
+        "required_source": 2961,
+        "reward_item": 2072
+      },
+      "canonical_rows_deleted": 0,
+      "comparison_hash": "ac376ec58584c59446eb6c6d448b6f6565fb3f14593c27b60c13e539e43cea50",
+      "cross_source_conflicts": [
+        {
+          "fact_key": "required_source:5388",
+          "family": "required_source",
+          "quest_id": 1045
+        },
+        {
+          "fact_key": "reward_item:117",
+          "family": "reward_item",
+          "quest_id": 815
+        },
+        {
+          "fact_key": "reward_item:4540",
+          "family": "reward_item",
+          "quest_id": 815
+        },
+        {
+          "fact_key": "reward_item:4941",
+          "family": "reward_item",
+          "quest_id": 818
+        }
+      ],
+      "priority_contract": {
+        "choice_reward_item": [
+          "octo-live-quest-query",
+          "octodb",
+          "tortoise-world-sql",
+          "cmangos-vanilla"
+        ],
+        "required_item": [
+          "octo-live-quest-query",
+          "octodb",
+          "tortoise-world-sql",
+          "cmangos-vanilla"
+        ],
+        "required_source": [
+          "tortoise-world-sql",
+          "cmangos-vanilla"
+        ],
+        "reward_item": [
+          "octo-live-quest-query",
+          "octodb",
+          "tortoise-world-sql",
+          "cmangos-vanilla"
+        ],
+        "source_item_count": [
+          "octodb",
+          "tortoise-world-sql",
+          "cmangos-vanilla"
+        ],
+        "source_item_id": [
+          "octo-live-quest-query",
+          "octodb",
+          "tortoise-world-sql",
+          "cmangos-vanilla"
+        ]
+      },
+      "protected_canonical_rows_retained": 0,
+      "protected_selection_events": [],
+      "source_revisions": {
+        "cmangos-vanilla": "250a705a462c1acb457d3002359c7e0052c4dafe:0a77f5230a3d5d6db968678203dfe3b30c34b8a9",
+        "octo-live-quest-query": "e793f80f6b45ed49a94dc8abdc9fcac4fe6b03dd|capture:71de2543b3b7e008dd229d82cb5372e163e08c117cc3b354229ff2b0ef71dedc",
+        "octodb": "0f81f0908cc3b8082ae2897901b88c61f24c916c04bf3c4c6b627eb09f53e533",
+        "tortoise-world-sql": "61a8269151721f6467eddb05e7bed37704d0fc0b|content:dce8653d8daf829e3b28f585ed4e200cc32f32819ffaa6f92aa4c4ce7bd14299"
+      },
+      "unresolved_item_or_quest_targets": [
+        {
+          "family": "choice_reward_item",
+          "item_id": 33000,
+          "quest_id": 41459,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33001,
+          "quest_id": 41460,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33002,
+          "quest_id": 41461,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33003,
+          "quest_id": 41462,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33004,
+          "quest_id": 41463,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33005,
+          "quest_id": 41464,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33006,
+          "quest_id": 41465,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33007,
+          "quest_id": 41466,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33008,
+          "quest_id": 41451,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33009,
+          "quest_id": 41452,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33010,
+          "quest_id": 41453,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33011,
+          "quest_id": 41454,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33012,
+          "quest_id": 41455,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33013,
+          "quest_id": 41456,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33014,
+          "quest_id": 41457,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33015,
+          "quest_id": 41458,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33016,
+          "quest_id": 8592,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33017,
+          "quest_id": 8594,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33018,
+          "quest_id": 8603,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33019,
+          "quest_id": 8593,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33020,
+          "quest_id": 8596,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33162,
+          "quest_id": 9113,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33163,
+          "quest_id": 9114,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33164,
+          "quest_id": 9111,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33165,
+          "quest_id": 9118,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33166,
+          "quest_id": 9116,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33167,
+          "quest_id": 9117,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33168,
+          "quest_id": 9112,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33169,
+          "quest_id": 9115,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33170,
+          "quest_id": 41450,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33171,
+          "quest_id": 41596,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33172,
+          "quest_id": 41597,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33173,
+          "quest_id": 41598,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33174,
+          "quest_id": 41599,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33175,
+          "quest_id": 41600,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 33176,
+          "quest_id": 41601,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 42076,
+          "quest_id": 747,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 42077,
+          "quest_id": 750,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 42078,
+          "quest_id": 3376,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 42079,
+          "quest_id": 60150,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 42080,
+          "quest_id": 746,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 42081,
+          "quest_id": 772,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 42082,
+          "quest_id": 744,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "choice_reward_item",
+          "item_id": 42083,
+          "quest_id": 765,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "quest",
+          "quest_id": 39980,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 39981,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 40273,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 40915,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 40916,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41898,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41899,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41900,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41901,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41902,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41903,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41904,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41905,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41906,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41907,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41908,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41909,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41910,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41911,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41912,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41913,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41914,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41915,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41916,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41917,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41918,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41919,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41920,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41921,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41922,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41923,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41924,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41925,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41926,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41927,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41928,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41929,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41930,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41931,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41932,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41933,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41934,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41935,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41936,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41937,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41938,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41939,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41940,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41941,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41942,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41943,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41944,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41945,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41946,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41947,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41948,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41949,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41950,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41951,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41952,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41953,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41954,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41955,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41956,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41957,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41958,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41959,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41960,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41961,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41962,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41963,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41964,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41965,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41966,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41967,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41968,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41969,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41970,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41972,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41973,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41974,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41975,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41976,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41977,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41978,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41979,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41980,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41981,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41982,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41983,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41984,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41985,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41986,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41987,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41988,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41989,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41990,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41991,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41992,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41993,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41994,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41995,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41996,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41997,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41998,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 41999,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42000,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42001,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42002,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42003,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42004,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42005,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42006,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42007,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42008,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42009,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42010,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42011,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42012,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42013,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42014,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42015,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42016,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42017,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42018,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42019,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42020,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42021,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42022,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42023,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42024,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42025,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42026,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42027,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42028,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42029,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42030,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42031,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42032,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42033,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42034,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42035,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42036,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42037,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42038,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42039,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42040,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42041,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42042,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42043,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42044,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42045,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42046,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42047,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42048,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42049,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42050,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42051,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42052,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42053,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42054,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42055,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42056,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42057,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42058,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42059,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42060,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42061,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42062,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42063,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42064,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42065,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42066,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42067,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42068,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42069,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42070,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42071,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42072,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42073,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42074,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42075,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42076,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42077,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42078,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42079,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42080,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42081,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42082,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42083,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42084,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42085,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42086,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42087,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42088,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42089,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42090,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42091,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42092,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42093,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42094,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42095,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42096,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42097,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42098,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42099,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42100,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 42101,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 50215,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "quest",
+          "quest_id": 50220,
+          "reason": "missing_quest_identity"
+        },
+        {
+          "family": "required_item",
+          "item_id": 115,
+          "quest_id": 8249,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "required_item",
+          "item_id": 31830,
+          "quest_id": 4728,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "required_item",
+          "item_id": 31831,
+          "quest_id": 4730,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "required_item",
+          "item_id": 31832,
+          "quest_id": 4733,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "required_item",
+          "item_id": 31833,
+          "quest_id": 4727,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "required_item",
+          "item_id": 31834,
+          "quest_id": 4732,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "required_item",
+          "item_id": 31835,
+          "quest_id": 4731,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "required_source",
+          "item_id": 115,
+          "quest_id": 8249,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "source_item_id",
+          "item_id": 31830,
+          "quest_id": 4728,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "source_item_id",
+          "item_id": 31831,
+          "quest_id": 4730,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "source_item_id",
+          "item_id": 31832,
+          "quest_id": 4733,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "source_item_id",
+          "item_id": 31833,
+          "quest_id": 4727,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "source_item_id",
+          "item_id": 31834,
+          "quest_id": 4732,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        },
+        {
+          "family": "source_item_id",
+          "item_id": 31835,
+          "quest_id": 4731,
+          "reason": "missing_item_identity",
+          "source_key": "tortoise-world-sql"
+        }
+      ]
+    },
+    "error_count": 0,
+    "rows_accepted": 6719,
+    "rows_inserted": 0,
+    "rows_read": 6719,
+    "rows_skipped": 0,
+    "rows_updated": 0,
+    "source_key": "p3-t05-d033",
+    "source_revision": "ac376ec58584c59446eb6c6d448b6f6565fb3f14593c27b60c13e539e43cea50",
+    "status": "succeeded",
+    "warning_count": 268
+  }
+}

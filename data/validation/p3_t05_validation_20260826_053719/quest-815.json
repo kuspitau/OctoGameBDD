@@ -1,0 +1,272 @@
+{
+  "choice_rewards": {
+    "items": [],
+    "materialized_member_count": 0,
+    "selected_member_count": 0,
+    "semantics": "choose_one"
+  },
+  "conflicts": [
+    {
+      "distinct_value_count": 2,
+      "evidence": [
+        {
+          "observation_id": 2133708,
+          "raw_identifier": "815:reward_item:117:slot:2",
+          "selected": false,
+          "source_key": "cmangos-vanilla",
+          "source_revision": "250a705a462c1acb457d3002359c7e0052c4dafe:0a77f5230a3d5d6db968678203dfe3b30c34b8a9",
+          "source_slot": 2,
+          "value": {
+            "attributes": {
+              "quantity": 5
+            },
+            "target": {
+              "key": "117",
+              "kind": "item"
+            }
+          }
+        },
+        {
+          "observation_id": 2133649,
+          "raw_identifier": "815:reward_item:117:slot:2",
+          "selected": true,
+          "source_key": "octo-live-quest-query",
+          "source_revision": "e793f80f6b45ed49a94dc8abdc9fcac4fe6b03dd|capture:71de2543b3b7e008dd229d82cb5372e163e08c117cc3b354229ff2b0ef71dedc",
+          "source_slot": 2,
+          "value": {
+            "attributes": {
+              "quantity": 5
+            },
+            "target": {
+              "key": "117",
+              "kind": "item"
+            }
+          }
+        },
+        {
+          "observation_id": 2133676,
+          "raw_identifier": "815:reward_item:117:slot:2",
+          "selected": false,
+          "source_key": "octodb",
+          "source_revision": "0f81f0908cc3b8082ae2897901b88c61f24c916c04bf3c4c6b627eb09f53e533",
+          "source_slot": 2,
+          "value": {
+            "attributes": {
+              "quantity": 1
+            },
+            "target": {
+              "key": "117",
+              "kind": "item"
+            }
+          }
+        },
+        {
+          "observation_id": 2089148,
+          "raw_identifier": "815:reward_item:117:slot:2",
+          "selected": false,
+          "source_key": "tortoise-world-sql",
+          "source_revision": "61a8269151721f6467eddb05e7bed37704d0fc0b|content:dce8653d8daf829e3b28f585ed4e200cc32f32819ffaa6f92aa4c4ce7bd14299",
+          "source_slot": 2,
+          "value": {
+            "attributes": {
+              "quantity": 5
+            },
+            "target": {
+              "key": "117",
+              "kind": "item"
+            }
+          }
+        }
+      ],
+      "fact_instance_key": "117",
+      "fact_key": "quest_reward_item"
+    },
+    {
+      "distinct_value_count": 2,
+      "evidence": [
+        {
+          "observation_id": 2133709,
+          "raw_identifier": "815:reward_item:4540:slot:1",
+          "selected": false,
+          "source_key": "cmangos-vanilla",
+          "source_revision": "250a705a462c1acb457d3002359c7e0052c4dafe:0a77f5230a3d5d6db968678203dfe3b30c34b8a9",
+          "source_slot": 1,
+          "value": {
+            "attributes": {
+              "quantity": 5
+            },
+            "target": {
+              "key": "4540",
+              "kind": "item"
+            }
+          }
+        },
+        {
+          "observation_id": 2133650,
+          "raw_identifier": "815:reward_item:4540:slot:1",
+          "selected": true,
+          "source_key": "octo-live-quest-query",
+          "source_revision": "e793f80f6b45ed49a94dc8abdc9fcac4fe6b03dd|capture:71de2543b3b7e008dd229d82cb5372e163e08c117cc3b354229ff2b0ef71dedc",
+          "source_slot": 1,
+          "value": {
+            "attributes": {
+              "quantity": 5
+            },
+            "target": {
+              "key": "4540",
+              "kind": "item"
+            }
+          }
+        },
+        {
+          "observation_id": 2133677,
+          "raw_identifier": "815:reward_item:4540:slot:1",
+          "selected": false,
+          "source_key": "octodb",
+          "source_revision": "0f81f0908cc3b8082ae2897901b88c61f24c916c04bf3c4c6b627eb09f53e533",
+          "source_slot": 1,
+          "value": {
+            "attributes": {
+              "quantity": 1
+            },
+            "target": {
+              "key": "4540",
+              "kind": "item"
+            }
+          }
+        },
+        {
+          "observation_id": 2089149,
+          "raw_identifier": "815:reward_item:4540:slot:1",
+          "selected": false,
+          "source_key": "tortoise-world-sql",
+          "source_revision": "61a8269151721f6467eddb05e7bed37704d0fc0b|content:dce8653d8daf829e3b28f585ed4e200cc32f32819ffaa6f92aa4c4ce7bd14299",
+          "source_slot": 1,
+          "value": {
+            "attributes": {
+              "quantity": 5
+            },
+            "target": {
+              "key": "4540",
+              "kind": "item"
+            }
+          }
+        }
+      ],
+      "fact_instance_key": "4540",
+      "fact_key": "quest_reward_item"
+    }
+  ],
+  "guaranteed_rewards": [
+    {
+      "item_id": 117,
+      "item_name": "Tough Jerky",
+      "quantity": 5,
+      "resolved": true,
+      "selection": {
+        "observation_id": 2133649,
+        "selection_policy": "p3-t05-d033-reward_item",
+        "source_key": "octo-live-quest-query",
+        "source_revision": "e793f80f6b45ed49a94dc8abdc9fcac4fe6b03dd|capture:71de2543b3b7e008dd229d82cb5372e163e08c117cc3b354229ff2b0ef71dedc"
+      },
+      "source_evidence": [
+        {
+          "observation_id": 2133649,
+          "raw_identifier": "815:reward_item:117:slot:2",
+          "selected": true,
+          "source_slot": 2
+        }
+      ],
+      "source_slots": [
+        2
+      ],
+      "value_status": "known"
+    },
+    {
+      "item_id": 4540,
+      "item_name": "Tough Hunk of Bread",
+      "quantity": 5,
+      "resolved": true,
+      "selection": {
+        "observation_id": 2133650,
+        "selection_policy": "p3-t05-d033-reward_item",
+        "source_key": "octo-live-quest-query",
+        "source_revision": "e793f80f6b45ed49a94dc8abdc9fcac4fe6b03dd|capture:71de2543b3b7e008dd229d82cb5372e163e08c117cc3b354229ff2b0ef71dedc"
+      },
+      "source_evidence": [
+        {
+          "observation_id": 2133650,
+          "raw_identifier": "815:reward_item:4540:slot:1",
+          "selected": true,
+          "source_slot": 1
+        }
+      ],
+      "source_slots": [
+        1
+      ],
+      "value_status": "known"
+    }
+  ],
+  "objective_membership": {
+    "equivalence_assumed": false,
+    "item_ids": [
+      4890
+    ],
+    "objective_only_item_ids": [],
+    "required_item_ids_not_in_objectives": []
+  },
+  "provided_item": null,
+  "required_items": [
+    {
+      "item_id": 4890,
+      "item_name": "Taillasher Egg",
+      "objective_membership": true,
+      "quantity": 3,
+      "resolved": true,
+      "selection": {
+        "observation_id": 2133648,
+        "selection_policy": "p3-t05-d033-required_item",
+        "source_key": "octo-live-quest-query",
+        "source_revision": "e793f80f6b45ed49a94dc8abdc9fcac4fe6b03dd|capture:71de2543b3b7e008dd229d82cb5372e163e08c117cc3b354229ff2b0ef71dedc"
+      },
+      "source_evidence": [
+        {
+          "observation_id": 2133648,
+          "raw_identifier": "815:required_item:4890:slot:1",
+          "selected": true,
+          "source_slot": 1
+        }
+      ],
+      "source_slots": [
+        1
+      ],
+      "value_status": "known"
+    }
+  ],
+  "required_sources": [
+    {
+      "item_id": 4890,
+      "item_name": "Taillasher Egg",
+      "raw_source_count": 3,
+      "resolved": true,
+      "selection": {
+        "observation_id": 2089147,
+        "selection_policy": "p3-t05-d033-required_source",
+        "source_key": "tortoise-world-sql",
+        "source_revision": "61a8269151721f6467eddb05e7bed37704d0fc0b|content:dce8653d8daf829e3b28f585ed4e200cc32f32819ffaa6f92aa4c4ce7bd14299"
+      },
+      "source_evidence": [
+        {
+          "observation_id": 2089147,
+          "raw_identifier": "815:required_source:4890:slot:1",
+          "selected": true,
+          "source_slot": 1
+        }
+      ],
+      "source_slots": [
+        1
+      ],
+      "value_status": "known"
+    }
+  ]
+}

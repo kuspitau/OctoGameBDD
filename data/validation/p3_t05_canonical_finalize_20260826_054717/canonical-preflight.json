@@ -1,0 +1,19 @@
+{
+  "baseline_sha256": "3dc2a49092d108a1274e55e3052b3ba74711b5ec0f675c9ff2a201c287617443",
+  "canonical_counts": {
+    "choice_reward_item": 2424,
+    "provided_item": 1320,
+    "required_item": 6100,
+    "required_source": 2961,
+    "reward_item": 2072
+  },
+  "reqsource_zero_observation_count": 1,
+  "snapshot_sha256": {
+    "cmangos": "4e01674077cb595e4075f3608414c6acacd813d16b79048198badd09263e7df1",
+    "live": "ca1644f5b30dc38295d67a8aab92346d27a2e7e91db3593150a9aefaf52e99cc",
+    "octodb": "5396f203c318ead7d0adf83d2131111540d1f0992ce2e09b070376ba6f02c510",
+    "tortoise": "67e3e70340d7af4c232ba705bc669f1cd4b2b9b5881e701da1bcfc2d750d1256"
+  },
+  "unresolved_count": 268,
+  "validated_run": "C:\\Games\\OctoGameDB_project\\OctoGameDB\\data\\validation\\p3_t05_validation_20260826_053719"
+}

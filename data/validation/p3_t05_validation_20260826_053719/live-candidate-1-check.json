@@ -1,0 +1,13 @@
+{
+  "capture_hash": "71de2543b3b7e008dd229d82cb5372e163e08c117cc3b354229ff2b0ef71dedc",
+  "normalized_file_sha256": "ca1644f5b30dc38295d67a8aab92346d27a2e7e91db3593150a9aefaf52e99cc",
+  "raw_saved_variables_sha256": "88244328933de4749160a153bf6d80d6bed764d65b0ba9ed51b1084d1f7ac494",
+  "record_count": 4,
+  "representative_statuses": {
+    "40675": "success",
+    "40788": "success",
+    "815": "success",
+    "818": "success"
+  },
+  "successful_representatives": 4
+}

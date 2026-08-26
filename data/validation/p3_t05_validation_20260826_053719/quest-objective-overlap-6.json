@@ -1,0 +1,145 @@
+{
+  "choice_rewards": {
+    "items": [
+      {
+        "item_id": 60,
+        "item_name": "Layered Tunic",
+        "quantity": 1,
+        "resolved": true,
+        "selection": {
+          "observation_id": 2083333,
+          "selection_policy": "p3-t05-d033-choice_reward_item",
+          "source_key": "tortoise-world-sql",
+          "source_revision": "61a8269151721f6467eddb05e7bed37704d0fc0b|content:dce8653d8daf829e3b28f585ed4e200cc32f32819ffaa6f92aa4c4ce7bd14299"
+        },
+        "source_evidence": [
+          {
+            "observation_id": 2083333,
+            "raw_identifier": "6:choice_reward_item:60:slot:2",
+            "selected": true,
+            "source_slot": 2
+          }
+        ],
+        "source_slots": [
+          2
+        ],
+        "value_status": "known"
+      },
+      {
+        "item_id": 3070,
+        "item_name": "Ensign Cloak",
+        "quantity": 1,
+        "resolved": true,
+        "selection": {
+          "observation_id": 2083334,
+          "selection_policy": "p3-t05-d033-choice_reward_item",
+          "source_key": "tortoise-world-sql",
+          "source_revision": "61a8269151721f6467eddb05e7bed37704d0fc0b|content:dce8653d8daf829e3b28f585ed4e200cc32f32819ffaa6f92aa4c4ce7bd14299"
+        },
+        "source_evidence": [
+          {
+            "observation_id": 2083334,
+            "raw_identifier": "6:choice_reward_item:3070:slot:3",
+            "selected": true,
+            "source_slot": 3
+          }
+        ],
+        "source_slots": [
+          3
+        ],
+        "value_status": "known"
+      },
+      {
+        "item_id": 6076,
+        "item_name": "Tapered Pants",
+        "quantity": 1,
+        "resolved": true,
+        "selection": {
+          "observation_id": 2083335,
+          "selection_policy": "p3-t05-d033-choice_reward_item",
+          "source_key": "tortoise-world-sql",
+          "source_revision": "61a8269151721f6467eddb05e7bed37704d0fc0b|content:dce8653d8daf829e3b28f585ed4e200cc32f32819ffaa6f92aa4c4ce7bd14299"
+        },
+        "source_evidence": [
+          {
+            "observation_id": 2083335,
+            "raw_identifier": "6:choice_reward_item:6076:slot:1",
+            "selected": true,
+            "source_slot": 1
+          }
+        ],
+        "source_slots": [
+          1
+        ],
+        "value_status": "known"
+      }
+    ],
+    "materialized_member_count": 3,
+    "selected_member_count": 3,
+    "semantics": "choose_one"
+  },
+  "conflicts": [],
+  "guaranteed_rewards": [],
+  "objective_membership": {
+    "equivalence_assumed": false,
+    "item_ids": [
+      182
+    ],
+    "objective_only_item_ids": [],
+    "required_item_ids_not_in_objectives": []
+  },
+  "provided_item": null,
+  "required_items": [
+    {
+      "item_id": 182,
+      "item_name": "Garrick's Head",
+      "objective_membership": true,
+      "quantity": 1,
+      "resolved": true,
+      "selection": {
+        "observation_id": 2083331,
+        "selection_policy": "p3-t05-d033-required_item",
+        "source_key": "tortoise-world-sql",
+        "source_revision": "61a8269151721f6467eddb05e7bed37704d0fc0b|content:dce8653d8daf829e3b28f585ed4e200cc32f32819ffaa6f92aa4c4ce7bd14299"
+      },
+      "source_evidence": [
+        {
+          "observation_id": 2083331,
+          "raw_identifier": "6:required_item:182:slot:1",
+          "selected": true,
+          "source_slot": 1
+        }
+      ],
+      "source_slots": [
+        1
+      ],
+      "value_status": "known"
+    }
+  ],
+  "required_sources": [
+    {
+      "item_id": 182,
+      "item_name": "Garrick's Head",
+      "raw_source_count": 1,
+      "resolved": true,
+      "selection": {
+        "observation_id": 2083332,
+        "selection_policy": "p3-t05-d033-required_source",
+        "source_key": "tortoise-world-sql",
+        "source_revision": "61a8269151721f6467eddb05e7bed37704d0fc0b|content:dce8653d8daf829e3b28f585ed4e200cc32f32819ffaa6f92aa4c4ce7bd14299"
+      },
+      "source_evidence": [
+        {
+          "observation_id": 2083332,
+          "raw_identifier": "6:required_source:182:slot:1",
+          "selected": true,
+          "source_slot": 1
+        }
+      ],
+      "source_slots": [
+        1
+      ],
+      "value_status": "known"
+    }
+  ]
+}

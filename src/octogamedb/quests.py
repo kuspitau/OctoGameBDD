@@ -5,6 +5,7 @@ from __future__ import annotations
 import sqlite3
 from typing import Any
 
+from octogamedb.quest_items import quest_item_facts_by_id
 from octogamedb.quest_objectives import quest_objectives_by_id
 
 
@@ -152,7 +153,7 @@ def _member_provenance(
 
 
 def quest_by_id(connection: sqlite3.Connection, quest_id: int) -> dict[str, Any] | None:
-    """Return quest identity, progression, endpoints, objectives, provenance and geography."""
+    """Return quest identity, progression, endpoints, item facts, objectives, provenance and geography."""
 
     quest = connection.execute(
         """
@@ -271,5 +272,6 @@ def quest_by_id(connection: sqlite3.Connection, quest_id: int) -> dict[str, Any]
             },
         },
         "endpoints": endpoints,
+        "item_facts": quest_item_facts_by_id(connection, quest_id),
         "objectives": quest_objectives_by_id(connection, quest_id),
     }

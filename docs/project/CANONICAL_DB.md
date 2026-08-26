@@ -31,50 +31,82 @@ Both files are generated/local artifacts and remain ignored by Git.
 
 ## Current baseline
 
-As of the P3-T04 closeout on 2026-08-25, the human has validated the cumulative database through the
-complete P1/P2 chain plus P3-T01, P3-T02, P3-T03 and P3-T04. The canonical local DB is therefore
-**validated through P3-T04**.
+As of the P3-T05 closeout on 2026-08-26, the human has validated the cumulative database through the
+complete P1/P2 chain plus P3-T01 through P3-T05. The canonical local DB is therefore **validated
+through P3-T05 / migration 10**.
 
-P3-T04 applied migration 9 and successfully reconciled quest objective membership, item-use target
-support and area-trigger location support from the configured pfQuest and pfQuest-turtle trees. The
-final same-revision pass produced zero canonical inserts, updates or deletes; `PRAGMA
-foreign_key_check` and `PRAGMA integrity_check` both passed.
-
-Validated P3-T04 source revisions are:
+P3-T05 applied:
 
 ```text
-base pfQuest objectives
-sha256:2acc862f732bc512482eaaec0b86a2a5d67c548d8cc50f7b6128f5ffba27a58c
-
-pfQuest-turtle objectives
-sha256:8e570cb4303e73fae03d6b4240b0122f0000f35dd441aca686feed039641f90f
+0010_quest_item_facts.sql
 ```
 
-P3-T04 validator-reported canonical counts are:
+after successful disposable full-data validation and an isolated D-029 shadow exercise.
+
+The real canonical database was verified with:
 
 ```text
-quests                         6498
-quest_objective_sets           4224
-quest_creature_objectives      1484
-quest_gameobject_objectives    99
-quest_item_objectives          5064
-quest_item_use_objectives      226
-quest_area_trigger_objectives  50
-quest_zone_objectives          0
-area_triggers                  496
-area_trigger_locations         558
-item_use_target_sets           189
-item_use_creature_targets      113
-item_use_gameobject_targets    220
-import_batches                 20
-observation_groups             1182571
-canonical_selections           1172691
-source_observations            2083312
+schema_version                   = 10
+foreign_key_check                = []
+integrity_check                  = ["ok"]
+failed_import_batches            = 0
+invalid_required_quantity_count  = 0
 ```
 
-The task validator also reports `219` unresolved objective/support references as explicit warnings
-(`188` missing quest identities, `30` missing creature identities and `1` missing item identity).
-These are preserved audit evidence and do not represent FK or integrity failures.
+P3-T05 canonical family counts are:
+
+```text
+quest_required_items       6100
+quest_required_sources     2961
+quest_provided_items       1320
+quest_reward_items         2072
+quest_choice_reward_items  2424
+```
+
+Validated P3-T05 source identities/revisions are:
+
+```text
+tortoise-world-sql
+61a8269151721f6467eddb05e7bed37704d0fc0b
+content:dce8653d8daf829e3b28f585ed4e200cc32f32819ffaa6f92aa4c4ce7bd14299
+
+octo-live-quest-query
+e793f80f6b45ed49a94dc8abdc9fcac4fe6b03dd
+capture:71de2543b3b7e008dd229d82cb5372e163e08c117cc3b354229ff2b0ef71dedc
+
+octodb
+0f81f0908cc3b8082ae2897901b88c61f24c916c04bf3c4c6b627eb09f53e533
+
+cmangos-vanilla
+250a705a462c1acb457d3002359c7e0052c4dafe:0a77f5230a3d5d6db968678203dfe3b30c34b8a9
+```
+
+The accepted P3-T05 D-033 comparison hash is:
+
+```text
+ac376ec58584c59446eb6c6d448b6f6565fb3f14593c27b60c13e539e43cea50
+```
+
+The validation retains `268` unresolved item/quest targets as explicit warning/provenance evidence,
+with no same-priority ambiguity or reconciliation anomaly. Four cross-source value conflicts remain
+auditable. At least one real `ReqSourceCount = 0` observation is preserved as raw source semantics and
+does not create a non-positive ordinary quest requirement.
+
+Closeout SHA-256 values are:
+
+```text
+migration-9 rollback backup:
+3dc2a49092d108a1274e55e3052b3ba74711b5ec0f675c9ff2a201c287617443
+
+validated migration-10 canonical:
+9c637ab40c2c5e3c2843e6c7d52fb5c75bbe05f57d05e2ea4d48ae7bd03b127d
+```
+
+The `_bak` file is the immediate pre-P3-T05 migration-9 rollback state. It may remain until the next
+validated canonical mutation cycle replaces it.
+
+Earlier phase-specific counts/revisions remain documented in their task closeouts; this file records
+the current cumulative baseline rather than duplicating every historical metric.
 
 The current task router (`docs/project/CURRENT_STATE.md`) records which next task may consume this
 baseline.

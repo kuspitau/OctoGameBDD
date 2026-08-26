@@ -1,0 +1,35 @@
+{
+  "custom_quests_absent": [
+    40788,
+    40675
+  ],
+  "full_projection_hash": "53cc5319cccf05aac169274db0c49674a0b8ed25f58161a9a2c74441a2db7268",
+  "git_blob_sha1": "0a77f5230a3d5d6db968678203dfe3b30c34b8a9",
+  "origin": "validation-download",
+  "path": "C:\\Games\\OctoGameDB_project\\OctoGameDB\\data\\validation\\p3_t05_validation_20260826_053719\\ClassicDB_1_12_1_z2815.sql.gz",
+  "quest_count": 4245,
+  "reqsource": {
+    "nonzero_count": 72,
+    "nonzero_example": {
+      "count": 1,
+      "item_id": 15877,
+      "quest_id": 28,
+      "slot": 1,
+      "source_key": "cmangos-vanilla"
+    },
+    "zero_count": 3,
+    "zero_count_example": {
+      "count": 0,
+      "item_id": 5388,
+      "quest_id": 1045,
+      "slot": 1,
+      "source_key": "cmangos-vanilla"
+    }
+  },
+  "reviewed_quest_ids": [
+    815,
+    818,
+    1045
+  ],
+  "source_revision": "250a705a462c1acb457d3002359c7e0052c4dafe:0a77f5230a3d5d6db968678203dfe3b30c34b8a9"
+}

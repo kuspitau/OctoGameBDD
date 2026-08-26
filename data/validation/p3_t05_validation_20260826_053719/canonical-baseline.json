@@ -1,0 +1,9 @@
+{
+  "database": "C:\\Games\\OctoGameDB_project\\OctoGameDB\\data\\generated\\octogamedb.sqlite3",
+  "foreign_key_check": [],
+  "integrity_check": [
+    "ok"
+  ],
+  "schema_version": 9,
+  "sha256": "3dc2a49092d108a1274e55e3052b3ba74711b5ec0f675c9ff2a201c287617443"
+}

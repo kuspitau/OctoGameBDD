@@ -9,45 +9,58 @@ editing.
 At closeout preparation time, visible GitHub `main` is still:
 
 ```text
-ee893eb2a37808ebb791790abd8561a76da92738
+9555290b6be21d7e9153652a661f680a0ed47b18
 ```
 
 Commit title:
 
 ```text
-Refine P3-T05 source strategy with live Octo and Tortoise evidence
+Validate P3-T05B source contract and unblock P3-T05
 ```
 
-The validated P3-T05B implementation delta was applied locally on top of that commit and has not yet
-been pushed to GitHub. This closeout delta is intentionally stacked on that local implementation
-state. It must not be applied by itself to the visible `ee893eb...` tree.
+The validated P3-T05 implementation is currently a **local stacked integration state** and has not
+yet been pushed to GitHub. It consists of:
 
-After the human commits and pushes the combined implementation + closeout, the next conversation must
-verify that the current GitHub head contains both before proceeding.
+1. the full P3-T05 implementation handoff
+   `changes.zip` SHA-256
+   `0d6648912565ab3af70c21d6a017977c148dda2b1fa68382d4741787e7106f44`;
+2. the corrective P3-T05 handoff
+   `changes.zip` SHA-256
+   `9735c0aa8f5f236d3066d5d57940c07f7e59e7d08c7f9ba73095cd3f3cb560fc`;
+3. this P3-T05 closeout handoff.
+
+This closeout must be applied only on top of that local P3-T05 integration state. It must not be
+applied by itself to visible GitHub `main`.
+
+After the human commits and pushes the combined implementation + correction + closeout, the next
+conversation must verify the new `main` head before proceeding.
 
 ## Validated cumulative state
 
-P0 through P3-T04 are `VALIDATED` in code/data. P3-T05A is `VALIDATED` as the historical source-
-contract investigation. P3-T05B is now also `VALIDATED` after successful real-source Level-2
-validation on 2026-08-26.
+P0 through P3-T05 are now `VALIDATED` in code/data. P3-T05A and P3-T05B remain the validated
+source-contract predecessors for the P3-T05 quantity/reward slice.
 
-The canonical cumulative local database remains:
+The canonical cumulative local database is:
 
 ```text
 data/generated/octogamedb.sqlite3
 ```
 
-It remains validated through migration:
+and is now validated through:
 
 ```text
-0009_quest_objectives.sql
+0010_quest_item_facts.sql
 ```
 
-P3-T05A, D-033 and P3-T05B do not add a canonical migration or advance canonical SQLite data.
-P3-T04 remains the latest canonical-data implementation. The P3-T05B validation explicitly confirmed
-that the canonical database hash was unchanged.
+The immediate rollback file remains:
 
-## P3-T05B — validated acquisition/source bridge
+```text
+data/generated/octogamedb_bak.sqlite3
+```
+
+and is the byte-identical migration-9/P3-T04 pre-P3-T05 state produced under D-029.
+
+## P3-T05 — validated quest item requirements and rewards
 
 ### Status
 
@@ -55,42 +68,15 @@ that the canonical database hash was unchanged.
 VALIDATED
 ```
 
-Detailed record:
+Detailed implementation/validation record:
 
 ```text
-docs/project/tasks/P3-T05B.md
+docs/project/tasks/P3-T05.md
 ```
-
-Durable validated outcomes:
-
-- source-shaped `tortoise-world-sql` projection over the pinned Tortoise base quest table plus
-  deterministic relevant world-migration replay;
-- pinned Tortoise revision:
-  `61a8269151721f6467eddb05e7bed37704d0fc0b`;
-- bounded manual Octo/ClassicAPI quest probe with one outstanding request at a time and no autonomous
-  enumeration;
-- pinned ClassicAPI semantic reference:
-  `e793f80f6b45ed49a94dc8abdc9fcac4fe6b03dd`;
-- deterministic live SavedVariables normalization with missing/empty/failure fields remaining
-  `unknown` rather than negative complete-set evidence;
-- no fabricated live `ReqSource` facts and no fabricated `srcItemID` count;
-- reviewed OctoDB positive structural observations;
-- pinned CMaNGOS Vanilla fallback/baseline;
-- deterministic four-source comparison implementing D-033's fact-family-specific priority while
-  retaining conflicts and refusing silent same-priority disagreement;
-- real source auditing confirms nonzero `ReqSourceId` and explicit zero-count semantics can be
-  preserved without coercing them into ordinary quest-required quantities;
-- no canonical SQLite mutation.
-
-The local `data/raw` validation workspace is not a durable project dependency. Future work must rely
-on the tracked acquisition/normalization code, pinned/configured source identities and reproducible
-validation procedures rather than historical temporary validation directories.
-
-## P3-T05B Level-2 completion record
 
 Human/local validation completed successfully on 2026-08-26.
 
-Previously completed general gates:
+General tracked quality gates passed before Level 2:
 
 ```text
 python -m pip install -e ".[dev]"
@@ -99,47 +85,68 @@ python -m ruff check src tests
 python -m compileall -q src tests
 ```
 
-The task-specific validator also checked the script scope omitted by those commands and then completed
-all remaining Level-2 work. Final reported result:
+The task-specific Level-2 validation then reacquired/revalidated the real source inputs and confirmed:
+
+- deterministic full Tortoise projection at pinned revision
+  `61a8269151721f6467eddb05e7bed37704d0fc0b`;
+- bounded live Octo/ClassicAPI evidence with capture hash
+  `71de2543b3b7e008dd229d82cb5372e163e08c117cc3b354229ff2b0ef71dedc`;
+- reviewed OctoDB evidence revision
+  `0f81f0908cc3b8082ae2897901b88c61f24c916c04bf3c4c6b627eb09f53e533`;
+- pinned CMaNGOS evidence revision
+  `250a705a462c1acb457d3002359c7e0052c4dafe:0a77f5230a3d5d6db968678203dfe3b30c34b8a9`;
+- D-033 four-source comparison with no same-priority ambiguity;
+- a real raw `ReqSourceCount = 0` observation retained as provenance without creating a zero ordinary
+  requirement quantity;
+- migration 10 on a disposable copy, with second-pass zero inserts/updates/deletes;
+- FK/integrity success, read-model checks and source-provenance audits;
+- D-029 canonical mode on an isolated shadow copy before real canonical mutation.
+
+The deliberate real canonical evolution then succeeded:
 
 ```text
-[PASS] P3-T05B LOCAL VALIDATION COMPLETE: all remaining Level-2 checks passed.
-[PASS] SUMMARY: P3-T05B completed all remaining local validation checks.
-[PASS] Validation script finished successfully.
+schema_version = 10
+migration       = 0010_quest_item_facts.sql
+
+quest_required_items       = 6100
+quest_required_sources     = 2961
+quest_provided_items       = 1320
+quest_reward_items         = 2072
+quest_choice_reward_items  = 2424
 ```
 
-This covered the pinned Tortoise projection/determinism checks, actual Octo/ClassicAPI capture,
-reviewed OctoDB evidence, pinned CMaNGOS evidence, D-033 four-source comparison invariants, real
-`ReqSource` audit cases and canonical DB non-mutation.
-
-No additional D-033/source-contract change was required by the real-source validation.
-
-## Active task
-
-### P3-T05 — quest item requirements and rewards
-
-**Status: READY_FOR_IMPLEMENTATION**
-
-Detailed task:
+Final direct canonical checks reported:
 
 ```text
-docs/project/tasks/P3-T05.md
+foreign_key_check               = []
+integrity_check                  = ["ok"]
+failed_import_batches            = 0
+invalid_required_quantity_count  = 0
 ```
 
-The next conversation should implement P3-T05 using the validated P3-T05B bridge and existing D-033
-field-family policy. It must not redo P3-T05B as a prerequisite merely because its local raw validation
-artifacts are absent.
+The accepted D-033 comparison hash is:
 
-The cumulative canonical DB is still the P3-T04/migration-9 baseline. P3-T05 is the next task that may
-introduce a new canonical migration/data evolution, so D-029 / `docs/project/CANONICAL_DB.md` applies
-before any canonical write.
+```text
+ac376ec58584c59446eb6c6d448b6f6565fb3f14593c27b60c13e539e43cea50
+```
 
-## Durable source strategy
+Canonical hashes at closeout:
 
-D-033 remains the current bounded source-priority/acquisition decision. D-032 remains historical and
-its semantic distinctions continue to apply where not superseded.
+```text
+migration-9 backup:
+3dc2a49092d108a1274e55e3052b3ba74711b5ec0f675c9ff2a201c287617443
 
-Validated field-specific priority:
+validated migration-10 canonical:
+9c637ab40c2c5e3c2843e6c7d52fb5c75bbe05f57d05e2ea4d48ae7bd03b127d
+```
+
+The 268 unresolved item/quest targets remain explicit warnings/provenance evidence. They are not
+fabricated identities and did not produce FK/integrity failures. Four cross-source value conflicts
+remain retained for audit; none is a same-priority ambiguity.
+
+## Durable P3-T05 policy
+
+D-033 remains the governing field-family source policy:
 
 ```text
 ReqItem + count:
@@ -159,16 +166,50 @@ SrcItem count:
 
 ReqSource ID/count:
   Tortoise SQL -> CMaNGOS Vanilla
-  (Octo-specific live coverage remains unresolved)
 ```
 
-Every selected fact retains its real source identity. Missing live fields/query failures remain
-unknown. A Tortoise fallback is never relabeled as live Octo truth, and P3-T04 objective membership
-must not manufacture P3-T05 quantities.
+Operational consequences remain:
+
+- missing/failed live fields are unknown, not complete empty evidence;
+- partial live/OctoDB absence does not delete selected positive facts;
+- complete Tortoise fixed-slot evidence may replace stale managed fallback facts only within the
+  family whose completeness contract is established;
+- explicit/custom selections remain protected;
+- raw `ReqSourceCount = 0` is source/drop-control evidence, not an ordinary zero required quantity;
+- P3-T04 objective membership stays separate from P3-T05 quantity-bearing requirements.
+
+## Active task
+
+### P4-T01 — spell/recipe source and identity contract
+
+**Status: READY_FOR_IMPLEMENTATION**
+
+Detailed task:
+
+```text
+docs/project/tasks/P4-T01.md
+```
+
+This is the first bounded P4 task. It must establish the source/identity semantics needed to preserve
+the project's required distinctions between:
+
+- native spell identity;
+- the learned/crafting spell that performs a recipe;
+- an item that teaches/unlocks a recipe;
+- the crafted result item;
+- profession/skill-line membership and rank/skill requirements.
+
+Do not begin a broad reagents/acquisition/economics import before those identities and source
+completeness rules are evidenced. P4-T01 should prefer primary/current source inspection and
+source-shaped fixtures over assumptions.
+
+The validated migration-10 canonical DB is the cumulative local baseline available to P4-T01, but
+P4-T01 should not mutate it unless its task-specific implementation and validation protocol explicitly
+requires a new migration and follows D-029.
 
 ## Next-conversation guard
 
-Before starting P3-T05, verify GitHub `main` contains the locally validated P3-T05B implementation and
-this closeout. If GitHub still points to
-`ee893eb2a37808ebb791790abd8561a76da92738`, the combined handoff has not yet been integrated and the
-next conversation must not assume P3-T05B code exists on `main`.
+Before starting P4-T01, verify GitHub `main` contains the complete P3-T05 implementation, correction
+and this closeout. If `main` still points to
+`9555290b6be21d7e9153652a661f680a0ed47b18`, the local handoffs have not yet been integrated and the
+next conversation must not assume P3-T05 code/project memory exists on GitHub.

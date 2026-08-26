@@ -1,0 +1,92 @@
+{
+  "choice_rewards": {
+    "items": [
+      {
+        "item_id": 60915,
+        "item_name": "Band of Durotar",
+        "quantity": 1,
+        "resolved": true,
+        "selection": {
+          "observation_id": 2133691,
+          "selection_policy": "p3-t05-d033-choice_reward_item",
+          "source_key": "octodb",
+          "source_revision": "0f81f0908cc3b8082ae2897901b88c61f24c916c04bf3c4c6b627eb09f53e533"
+        },
+        "source_evidence": [
+          {
+            "observation_id": 2133691,
+            "raw_identifier": "40675:choice_reward_item:60915:slot:1",
+            "selected": true,
+            "source_slot": 1
+          }
+        ],
+        "source_slots": [
+          1
+        ],
+        "value_status": "known"
+      },
+      {
+        "item_id": 60916,
+        "item_name": "Signet of Durotar",
+        "quantity": 1,
+        "resolved": true,
+        "selection": {
+          "observation_id": 2133692,
+          "selection_policy": "p3-t05-d033-choice_reward_item",
+          "source_key": "octodb",
+          "source_revision": "0f81f0908cc3b8082ae2897901b88c61f24c916c04bf3c4c6b627eb09f53e533"
+        },
+        "source_evidence": [
+          {
+            "observation_id": 2133692,
+            "raw_identifier": "40675:choice_reward_item:60916:slot:2",
+            "selected": true,
+            "source_slot": 2
+          }
+        ],
+        "source_slots": [
+          2
+        ],
+        "value_status": "known"
+      },
+      {
+        "item_id": 60917,
+        "item_name": "Ring of Durotar",
+        "quantity": 1,
+        "resolved": true,
+        "selection": {
+          "observation_id": 2133693,
+          "selection_policy": "p3-t05-d033-choice_reward_item",
+          "source_key": "octodb",
+          "source_revision": "0f81f0908cc3b8082ae2897901b88c61f24c916c04bf3c4c6b627eb09f53e533"
+        },
+        "source_evidence": [
+          {
+            "observation_id": 2133693,
+            "raw_identifier": "40675:choice_reward_item:60917:slot:3",
+            "selected": true,
+            "source_slot": 3
+          }
+        ],
+        "source_slots": [
+          3
+        ],
+        "value_status": "known"
+      }
+    ],
+    "materialized_member_count": 3,
+    "selected_member_count": 3,
+    "semantics": "choose_one"
+  },
+  "conflicts": [],
+  "guaranteed_rewards": [],
+  "objective_membership": {
+    "equivalence_assumed": false,
+    "item_ids": [],
+    "objective_only_item_ids": [],
+    "required_item_ids_not_in_objectives": []
+  },
+  "provided_item": null,
+  "required_items": [],
+  "required_sources": []
+}
