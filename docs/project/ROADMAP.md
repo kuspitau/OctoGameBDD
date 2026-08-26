@@ -47,68 +47,81 @@ geography.
 Goal: first-class recipe/spell identities, profession membership, outputs, reagents and independent
 learning/acquisition paths.
 
-### P4-T01 — source/identity contract
+- **P4-T01 — source/identity contract: VALIDATED**
+- **P4-T02 — canonical spell / skill-line / recipe identity: VALIDATED**
+- **P4-T03 — recipe reagents and quantities: VALIDATED**
+- **P4-T04 — recipe learning/acquisition sources: VALIDATED**
 
-**VALIDATED.** D-034 anchors recipe identity to a proven crafting spell while keeping learning sources
-separate.
-
-### P4-T02 — canonical spell / skill-line / recipe identity
-
-**VALIDATED.** Migration 11 materializes spells, skill lines, recipes, profession memberships and
-slot-preserving outputs from the verified Octo DBC revision.
-
-### P4-T03 — recipe reagents and quantities
-
-**VALIDATED.** Migration 12 materializes native reagent slots/IDs and exact `Spell.ReagentCount`
-quantities. Its exact canonical file is now the D-029 rollback for validated migration 13.
-
-### P4-T04 — recipe learning/acquisition sources
-
-**VALIDATED.** Migration 13 materializes explicit teaching-item, trainer-creature and quest-reward
-learning relations without duplicating derived teaching-item vendor/loot/zone paths. D-035 keeps exact
-Octo DBC `LEARN_SPELL` as preferred learning proof and permits pinned Tortoise `spell_learn_spell` only
-as lower-authority fallback.
-
-Final full-data validation and guarded promotion on 2026-08-26 produced:
-
-```text
-recipe_count                     = 1739
-teaching_item_count              = 1065
-trainer_source_count             = 6376
-direct_trainer_source_count      = 5834
-template_trainer_source_count    = 542
-quest_learning_source_count      = 16
-dbc_proven_acquisition_count     = 7457
-server_fallback_acquisition_count = 0
-second_import                     = 0 inserted / 0 updated
-foreign_key_check                 = []
-integrity_check                   = ok
-```
-
-Canonical migration-13 SHA-256:
+Canonical migration-13 SHA-256 remains:
 
 ```text
 623e29d83abd20335506d2a23dcbd525331de4f1bc10d38fccd7aa550a7613d7
 ```
 
-D-029 rollback now preserves the exact migration-12 canonical:
-
-```text
-6f9d9c44593225a67576df3be8caa06cbf157fbfb19233b9a932a83612ae5261
-```
-
-Detailed evidence remains in `docs/project/tasks/P4-T04.md`. P4 is closed and P5 is unblocked.
-
 ## P5 — Resolution, auditing and coverage
 
-After P4 closes, expand:
+Goal: make accumulated multi-source evidence measurable and inspectable before changing resolution
+policies or scaling additional source families.
 
-- source-specific resolution policies;
-- conflict inspection;
-- trace/provenance views;
-- coverage metrics;
-- source-difference reports;
-- data-quality/idempotency checks.
+### P5-T01 — resolution audit baseline
+
+**VALIDATED.**
+
+P5-T01 added a read-only provenance-resolution inventory and validated it on the real cumulative
+migration-13 DB.
+
+Measured baseline:
+
+```text
+observation groups                 = 1307532
+selected                           = 1297652
+unselected                         = 9880
+conflicts                          = 64512
+resolved conflicts                 = 64512
+unresolved conflicts               = 0
+unselected single-value groups     = 9880
+empty groups                       = 0
+selection policies                 = 24
+selected sources                   = 7
+fact families                      = 82
+```
+
+The canonical DB remained byte-identical during validation.
+
+### P5-T02 — unselected single-value provenance audit
+
+**READY_FOR_IMPLEMENTATION.**
+
+Explain and classify the 9,880 unselected single-value groups before any policy changes.
+
+The measured family distribution is limited to creature/gameobject identity/presence/spawn-set facts
+and creature/gameobject spawn position/respawn facts, with the overwhelming majority in spawn facts.
+
+P5-T02 must remain read-only and provide deterministic drill-down/grouping sufficient to decide
+whether each class represents:
+
+- expected non-canonical evidence;
+- intentionally excluded effective-view data;
+- an importer/reconciler coverage gap;
+- or a genuine missing-selection candidate.
+
+It must not auto-select canonical observations.
+
+Detailed task contract:
+
+```text
+docs/project/tasks/P5-T02.md
+```
+
+Later P5 work remains routed from measured findings. Candidate bounded follow-ups include:
+
+- explicit policy correction for genuine missing-selection classes discovered by P5-T02;
+- deeper source-difference reports;
+- domain-specific coverage/completeness metrics;
+- broader data-quality/idempotency audits.
+
+Any later task that changes source-selection policy must document the authority/behavior change rather
+than silently embedding it in audit code.
 
 ## P6 — Full Octo import / scaling
 

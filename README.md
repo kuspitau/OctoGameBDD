@@ -22,7 +22,7 @@ The data model is **not item-centric**. Items, quests, creatures, game objects, 
 
 ## Current foundation CLI
 
-The P0 foundation currently exposes:
+The audit foundation currently exposes:
 
 ```bash
 python -m octogamedb status
@@ -30,11 +30,14 @@ python -m octogamedb source [SOURCE_KEY]
 python -m octogamedb trace SUBJECT_KIND SUBJECT_KEY [--fact FACT_KEY]
 python -m octogamedb conflict [--subject-kind KIND] [--subject-key KEY]
 python -m octogamedb coverage
+python -m octogamedb resolution [--subject-kind KIND] [--fact FACT_KEY]
 ```
 
-Every audit command (`source`, `trace`, `conflict`, `coverage`) supports `--json` for deterministic machine-readable output and `--db PATH` for an explicit SQLite database.
+Every audit command (`source`, `trace`, `conflict`, `coverage`, `resolution`) supports `--json` for deterministic machine-readable output and `--db PATH` for an explicit SQLite database.
 
-P0 coverage is intentionally generic provenance/evidence coverage. Domain-specific completeness metrics are added only after the corresponding canonical domains exist.
+`coverage` remains generic provenance/evidence coverage. P5-T01 adds a read-only `resolution` inventory
+for selected/unselected evidence groups, conflicts, selection policies/sources and fact-family counts.
+Domain-specific completeness metrics are added only when a bounded domain task defines their semantics.
 
 ## Start here
 

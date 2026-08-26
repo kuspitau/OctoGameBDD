@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import hashlib
 import json
+from pathlib import Path
 
 from octogamedb.__main__ import main
 from octogamedb.db import connect_database
@@ -50,6 +52,28 @@ def test_audit_cli_json_commands(golden_audit_case, capsys):
     assert source["source_count"] == 1
     assert source["sources"][0]["source_key"] == "source-a"
 
+    assert main(["resolution", "--db", db_path, "--json"]) == 0
+    resolution = json.loads(capsys.readouterr().out)
+    assert resolution["scope"] == "provenance-resolution"
+    assert resolution["selected_group_count"] == 1
+    assert resolution["unresolved_conflict_group_count"] == 1
+
+    assert main(
+        [
+            "resolution",
+            "--subject-kind",
+            "item",
+            "--fact",
+            "name",
+            "--db",
+            db_path,
+            "--json",
+        ]
+    ) == 0
+    resolution = json.loads(capsys.readouterr().out)
+    assert resolution["observation_group_count"] == 1
+    assert resolution["resolved_conflict_group_count"] == 1
+
 
 def test_audit_cli_human_output(golden_audit_case, capsys):
     db_path = str(golden_audit_case["db_path"])
@@ -63,3 +87,24 @@ def test_audit_cli_human_output(golden_audit_case, capsys):
     output = capsys.readouterr().out
     assert "Conflicts: 2" in output
     assert "quest:99 giver [giver-slot-1]: 2 values (unresolved)" in output
+
+    assert main(["resolution", "--db", db_path]) == 0
+    output = capsys.readouterr().out
+    assert "Resolution scope: provenance-resolution" in output
+    assert "Selected groups: 1" in output
+    assert "Unselected single-value groups: 3" in output
+    assert "Resolved conflicts: 1" in output
+    assert "Unresolved conflicts: 1" in output
+    assert "fixture-source-priority/v1: selected=1, conflicts=1" in output
+    assert "source-b: selected=1, conflicts=1" in output
+
+
+def test_resolution_cli_does_not_change_existing_database(golden_audit_case, capsys):
+    db_path = Path(golden_audit_case["db_path"])
+    before = hashlib.sha256(db_path.read_bytes()).hexdigest()
+
+    assert main(["resolution", "--db", str(db_path), "--json"]) == 0
+    capsys.readouterr()
+
+    after = hashlib.sha256(db_path.read_bytes()).hexdigest()
+    assert after == before

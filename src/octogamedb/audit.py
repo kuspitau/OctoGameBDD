@@ -219,6 +219,169 @@ def conflict_report(
     }
 
 
+def resolution_report(
+    connection: sqlite3.Connection,
+    *,
+    subject_kind: str | None = None,
+    fact_key: str | None = None,
+) -> dict[str, Any]:
+    """Summarize canonical selection coverage without changing resolution policy."""
+
+    filters: list[str] = []
+    params: list[Any] = []
+    if subject_kind is not None:
+        filters.append("og.subject_kind = ?")
+        params.append(subject_kind)
+    if fact_key is not None:
+        filters.append("og.fact_key = ?")
+        params.append(fact_key)
+    where = ""
+    if filters:
+        where = "WHERE " + " AND ".join(filters)
+
+    rows = connection.execute(
+        f"""
+        SELECT
+            og.id,
+            og.subject_kind,
+            og.fact_key,
+            og.fact_kind,
+            COUNT(so.id) AS observation_count,
+            COUNT(DISTINCT so.value_json) AS distinct_value_count,
+            cs.observation_id AS selected_observation_id,
+            cs.selection_policy,
+            selected_source.source_key AS selected_source_key
+        FROM observation_groups AS og
+        LEFT JOIN source_observations AS so ON so.observation_group_id = og.id
+        LEFT JOIN canonical_selections AS cs ON cs.observation_group_id = og.id
+        LEFT JOIN source_observations AS selected_observation
+            ON selected_observation.id = cs.observation_id
+        LEFT JOIN data_sources AS selected_source
+            ON selected_source.id = selected_observation.source_id
+        {where}
+        GROUP BY og.id
+        ORDER BY og.subject_kind, og.fact_key, og.fact_kind, og.id
+        """,
+        tuple(params),
+    ).fetchall()
+
+    totals = {
+        "observation_group_count": 0,
+        "selected_group_count": 0,
+        "unselected_group_count": 0,
+        "empty_observation_group_count": 0,
+        "conflict_group_count": 0,
+        "resolved_conflict_group_count": 0,
+        "unresolved_conflict_group_count": 0,
+        "unselected_single_value_group_count": 0,
+    }
+    policy_counts: dict[str | None, dict[str, int]] = {}
+    source_counts: dict[str, dict[str, int]] = {}
+    family_counts: dict[tuple[str, str, str], dict[str, int | str]] = {}
+
+    for row in rows:
+        selected = row["selected_observation_id"] is not None
+        distinct_value_count = int(row["distinct_value_count"])
+        conflict = distinct_value_count > 1
+        empty = int(row["observation_count"]) == 0
+        unselected_single_value = not selected and distinct_value_count == 1
+
+        totals["observation_group_count"] += 1
+        totals["selected_group_count" if selected else "unselected_group_count"] += 1
+        if empty:
+            totals["empty_observation_group_count"] += 1
+        if conflict:
+            totals["conflict_group_count"] += 1
+            totals[
+                "resolved_conflict_group_count" if selected else "unresolved_conflict_group_count"
+            ] += 1
+        if unselected_single_value:
+            totals["unselected_single_value_group_count"] += 1
+
+        family_key = (str(row["subject_kind"]), str(row["fact_key"]), str(row["fact_kind"]))
+        family = family_counts.setdefault(
+            family_key,
+            {
+                "subject_kind": family_key[0],
+                "fact_key": family_key[1],
+                "fact_kind": family_key[2],
+                "observation_group_count": 0,
+                "selected_group_count": 0,
+                "unselected_group_count": 0,
+                "empty_observation_group_count": 0,
+                "conflict_group_count": 0,
+                "resolved_conflict_group_count": 0,
+                "unresolved_conflict_group_count": 0,
+                "unselected_single_value_group_count": 0,
+            },
+        )
+        family["observation_group_count"] = int(family["observation_group_count"]) + 1
+        selected_key = "selected_group_count" if selected else "unselected_group_count"
+        family[selected_key] = int(family[selected_key]) + 1
+        if empty:
+            family["empty_observation_group_count"] = (
+                int(family["empty_observation_group_count"]) + 1
+            )
+        if conflict:
+            family["conflict_group_count"] = int(family["conflict_group_count"]) + 1
+            conflict_key = (
+                "resolved_conflict_group_count" if selected else "unresolved_conflict_group_count"
+            )
+            family[conflict_key] = int(family[conflict_key]) + 1
+        if unselected_single_value:
+            family["unselected_single_value_group_count"] = (
+                int(family["unselected_single_value_group_count"]) + 1
+            )
+
+        if selected:
+            policy = row["selection_policy"]
+            policy_counter = policy_counts.setdefault(
+                policy,
+                {"selected_group_count": 0, "conflict_group_count": 0},
+            )
+            policy_counter["selected_group_count"] += 1
+            if conflict:
+                policy_counter["conflict_group_count"] += 1
+
+            source_key = str(row["selected_source_key"])
+            source_counter = source_counts.setdefault(
+                source_key,
+                {"selected_group_count": 0, "conflict_group_count": 0},
+            )
+            source_counter["selected_group_count"] += 1
+            if conflict:
+                source_counter["conflict_group_count"] += 1
+
+    selection_policies = [
+        {
+            "selection_policy": policy,
+            "selected_group_count": counts["selected_group_count"],
+            "conflict_group_count": counts["conflict_group_count"],
+        }
+        for policy, counts in sorted(
+            policy_counts.items(), key=lambda item: "" if item[0] is None else item[0]
+        )
+    ]
+    selected_sources = [
+        {
+            "source_key": source_key,
+            "selected_group_count": counts["selected_group_count"],
+            "conflict_group_count": counts["conflict_group_count"],
+        }
+        for source_key, counts in sorted(source_counts.items())
+    ]
+
+    return {
+        "scope": "provenance-resolution",
+        "subject_kind": subject_kind,
+        "fact_key": fact_key,
+        **totals,
+        "selection_policies": selection_policies,
+        "selected_sources": selected_sources,
+        "fact_families": [family_counts[key] for key in sorted(family_counts)],
+    }
+
+
 def coverage_report(connection: sqlite3.Connection) -> dict[str, Any]:
     """Return generic evidence coverage until domain-specific P1+ metrics exist."""
 

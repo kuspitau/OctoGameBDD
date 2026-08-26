@@ -212,7 +212,18 @@ P0 audit commands operate on import metadata and provenance evidence:
 - `conflict` identifies evidence groups with competing distinct values and whether a canonical winner exists;
 - `coverage` reports generic provenance/evidence counts.
 
-Audit commands provide human-readable output and deterministic JSON. Generic P0 coverage is not a substitute for later domain-specific completeness metrics; those are added as canonical domains become available.
+P5 extends that same generic layer without making audit code a hidden resolution engine:
+
+- `resolution` inventories selected/unselected evidence groups, resolved/unresolved conflicts,
+  selection policies, selected sources and subject/fact-family counts;
+- the report is read-only and does not authorize choosing a winner merely because a group currently
+  contains one distinct value;
+- later domain-specific completeness or policy changes remain separate bounded tasks and must retain
+  their source-authority/completeness decisions.
+
+Audit commands provide human-readable output and deterministic JSON. Generic provenance coverage and
+resolution counts are not substitutes for later domain-specific completeness metrics; those are added
+as measured requirements justify them.
 
 ## Existing projects
 

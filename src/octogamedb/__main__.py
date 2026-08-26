@@ -8,7 +8,13 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-from octogamedb.audit import conflict_report, coverage_report, source_report, trace_report
+from octogamedb.audit import (
+    conflict_report,
+    coverage_report,
+    resolution_report,
+    source_report,
+    trace_report,
+)
 from octogamedb.db import DEFAULT_DB_PATH, apply_migrations, connect_database
 from octogamedb.importers.pfquest_item_overlay_reconcile import (
     compute_pfquest_turtle_items_revision,
@@ -81,6 +87,15 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     _add_db_argument(coverage_parser)
     _add_json_argument(coverage_parser)
+
+    resolution_parser = subparsers.add_parser(
+        "resolution",
+        help="Summarize canonical selection coverage, policies, sources and unresolved groups.",
+    )
+    resolution_parser.add_argument("--subject-kind", help="Optional subject-domain filter.")
+    resolution_parser.add_argument("--fact", dest="fact_key", help="Optional fact-key filter.")
+    _add_db_argument(resolution_parser)
+    _add_json_argument(resolution_parser)
 
     import_items_parser = subparsers.add_parser(
         "import-pfquest-items",
@@ -224,6 +239,50 @@ def _print_coverage(payload: dict[str, Any]) -> None:
         )
 
 
+def _print_resolution(payload: dict[str, Any]) -> None:
+    print(f"Resolution scope: {payload['scope']}")
+    if payload["subject_kind"] is not None:
+        print(f"Subject kind filter: {payload['subject_kind']}")
+    if payload["fact_key"] is not None:
+        print(f"Fact filter: {payload['fact_key']}")
+    print(f"Observation groups: {payload['observation_group_count']}")
+    print(f"Selected groups: {payload['selected_group_count']}")
+    print(f"Unselected groups: {payload['unselected_group_count']}")
+    print(f"Empty observation groups: {payload['empty_observation_group_count']}")
+    print(f"Conflicts: {payload['conflict_group_count']}")
+    print(f"Resolved conflicts: {payload['resolved_conflict_group_count']}")
+    print(f"Unresolved conflicts: {payload['unresolved_conflict_group_count']}")
+    print(
+        "Unselected single-value groups: "
+        f"{payload['unselected_single_value_group_count']}"
+    )
+    if payload["selection_policies"]:
+        print("Selection policies:")
+        for policy in payload["selection_policies"]:
+            label = policy["selection_policy"] or "<none>"
+            print(
+                f"- {label}: selected={policy['selected_group_count']}, "
+                f"conflicts={policy['conflict_group_count']}"
+            )
+    if payload["selected_sources"]:
+        print("Selected sources:")
+        for source in payload["selected_sources"]:
+            print(
+                f"- {source['source_key']}: selected={source['selected_group_count']}, "
+                f"conflicts={source['conflict_group_count']}"
+            )
+    if payload["fact_families"]:
+        print("Fact families:")
+        for family in payload["fact_families"]:
+            print(
+                f"- {family['subject_kind']}.{family['fact_key']} ({family['fact_kind']}): "
+                f"groups={family['observation_group_count']}, "
+                f"selected={family['selected_group_count']}, "
+                f"conflicts={family['conflict_group_count']}, "
+                f"unresolved={family['unresolved_conflict_group_count']}"
+            )
+
+
 def _audit_command(args: argparse.Namespace) -> int:
     with connect_database(args.db) as connection:
         apply_migrations(connection)
@@ -248,6 +307,13 @@ def _audit_command(args: argparse.Namespace) -> int:
         elif args.command == "coverage":
             payload = coverage_report(connection)
             printer = _print_coverage
+        elif args.command == "resolution":
+            payload = resolution_report(
+                connection,
+                subject_kind=args.subject_kind,
+                fact_key=args.fact_key,
+            )
+            printer = _print_resolution
         else:
             raise AssertionError(f"Unhandled audit command: {args.command}")
 
@@ -363,7 +429,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.command == "status":
         return _status(args.db)
-    if args.command in {"source", "trace", "conflict", "coverage"}:
+    if args.command in {"source", "trace", "conflict", "coverage", "resolution"}:
         return _audit_command(args)
     if args.command == "import-pfquest-items":
         return _import_pfquest_items_command(args)

@@ -5,27 +5,30 @@ project state; every new coding conversation must verify the actual current head
 
 ## Integration baseline for this handoff
 
-P4-T04 was implemented from GitHub `main` commit:
+The visible GitHub `main` head at P5-T01 closeout time is:
 
 ```text
-9061569db2e6862516dae268540dc83bf0a1d91a
+1ecba48260046ee2c4cf112cc0a8374b26605506
 ```
 
 Commit title:
 
 ```text
-Validate P4-T03 recipe reagents import and canonical migration 12
+Validate P4-T04 recipe acquisition sources and canonical migration 13
 ```
 
-That commit contains the complete validated P4-T03 closeout. The P4-T04 implementation/continuation
-delta was applied locally on top of that baseline and has now passed Level-2 validation plus canonical
-promotion. This closeout delta is intentionally stacked on that not-yet-pushed local P4-T04 state.
+The P5-T01 implementation delta was applied locally on top of that GitHub baseline and then passed
+all prescribed Level-1/Level-2 validation. This closeout delta is therefore intentionally **stacked on
+the already-applied, not-yet-pushed P5-T01 implementation state**.
+
+Do not apply this closeout delta to a bare checkout of GitHub commit
+`1ecba48260046ee2c4cf112cc0a8374b26605506` without first applying the P5-T01 implementation delta.
 
 ## Validated cumulative state
 
-P0 through **P4-T04** are `VALIDATED`. P4 is closed.
+P0 through **P5-T01** are `VALIDATED`.
 
-The cumulative local canonical database is:
+The cumulative local canonical database remains:
 
 ```text
 data/generated/octogamedb.sqlite3
@@ -37,126 +40,139 @@ validated through:
 P4-T04 / migration 13 / 0013_recipe_acquisition_sources.sql
 ```
 
-Current validated canonical SHA-256:
+P5-T01 is read-only and introduced no migration.
+
+Current validated canonical SHA-256 remains:
 
 ```text
 623e29d83abd20335506d2a23dcbd525331de4f1bc10d38fccd7aa550a7613d7
 ```
 
-The D-029 one-step rollback is now the exact migration-12 canonical:
+The D-029 one-step rollback remains the exact migration-12 canonical:
 
 ```text
 data/generated/octogamedb_bak.sqlite3
 sha256:6f9d9c44593225a67576df3be8caa06cbf157fbfb19233b9a932a83612ae5261
 ```
 
-P4-T04 Level-2 validation and guarded canonical promotion completed successfully on 2026-08-26.
+## P5-T01 closeout
 
-## Durable P4 baseline
+### Status
 
-P4-T01 through P4-T03 remain documented in:
+`VALIDATED`
 
-```text
-docs/project/tasks/P4-T01.md
-docs/project/tasks/P4-T02.md
-docs/project/tasks/P4-T03.md
-```
+P5-T01 established the first measured, read-only resolution baseline over the cumulative P1-P4
+provenance graph.
 
-D-034 remains the recipe-identity contract:
-
-- native `Spell.Id` remains spell identity;
-- recipe identity is a separate entity anchored to a proven crafting spell;
-- recipe qualification requires profession/skill-line membership plus `CREATE_ITEM` evidence;
-- recipe outputs and reagent slots retain native slot/order and IDs;
-- teaching items/trainers/quests are acquisition sources, not recipe identity;
-- no recipe/item/spell identity may be fabricated from display-name or convenient-ID coincidence.
-
-Validated P4-T02/P4-T03 Octo DBC revision:
+Classical local checks reported successful:
 
 ```text
-sha256:f82d41ddbb77f5958d36b2483786c819de512128ef736142c758469718f7274d
+python -m pip install -e ".[dev]"
+pytest --basetemp=.pytest_tmp
+python -m ruff check src tests
+python -m compileall -q src tests
 ```
 
-Validated layouts/counts:
+The autonomous full-data validation then passed on 2026-08-27 against an isolated byte-for-byte
+snapshot of the canonical migration-13 DB.
+
+Measured real baseline:
 
 ```text
-Spell.dbc             173 fields / 692 bytes / 28001 records
-SkillLine.dbc          22 fields /  88 bytes /   136 records
-SkillLineAbility.dbc   15 fields /  60 bytes /  6795 records
+observation_group_count             = 1307532
+selected_group_count                = 1297652
+unselected_group_count              = 9880
+empty_observation_group_count       = 0
+conflict_group_count                = 64512
+resolved_conflict_group_count       = 64512
+unresolved_conflict_group_count     = 0
+unselected_single_value_group_count = 9880
+selection_policy_count              = 24
+selected_source_count               = 7
+fact_family_count                   = 82
 ```
 
-Validated migration-12 invariants remain:
+All resolution aggregation invariants passed.
+
+The canonical DB SHA-256 matched the validated migration-13 baseline before and after validation, and
+the isolated real-data snapshot also remained byte-identical before and after `resolution`. P5-T01
+therefore caused no canonical DB mutation.
+
+Detailed closeout evidence is recorded in:
 
 ```text
-recipe_count                   = 1739
-recipe_reagent_count           = 5801
-recipes_with_reagents          = 1721
-unresolved_reagent_count       = 85
-zero_quantity_reagent_count    = 0
-ignored_negative_reagent_slots = 0
-second_import.rows_inserted    = 0
-second_import.rows_updated     = 0
-foreign_key_check              = []
-integrity_check                = ok
+docs/project/tasks/P5-T01.md
 ```
+
+## Observed gap that routes the next task
+
+P5-T01 found **zero unresolved conflicts**. The immediate P5 problem is therefore not conflict winner
+selection.
+
+Instead, all **9,880 unselected observation groups contain exactly one distinct value**. Their family
+distribution is concentrated in world/spawn facts:
+
+```text
+creature.faction                         = 4
+creature.level_max                       = 1
+creature.level_min                       = 1
+creature.name                            = 1
+creature.spawn_set                       = 1
+creature.world_presence                  = 1
+
+creature_spawn.position                  = 2748
+creature_spawn.respawn_seconds           = 2748
+
+gameobject.faction                       = 5
+gameobject.name                          = 2
+gameobject.spawn_set                     = 2
+gameobject.world_presence                = 2
+
+gameobject_spawn.position                = 2182
+gameobject_spawn.respawn_seconds         = 2182
+```
+
+These counts sum exactly to `9880`.
+
+This is an audit signal only. It does not authorize automatic canonical selection.
 
 ## Active task
 
-### P5 — resolution, auditing and coverage
+### P5-T02 — unselected single-value provenance audit
 
 **Status: READY_FOR_IMPLEMENTATION.**
 
-P4-T04 is fully validated and P5 is now unblocked. Before implementing new scope, the next coding
-conversation must inspect the current `main` after this closeout is committed/pushed and define the
-first bounded P5 task from the roadmap rather than reopening P4-T04.
+The next bounded task is to explain and classify the 9,880 unselected single-value groups before any
+selection policy is changed.
 
-## P4-T04 closeout evidence
-
-Validated source revisions:
+Task contract:
 
 ```text
-Octo DBC: sha256:f82d41ddbb77f5958d36b2483786c819de512128ef736142c758469718f7274d
-Tortoise: 61a8269151721f6467eddb05e7bed37704d0fc0b
-Tortoise bounded SQL manifest: 12b7c285b025d228768f0954a12a803a73cf6326d96a71e271308d3baac010b4
+docs/project/tasks/P5-T02.md
 ```
 
-Validated migration-13 materialization:
-
-```text
-recipe_count                         = 1739
-teaching_item_count                  = 1065
-trainer_source_count                 = 6376
-direct_trainer_source_count          = 5834
-template_trainer_source_count        = 542
-quest_learning_source_count          = 16
-dbc_proven_acquisition_count         = 7457
-server_fallback_acquisition_count     = 0
-unresolved_teaching_item_count       = 28
-unresolved_trainer_count             = 737
-unresolved_quest_learning_count      = 0
-second_import.rows_inserted           = 0
-second_import.rows_updated            = 0
-foreign_key_check                     = []
-integrity_check                       = ok
-```
-
-The unresolved item/trainer identities remain explicit native-ID provenance with nullable canonical
-foreign keys. They were reviewed as discovery/coverage diagnostics, not fabricated identities or
-import failures. No trainer-template ID remained unmapped and no quest-learning source remained
-unresolved. All 7,457 materialized acquisition relations selected exact Octo DBC `LEARN_SPELL` proof;
-the D-035 Tortoise fallback remained available but was not needed for the validated data.
+P5-T02 remains read-only. It must identify which source/revision/policy gaps produce the unselected
+groups, preserve drill-down provenance, and distinguish expected non-canonical evidence from genuine
+missing-selection candidates. It must not automatically choose winners.
 
 ## Next action
 
-Commit and push this P4-T04 closeout on top of the already-applied P4-T04 implementation delta. The
-next conversation may then begin P5 planning/implementation from the updated `main`.
+Commit and push the already-applied P5-T01 implementation delta together with this P5-T01 closeout
+delta.
+
+After that push, the next conversation should read the new GitHub `main`, confirm P5-T01 is present
+and `VALIDATED`, then implement P5-T02 from its task document.
 
 ## Next-conversation guard
 
-Do not treat GitHub `main` as containing P4-T04 until the human has committed and pushed the stacked
-implementation plus this closeout delta. Once pushed, the expected validated local baseline is
-migration 13 with SHA-256:
+Until the human commits and pushes the stacked P5-T01 implementation + closeout state, a fresh
+conversation must **not** assume GitHub `main` already contains P5-T01.
+
+Once pushed, expected durable state is:
 
 ```text
-623e29d83abd20335506d2a23dcbd525331de4f1bc10d38fccd7aa550a7613d7
+P5-T01 = VALIDATED
+P5-T02 = READY_FOR_IMPLEMENTATION
+canonical DB schema = migration 13
+canonical DB SHA-256 = 623e29d83abd20335506d2a23dcbd525331de4f1bc10d38fccd7aa550a7613d7
 ```

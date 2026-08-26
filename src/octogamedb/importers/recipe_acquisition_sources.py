@@ -663,17 +663,7 @@ def _matches(row: dict[str, int | None], predicates: Sequence[_WherePredicate]) 
         if predicate.operator == "IN":
             if value not in predicate.values:
                 return False
-        elif predicate.operator == "=" and value != target:
-            return False
-        elif predicate.operator in {"!=", "<>"} and value == target:
-            return False
-        elif predicate.operator == "<" and not value < target:
-            return False
-        elif predicate.operator == "<=" and not value <= target:
-            return False
-        elif predicate.operator == ">" and not value > target:
-            return False
-        elif predicate.operator == ">=" and not value >= target:
+        elif predicate.operator == "=" and value != target or predicate.operator in {"!=", "<>"} and value == target or predicate.operator == "<" and not value < target or predicate.operator == "<=" and not value <= target or predicate.operator == ">" and not value > target or predicate.operator == ">=" and not value >= target:
             return False
     return True
 
