@@ -16,7 +16,6 @@ def test_status_command_smoke(tmp_path, capsys):
     expected_count = len(migrations)
 
     assert main(["status", "--db", str(db_path)]) == 0
-
     output = capsys.readouterr().out
     assert f"Database: {db_path}" in output
     assert f"Schema version: {expected_version}" in output
@@ -25,9 +24,10 @@ def test_status_command_smoke(tmp_path, capsys):
     assert "Import batches: 0" in output
 
     with connect_database(db_path) as connection:
-        assert connection.execute(
+        migration_count = connection.execute(
             "SELECT COUNT(*) FROM schema_migrations"
-        ).fetchone()[0] == expected_count
+        ).fetchone()[0]
+        assert migration_count == expected_count
 
 
 def test_audit_cli_json_commands(golden_audit_case, capsys):
@@ -59,20 +59,25 @@ def test_audit_cli_json_commands(golden_audit_case, capsys):
     assert resolution["unresolved_conflict_group_count"] == 1
 
     assert main(
-        [
-            "resolution",
-            "--subject-kind",
-            "item",
-            "--fact",
-            "name",
-            "--db",
-            db_path,
-            "--json",
-        ]
+        ["resolution", "--subject-kind", "item", "--fact", "name", "--db", db_path, "--json"]
     ) == 0
     resolution = json.loads(capsys.readouterr().out)
     assert resolution["observation_group_count"] == 1
     assert resolution["resolved_conflict_group_count"] == 1
+
+    assert main(["unselected", "--limit", "0", "--db", db_path, "--json"]) == 0
+    unselected = json.loads(capsys.readouterr().out)
+    assert unselected["scope"] == "unselected-single-value"
+    assert unselected["group_count"] == 3
+    assert unselected["returned_group_count"] == 0
+    assert unselected["groups"] == []
+
+    assert main(
+        ["unselected", "--subject-kind", "item", "--source", "source-a", "--db", db_path, "--json"]
+    ) == 0
+    unselected = json.loads(capsys.readouterr().out)
+    assert unselected["group_count"] == 1
+    assert unselected["groups"][0]["fact_key"] == "quality"
 
 
 def test_audit_cli_human_output(golden_audit_case, capsys):
@@ -98,13 +103,29 @@ def test_audit_cli_human_output(golden_audit_case, capsys):
     assert "fixture-source-priority/v1: selected=1, conflicts=1" in output
     assert "source-b: selected=1, conflicts=1" in output
 
+    assert main(["unselected", "--limit", "1", "--db", db_path]) == 0
+    output = capsys.readouterr().out
+    assert "Unselected scope: unselected-single-value" in output
+    assert "Matched single-value unselected groups: 3" in output
+    assert "Detailed groups returned: 1" in output
+    assert "Unresolved classification: 3" in output
+    assert "creature.loot.item (relation): groups=2" in output
+    assert "source-a: groups=3, observations=3" in output
+
 
 def test_resolution_cli_does_not_change_existing_database(golden_audit_case, capsys):
     db_path = Path(golden_audit_case["db_path"])
     before = hashlib.sha256(db_path.read_bytes()).hexdigest()
-
     assert main(["resolution", "--db", str(db_path), "--json"]) == 0
     capsys.readouterr()
+    after = hashlib.sha256(db_path.read_bytes()).hexdigest()
+    assert after == before
 
+
+def test_unselected_cli_does_not_change_existing_database(golden_audit_case, capsys):
+    db_path = Path(golden_audit_case["db_path"])
+    before = hashlib.sha256(db_path.read_bytes()).hexdigest()
+    assert main(["unselected", "--limit", "0", "--db", str(db_path), "--json"]) == 0
+    capsys.readouterr()
     after = hashlib.sha256(db_path.read_bytes()).hexdigest()
     assert after == before

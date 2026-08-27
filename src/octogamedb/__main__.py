@@ -14,6 +14,7 @@ from octogamedb.audit import (
     resolution_report,
     source_report,
     trace_report,
+    unselected_report,
 )
 from octogamedb.db import DEFAULT_DB_PATH, apply_migrations, connect_database
 from octogamedb.importers.pfquest_item_overlay_reconcile import (
@@ -42,6 +43,13 @@ def _add_json_argument(parser: argparse.ArgumentParser) -> None:
         action="store_true",
         help="Emit deterministic machine-readable JSON instead of human-readable text.",
     )
+
+
+def _nonnegative_int(value: str) -> int:
+    parsed = int(value)
+    if parsed < 0:
+        raise argparse.ArgumentTypeError("must be a non-negative integer")
+    return parsed
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -97,6 +105,30 @@ def _build_parser() -> argparse.ArgumentParser:
     _add_db_argument(resolution_parser)
     _add_json_argument(resolution_parser)
 
+    unselected_parser = subparsers.add_parser(
+        "unselected",
+        help="Audit unselected single-value provenance groups without selecting them.",
+    )
+    unselected_parser.add_argument("--subject-kind", help="Optional subject-domain filter.")
+    unselected_parser.add_argument("--subject-key", help="Optional subject-key filter.")
+    unselected_parser.add_argument("--fact", dest="fact_key", help="Optional fact-key filter.")
+    unselected_parser.add_argument(
+        "--source",
+        dest="source_key",
+        help="Keep groups containing at least one observation from this source key.",
+    )
+    unselected_parser.add_argument(
+        "--limit",
+        type=_nonnegative_int,
+        default=100,
+        help=(
+            "Maximum detailed groups to include after exhaustive aggregates; "
+            "0 emits summary aggregates only (default: 100)."
+        ),
+    )
+    _add_db_argument(unselected_parser)
+    _add_json_argument(unselected_parser)
+
     import_items_parser = subparsers.add_parser(
         "import-pfquest-items",
         help="Import the bounded P2 pfQuest item/loot/reference/vendor acquisition slice.",
@@ -119,7 +151,9 @@ def _build_parser() -> argparse.ArgumentParser:
             "pfQuest-turtle top-entry patches."
         ),
     )
-    reconcile_items_parser.add_argument("pfquest_root", type=Path, help="Installed pfQuest directory.")
+    reconcile_items_parser.add_argument(
+        "pfquest_root", type=Path, help="Installed pfQuest directory."
+    )
     reconcile_items_parser.add_argument(
         "pfquest_turtle_root", type=Path, help="Installed pfQuest-turtle directory."
     )
@@ -283,6 +317,54 @@ def _print_resolution(payload: dict[str, Any]) -> None:
             )
 
 
+def _print_unselected(payload: dict[str, Any]) -> None:
+    print(f"Unselected scope: {payload['scope']}")
+    filters = payload["filters"]
+    active_filters = [f"{key}={value}" for key, value in filters.items() if value is not None]
+    if active_filters:
+        print("Filters: " + ", ".join(active_filters))
+    print(f"Matched single-value unselected groups: {payload['group_count']}")
+    print(f"Detailed groups returned: {payload['returned_group_count']}")
+    print(f"Details truncated: {'yes' if payload['details_truncated'] else 'no'}")
+    print(f"Unresolved classification: {payload['classification_counts']['unresolved']}")
+    if payload["fact_families"]:
+        print("Fact families:")
+        for family in payload["fact_families"]:
+            print(
+                f"- {family['subject_kind']}.{family['fact_key']} ({family['fact_kind']}): "
+                f"groups={family['group_count']}"
+            )
+    if payload["sources"]:
+        print("Observed sources:")
+        for source in payload["sources"]:
+            print(
+                f"- {source['source_key']}: groups={source['group_count']}, "
+                f"observations={source['observation_count']}"
+            )
+    if payload["subject_fact_patterns"]:
+        print("Subject/fact patterns:")
+        for pattern in payload["subject_fact_patterns"]:
+            facts = ",".join(pattern["fact_keys"])
+            print(
+                f"- {pattern['subject_kind']} [{facts}]: subjects={pattern['subject_count']}, "
+                f"groups={pattern['group_count']}"
+            )
+    for group in payload["groups"]:
+        suffix = f" [{group['fact_instance_key']}]" if group["fact_instance_key"] else ""
+        value = json.dumps(group["sole_value"], ensure_ascii=False, sort_keys=True)
+        print(
+            f"- {group['subject_kind']}:{group['subject_key']} "
+            f"{group['fact_key']}{suffix}: {value} ({group['classification']['label']})"
+        )
+        evidence = group["classification_evidence"]
+        print(
+            "  siblings: "
+            f"selected={evidence['selected_sibling_count']}, "
+            f"single-value-unselected={evidence['single_value_unselected_sibling_count']}, "
+            f"conflict-unselected={evidence['conflict_unselected_sibling_count']}"
+        )
+
+
 def _audit_command(args: argparse.Namespace) -> int:
     with connect_database(args.db) as connection:
         apply_migrations(connection)
@@ -314,6 +396,16 @@ def _audit_command(args: argparse.Namespace) -> int:
                 fact_key=args.fact_key,
             )
             printer = _print_resolution
+        elif args.command == "unselected":
+            payload = unselected_report(
+                connection,
+                subject_kind=args.subject_kind,
+                subject_key=args.subject_key,
+                fact_key=args.fact_key,
+                source_key=args.source_key,
+                limit=args.limit,
+            )
+            printer = _print_unselected
         else:
             raise AssertionError(f"Unhandled audit command: {args.command}")
 
@@ -429,7 +521,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.command == "status":
         return _status(args.db)
-    if args.command in {"source", "trace", "conflict", "coverage", "resolution"}:
+    if args.command in {"source", "trace", "conflict", "coverage", "resolution", "unselected"}:
         return _audit_command(args)
     if args.command == "import-pfquest-items":
         return _import_pfquest_items_command(args)

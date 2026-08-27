@@ -90,33 +90,75 @@ The canonical DB remained byte-identical during validation.
 
 ### P5-T02 — unselected single-value provenance audit
 
-**READY_FOR_IMPLEMENTATION.**
+**VALIDATED.**
 
-Explain and classify the 9,880 unselected single-value groups before any policy changes.
+P5-T02 added deterministic aggregate + bounded drill-down inspection for the 9,880 single-value
+observation groups with no canonical selection and passed full-data validation without changing the
+migration-13 canonical DB.
 
-The measured family distribution is limited to creature/gameobject identity/presence/spawn-set facts
-and creature/gameobject spawn position/respawn facts, with the overwhelming majority in spawn facts.
+Closeout classification is complete:
 
-P5-T02 must remain read-only and provide deterministic drill-down/grouping sufficient to decide
-whether each class represents:
+```text
+expected non-canonical evidence = 9880
+effective-view exclusion        = 0
+coverage/reconciliation gap     = 0
+policy gap                      = 0
+```
 
-- expected non-canonical evidence;
-- intentionally excluded effective-view data;
-- an importer/reconciler coverage gap;
-- or a genuine missing-selection candidate.
+All 9,880 groups come exclusively from one successful `pfquest-octo` revision/batch. P1-T04 / D-026
+already defines that optional source as comparison evidence that is retained without automatic
+canonical selection, so P5-T02 found no missing selection policy and no reconciliation coverage bug.
 
-It must not auto-select canonical observations.
+The measured comparison-only remainder is:
 
-Detailed task contract:
+```text
+creature                         4 subjects /    9 groups
+creature_spawn                2748 subjects / 5496 groups
+gameobject                        5 subjects /   11 groups
+gameobject_spawn               2182 subjects / 4364 groups
+```
+
+The 9,860 spawn groups are exact `position` + `respawn_seconds` pairs over 4,930 comparison-source
+spawn subjects.
+
+Detailed task state/evidence:
 
 ```text
 docs/project/tasks/P5-T02.md
 ```
 
+### P5-T03 — selected-vs-comparison P1 world difference audit
+
+**READY_FOR_IMPLEMENTATION.**
+
+P5-T03 follows the measured P5-T02 result rather than inventing a policy correction that the data does
+not justify.
+
+It should add a deterministic read-only comparison report for the bounded P1 world families implicated
+by P5-T02, centered on the optional `pfquest-octo` evidence versus the active selected/effective P1
+world view.
+
+The report should quantify and drill into comparison differences such as:
+
+- comparison-only subjects/spawns;
+- active-view-only subjects/spawns where the required source evidence permits the comparison;
+- same vs differing scalar/complete-set evidence;
+- template-level versus spawn-level differences;
+- source revision/batch provenance and selected sibling context.
+
+No migration, canonical mutation, automatic source promotion or selection-policy rewrite belongs in
+P5-T03. Any later policy task must be justified by its measured output.
+
+Detailed task contract:
+
+```text
+docs/project/tasks/P5-T03.md
+```
+
 Later P5 work remains routed from measured findings. Candidate bounded follow-ups include:
 
-- explicit policy correction for genuine missing-selection classes discovered by P5-T02;
-- deeper source-difference reports;
+- an explicit policy/source correction only if P5-T03 identifies a justified Octo-specific authority
+  case;
 - domain-specific coverage/completeness metrics;
 - broader data-quality/idempotency audits.
 

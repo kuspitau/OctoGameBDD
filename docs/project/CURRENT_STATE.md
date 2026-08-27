@@ -5,28 +5,28 @@ project state; every new coding conversation must verify the actual current head
 
 ## Integration baseline for this handoff
 
-The visible GitHub `main` head at P5-T01 closeout time is:
+The visible GitHub `main` head at P5-T02 closeout time is:
 
 ```text
-1ecba48260046ee2c4cf112cc0a8374b26605506
+01b6c4d62e1ebfed75cd55de637fe027b90b98b2
 ```
 
 Commit title:
 
 ```text
-Validate P4-T04 recipe acquisition sources and canonical migration 13
+Validate P5-T01 resolution audit and route P5-T02
 ```
 
-The P5-T01 implementation delta was applied locally on top of that GitHub baseline and then passed
-all prescribed Level-1/Level-2 validation. This closeout delta is therefore intentionally **stacked on
-the already-applied, not-yet-pushed P5-T01 implementation state**.
+The P5-T02 implementation delta was applied locally on top of that GitHub baseline and then completed
+the prescribed local/full-data validation. This closeout delta is therefore intentionally **stacked on
+the already-applied, not-yet-pushed P5-T02 implementation state**.
 
 Do not apply this closeout delta to a bare checkout of GitHub commit
-`1ecba48260046ee2c4cf112cc0a8374b26605506` without first applying the P5-T01 implementation delta.
+`01b6c4d62e1ebfed75cd55de637fe027b90b98b2` without first applying the P5-T02 implementation delta.
 
 ## Validated cumulative state
 
-P0 through **P5-T01** are `VALIDATED`.
+P0 through **P5-T02** are `VALIDATED`.
 
 The cumulative local canonical database remains:
 
@@ -40,7 +40,7 @@ validated through:
 P4-T04 / migration 13 / 0013_recipe_acquisition_sources.sql
 ```
 
-P5-T01 is read-only and introduced no migration.
+P5-T01 and P5-T02 are read-only audit work and introduced no migration.
 
 Current validated canonical SHA-256 remains:
 
@@ -55,28 +55,23 @@ data/generated/octogamedb_bak.sqlite3
 sha256:6f9d9c44593225a67576df3be8caa06cbf157fbfb19233b9a932a83612ae5261
 ```
 
-## P5-T01 closeout
+## P5-T02 closeout
 
 ### Status
 
 `VALIDATED`
 
-P5-T01 established the first measured, read-only resolution baseline over the cumulative P1-P4
-provenance graph.
+P5-T02 added the deterministic read-only `unselected` aggregate/drill-down audit for observation
+groups that have no canonical selection and exactly one distinct canonical JSON value.
 
-Classical local checks reported successful:
+The supplied Level-2 capture is:
 
 ```text
-python -m pip install -e ".[dev]"
-pytest --basetemp=.pytest_tmp
-python -m ruff check src tests
-python -m compileall -q src tests
+P5-T02_validation_20260827_013434.json
+status = LEVEL_2_VALIDATION_PASSED
 ```
 
-The autonomous full-data validation then passed on 2026-08-27 against an isolated byte-for-byte
-snapshot of the canonical migration-13 DB.
-
-Measured real baseline:
+It reproduced the P5-T01 resolution baseline exactly:
 
 ```text
 observation_group_count             = 1307532
@@ -87,92 +82,119 @@ conflict_group_count                = 64512
 resolved_conflict_group_count       = 64512
 unresolved_conflict_group_count     = 0
 unselected_single_value_group_count = 9880
-selection_policy_count              = 24
-selected_source_count               = 7
-fact_family_count                   = 82
 ```
 
-All resolution aggregation invariants passed.
-
-The canonical DB SHA-256 matched the validated migration-13 baseline before and after validation, and
-the isolated real-data snapshot also remained byte-identical before and after `resolution`. P5-T01
-therefore caused no canonical DB mutation.
-
-Detailed closeout evidence is recorded in:
+The canonical DB remained byte-identical before/after validation:
 
 ```text
-docs/project/tasks/P5-T01.md
+623e29d83abd20335506d2a23dcbd525331de4f1bc10d38fccd7aa550a7613d7
 ```
 
-## Observed gap that routes the next task
-
-P5-T01 found **zero unresolved conflicts**. The immediate P5 problem is therefore not conflict winner
-selection.
-
-Instead, all **9,880 unselected observation groups contain exactly one distinct value**. Their family
-distribution is concentrated in world/spawn facts:
+The P5-T02 aggregate evidence gives a complete explanation for the 9,880 unselected groups:
 
 ```text
-creature.faction                         = 4
-creature.level_max                       = 1
-creature.level_min                       = 1
-creature.name                            = 1
-creature.spawn_set                       = 1
-creature.world_presence                  = 1
-
-creature_spawn.position                  = 2748
-creature_spawn.respawn_seconds           = 2748
-
-gameobject.faction                       = 5
-gameobject.name                          = 2
-gameobject.spawn_set                     = 2
-gameobject.world_presence                = 2
-
-gameobject_spawn.position                = 2182
-gameobject_spawn.respawn_seconds         = 2182
+source_key      = pfquest-octo
+source revisions = 1
+import batches   = 1 succeeded
+observations     = 9880
+groups           = 9880
 ```
 
-These counts sum exactly to `9880`.
+The sole observed source revision is:
 
-This is an audit signal only. It does not authorize automatic canonical selection.
+```text
+sha256:eddd325a9a0eab2616c7b70d03e23d55f1a0c4127a293426ea07a17c0f2421db
+```
 
-## Active task
+Measured subject distribution:
 
-### P5-T02 — unselected single-value provenance audit
+```text
+creature                         4 subjects /    9 groups
+creature_spawn                2748 subjects / 5496 groups
+gameobject                        5 subjects /   11 groups
+gameobject_spawn               2182 subjects / 4364 groups
+                               --------------------------
+total                                        9880 groups
+```
 
-**Status: READY_FOR_IMPLEMENTATION.**
+The spawn groups are exactly paired `position` + `respawn_seconds` facts:
 
-The next bounded task is to explain and classify the 9,880 unselected single-value groups before any
-selection policy is changed.
+```text
+creature_spawn   2748 subjects / 5496 groups
+gameobject_spawn 2182 subjects / 4364 groups
+```
 
-Task contract:
+### Closeout classification
+
+All 9,880 groups are classified as:
+
+```text
+expected_non_canonical_evidence = 9880
+effective_view_exclusion        = 0
+coverage_reconciliation_gap     = 0
+policy_gap                      = 0
+```
+
+Reason: P1-T04 / D-026 explicitly defines optional `pfquest-octo` P1 world observations as
+comparison evidence that is persisted without automatic canonical selection. The Level-2 aggregates
+show that **every** unselected single-value group is from that comparison source and no other source.
+Therefore the lack of canonical selection is intentional under the already-accepted contract rather
+than evidence of a missing reconciler selection or uncovered selection policy.
+
+A particular Octo comparison subject may still differ from, or be absent from, the active Turtle
+view. That is a source-content difference to audit separately; it does not change the P5-T02 reason
+that its `pfquest-octo` observation is intentionally non-canonical.
+
+P5-T02 therefore requires no selection-policy change, canonical DB change, migration, or architecture
+decision.
+
+Detailed implementation and closeout evidence is recorded in:
 
 ```text
 docs/project/tasks/P5-T02.md
 ```
 
-P5-T02 remains read-only. It must identify which source/revision/policy gaps produce the unselected
-groups, preserve drill-down provenance, and distinguish expected non-canonical evidence from genuine
-missing-selection candidates. It must not automatically choose winners.
+## Active task
+
+### P5-T03 — selected-vs-comparison P1 world difference audit
+
+**Status: READY_FOR_IMPLEMENTATION.**
+
+P5-T02 removed the apparent resolution gap: the only unselected single-value evidence is the optional
+`pfquest-octo` comparison source already governed by D-026.
+
+The next bounded task is therefore to measure what that comparison source actually differs on, without
+changing selection behavior.
+
+Task contract:
+
+```text
+docs/project/tasks/P5-T03.md
+```
+
+P5-T03 remains read-only. It should provide deterministic aggregate and drill-down comparison between
+`pfquest-octo` P1 creature/gameobject/spawn evidence and the active selected/effective P1 world view,
+so later work can decide from evidence whether any Octo-specific difference deserves a separate
+policy/source task. It must not automatically promote comparison evidence.
 
 ## Next action
 
-Commit and push the already-applied P5-T01 implementation delta together with this P5-T01 closeout
-delta.
+Apply this P5-T02 closeout delta **after** the already-applied P5-T02 implementation delta, review the
+combined Git diff, then commit and push both together to `main`.
 
-After that push, the next conversation should read the new GitHub `main`, confirm P5-T01 is present
-and `VALIDATED`, then implement P5-T02 from its task document.
+After that push, the next conversation should read the new GitHub `main`, confirm P5-T02 is present and
+`VALIDATED`, then implement P5-T03 from its task document.
 
 ## Next-conversation guard
 
-Until the human commits and pushes the stacked P5-T01 implementation + closeout state, a fresh
-conversation must **not** assume GitHub `main` already contains P5-T01.
+Until the human commits and pushes the stacked P5-T02 implementation + closeout state, a fresh
+conversation must **not** assume GitHub `main` already contains P5-T02 or P5-T03 routing.
 
 Once pushed, expected durable state is:
 
 ```text
-P5-T01 = VALIDATED
-P5-T02 = READY_FOR_IMPLEMENTATION
+P5-T02 = VALIDATED
+P5-T03 = READY_FOR_IMPLEMENTATION
 canonical DB schema = migration 13
 canonical DB SHA-256 = 623e29d83abd20335506d2a23dcbd525331de4f1bc10d38fccd7aa550a7613d7
 ```

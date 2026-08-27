@@ -31,12 +31,19 @@ python -m octogamedb trace SUBJECT_KIND SUBJECT_KEY [--fact FACT_KEY]
 python -m octogamedb conflict [--subject-kind KIND] [--subject-key KEY]
 python -m octogamedb coverage
 python -m octogamedb resolution [--subject-kind KIND] [--fact FACT_KEY]
+python -m octogamedb unselected [--subject-kind KIND] [--subject-key KEY] \
+    [--fact FACT_KEY] [--source SOURCE_KEY] [--limit N]
 ```
 
-Every audit command (`source`, `trace`, `conflict`, `coverage`, `resolution`) supports `--json` for deterministic machine-readable output and `--db PATH` for an explicit SQLite database.
+Every audit command (`source`, `trace`, `conflict`, `coverage`, `resolution`, `unselected`) supports
+`--json` for deterministic machine-readable output and `--db PATH` for an explicit SQLite database.
 
 `coverage` remains generic provenance/evidence coverage. P5-T01 adds a read-only `resolution` inventory
 for selected/unselected evidence groups, conflicts, selection policies/sources and fact-family counts.
+P5-T02 adds `unselected`, a read-only aggregate + drill-down report for single-value groups that have
+no canonical selection. Its aggregates are exhaustive; `--limit` bounds only detailed groups, and
+`--limit 0` emits summary aggregates without drill-down rows. The report preserves source revision,
+import-batch status and sibling-selection context without automatically assigning a canonical winner.
 Domain-specific completeness metrics are added only when a bounded domain task defines their semantics.
 
 ## Start here
