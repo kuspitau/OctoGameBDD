@@ -67,9 +67,6 @@ policies or scaling additional source families.
 
 **VALIDATED.**
 
-P5-T01 added a read-only provenance-resolution inventory and validated it on the real cumulative
-migration-13 DB.
-
 Measured baseline:
 
 ```text
@@ -81,89 +78,94 @@ resolved conflicts                 = 64512
 unresolved conflicts               = 0
 unselected single-value groups     = 9880
 empty groups                       = 0
-selection policies                 = 24
-selected sources                   = 7
-fact families                      = 82
 ```
-
-The canonical DB remained byte-identical during validation.
 
 ### P5-T02 — unselected single-value provenance audit
 
 **VALIDATED.**
 
-P5-T02 added deterministic aggregate + bounded drill-down inspection for the 9,880 single-value
-observation groups with no canonical selection and passed full-data validation without changing the
-migration-13 canonical DB.
-
-Closeout classification is complete:
-
-```text
-expected non-canonical evidence = 9880
-effective-view exclusion        = 0
-coverage/reconciliation gap     = 0
-policy gap                      = 0
-```
-
-All 9,880 groups come exclusively from one successful `pfquest-octo` revision/batch. P1-T04 / D-026
-already defines that optional source as comparison evidence that is retained without automatic
-canonical selection, so P5-T02 found no missing selection policy and no reconciliation coverage bug.
-
-The measured comparison-only remainder is:
-
-```text
-creature                         4 subjects /    9 groups
-creature_spawn                2748 subjects / 5496 groups
-gameobject                        5 subjects /   11 groups
-gameobject_spawn               2182 subjects / 4364 groups
-```
-
-The 9,860 spawn groups are exact `position` + `respawn_seconds` pairs over 4,930 comparison-source
-spawn subjects.
-
-Detailed task state/evidence:
-
-```text
-docs/project/tasks/P5-T02.md
-```
+All 9,880 unselected single-value groups are intentional `pfquest-octo` comparison evidence under
+P1-T04 / D-026. P5-T02 found no missing selection policy or reconciliation coverage defect.
 
 ### P5-T03 — selected-vs-comparison P1 world difference audit
 
-**READY_FOR_IMPLEMENTATION.**
+**VALIDATED.**
 
-P5-T03 follows the measured P5-T02 result rather than inventing a policy correction that the data does
-not justify.
+P5-T03 added and fully validated a deterministic read-only comparison report for the bounded P1 world
+families.
 
-It should add a deterministic read-only comparison report for the bounded P1 world families implicated
-by P5-T02, centered on the optional `pfquest-octo` evidence versus the active selected/effective P1
-world view.
+Measured full-data result:
 
-The report should quantify and drill into comparison differences such as:
+```text
+record_count                  = 450659
+same_value                    = 394970
+different_value               =   2759
+active_only                   =  32078
+comparison_only               =  12600
+not_directly_comparable       =   8252
+```
 
-- comparison-only subjects/spawns;
-- active-view-only subjects/spawns where the required source evidence permits the comparison;
-- same vs differing scalar/complete-set evidence;
-- template-level versus spawn-level differences;
-- source revision/batch provenance and selected sibling context.
+`same_value` accounts for 87.64% of audited records.
 
-No migration, canonical mutation, automatic source promotion or selection-policy rewrite belongs in
-P5-T03. Any later policy task must be justified by its measured output.
+The directly differing population is overwhelmingly `spawn_set`:
 
-Detailed task contract:
+```text
+creature spawn_set different_value   = 1062
+gameobject spawn_set different_value = 1508
+total                                = 2570 / 2759 (93.15%)
+```
+
+Unique spawn membership differences:
+
+```text
+creature active-only / comparison-only   = 10255 / 3928
+gameobject active-only / comparison-only =  5750 / 2362
+total unique membership differences      = 22295
+```
+
+Shared-spawn positions have zero differing values, while only 21 shared `respawn_seconds` facts differ.
+
+The evidence does not justify promoting `pfquest-octo` or changing D-026. P5-T03 therefore routes to a
+more focused spawn-topology characterization task.
+
+Detailed evidence:
 
 ```text
 docs/project/tasks/P5-T03.md
 ```
 
-Later P5 work remains routed from measured findings. Candidate bounded follow-ups include:
+### P5-T04 — pfquest-octo spawn membership divergence characterization
 
-- an explicit policy/source correction only if P5-T03 identifies a justified Octo-specific authority
-  case;
-- domain-specific coverage/completeness metrics;
-- broader data-quality/idempotency audits.
+**READY_FOR_IMPLEMENTATION.**
 
-Any later task that changes source-selection policy must document the authority/behavior change rather
-than silently embedding it in audit code.
+P5-T04 is the next bounded read-only audit.
+
+It should characterize the 22,295 unique active-only/comparison-only spawn memberships by:
+
+- creature versus gameobject;
+- parent template;
+- zone/map context;
+- active selected source/policy;
+- direction (`active_only` versus `comparison_only`);
+- concentration/distribution across parents and zones;
+- cautious relocation-candidate pairing within the same parent template and zone.
+
+A relocation candidate is analytical evidence only. P5-T04 must not merge identities or mutate
+canonical data.
+
+The task should also quantify how much of the apparent add/remove population can plausibly be explained
+by close coordinate replacements versus genuinely one-sided memberships.
+
+Detailed contract:
+
+```text
+docs/project/tasks/P5-T04.md
+```
+
+No migration, canonical mutation, automatic source promotion, D-026 change, or P2/P3/P4 expansion
+belongs in P5-T04.
+
+Later P5 work remains routed from measured findings.
 
 ## P6 — Full Octo import / scaling
 
