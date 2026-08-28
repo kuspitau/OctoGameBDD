@@ -5,30 +5,25 @@ project state; every new coding conversation must verify the actual current head
 
 ## Integration baseline for this handoff
 
-The visible GitHub `main` head at P5-T03 closeout time is:
+The P5-T04 implementation was originally prepared against GitHub `main` commit:
 
 ```text
-0bea70a43ba57c0dd3b0964da52be6c8cb3e3456
+a2dba2d9d60841b10d860a94221a749e1a1d39c5
 ```
 
 Commit title:
 
 ```text
-Validate P5-T02 unselected audit and route P5-T03
+Validate P5-T03 world comparison audit and route P5-T04
 ```
 
-The P5-T03 implementation delta was applied locally on top of that GitHub baseline and completed all
-prescribed classic and Level-2/full-data validation.
-
-This closeout delta is therefore intentionally **stacked on the already-applied, not-yet-pushed
-P5-T03 implementation state**.
-
-Do not apply this closeout delta to a bare checkout of GitHub commit
-`0bea70a43ba57c0dd3b0964da52be6c8cb3e3456` without first applying the P5-T03 implementation delta.
+This closeout delta assumes the already delivered P5-T04 implementation plus the duplicate-membership
+hotfix have been applied locally. The human should commit/push the combined P5-T04 implementation,
+hotfix and this closeout together before starting a new coding conversation.
 
 ## Validated cumulative state
 
-P0 through **P5-T03** are `VALIDATED`.
+P0 through **P5-T04** are `VALIDATED`.
 
 The canonical database schema remains:
 
@@ -36,7 +31,7 @@ The canonical database schema remains:
 P4-T04 / migration 13 / 0013_recipe_acquisition_sources.sql
 ```
 
-P5-T01 through P5-T03 are read-only audit work and introduced no migration.
+P5-T01 through P5-T04 are read-only audit work and introduce no migration.
 
 Current validated canonical SHA-256 remains:
 
@@ -50,79 +45,31 @@ The D-029 one-step rollback remains the exact migration-12 canonical:
 sha256:6f9d9c44593225a67576df3be8caa06cbf157fbfb19233b9a932a83612ae5261
 ```
 
-The local Level-2 validator accepted the canonical DB through an explicit/discovered `--db` path and
-proved it byte-identical before/after validation. No tracked project-path decision is changed by the
-user's local data-directory rearrangement.
+D-025 and D-026 are unchanged. `pfquest-octo` remains comparison evidence only.
 
-## P5-T03 closeout
-
-### Status
-
-`VALIDATED`
-
-Validation evidence:
-
-```text
-P5-T03_validation_20260827_225925.json
-status = LEVEL_2_VALIDATION_PASSED
-```
-
-Classic local validation also passed before Level-2:
-
-```text
-pytest                         = 173 passed
-ruff check src tests           = passed
-compileall -q src tests        = passed
-editable dev install           = passed
-```
-
-The Level-2 validator reproduced the resolution baseline exactly:
-
-```text
-observation_group_count             = 1307532
-selected_group_count                = 1297652
-unselected_group_count              = 9880
-empty_observation_group_count       = 0
-conflict_group_count                = 64512
-resolved_conflict_group_count       = 64512
-unresolved_conflict_group_count     = 0
-unselected_single_value_group_count = 9880
-```
-
-It also preserved the P5-T02 comparison-source baseline:
-
-```text
-source_key              = pfquest-octo
-source_revision         = sha256:eddd325a9a0eab2616c7b70d03e23d55f1a0c4127a293426ea07a17c0f2421db
-comparison groups       = 410837
-comparison observations = 411009
-unselected groups       = 9880
-```
-
-Measured P5-T03 comparison totals:
+## P5-T03 validated baseline
 
 ```text
 audited records               = 450659
-compared subjects             = 192983
-active selected observations  = 440779
-
-same_value                    = 394970  (87.64%)
-different_value               =   2759  ( 0.61%)
-active_only                   =  32078  ( 7.12%)
-comparison_only               =  12600  ( 2.80%)
-not_directly_comparable       =   8252  ( 1.83%)
+same_value                    = 394970
+different_value               =   2759
+active_only                   =  32078
+comparison_only               =  12600
+not_directly_comparable       =   8252
 ```
 
-The dominant `different_value` family is `spawn_set`:
+Validated comparison source:
 
 ```text
-creature spawn_set differing parents    = 1062
-gameobject spawn_set differing parents  = 1508
-total differing spawn_set parents       = 2570
-share of all different_value records    = 93.15%
+source_key      = pfquest-octo
+source_revision = sha256:eddd325a9a0eab2616c7b70d03e23d55f1a0c4127a293426ea07a17c0f2421db
 ```
 
-Unique spawn-membership comparison:
+## P5-T04 validated result — 2026-08-28
+
+P5-T04 is fully Level-2 validated on the unchanged migration-13 canonical database.
+
+Exact unique spawn membership baseline:
 
 ```text
 creature
@@ -135,103 +82,187 @@ gameobject
   active-only members     =  5750
   comparison-only members =  2362
 
-total unique membership differences = 22295
+shared total                   = 145447
+active-only total              =  16005
+comparison-only total          =   6290
+total unique one-sided members =  22295
 ```
 
-Shared-spawn position evidence shows:
+Directly comparable parent topology:
 
 ```text
-creature_spawn position different_value   = 0
-gameobject_spawn position different_value = 0
+directly comparable parents = 24992
+
+shared_only                  = 22428
+active_only_members          =  1274
+comparison_only_members      =   154
+mixed_one_sided_members      =  1136
 ```
 
-Shared-spawn `respawn_seconds` differences are small:
+Thus 2,564 / 24,992 directly comparable parents contain at least one one-sided membership.
+
+Active complete-set provenance for the one-sided population:
 
 ```text
-creature_spawn respawn_seconds different_value   = 2
-gameobject_spawn respawn_seconds different_value = 19
+pfquest base effective view
+  one-sided members =    31
+
+pfquest-turtle effective view
+  one-sided members = 22264
 ```
 
-Template presence is also narrow:
+So 99.86% of the one-sided population belongs to an active `pfquest-turtle` complete-set context.
+
+Threshold-free coordinate-compatible candidate analysis:
 
 ```text
-creature active-only world_presence subjects = 17
-gameobject active-only world_presence subjects = 0
+members with zero compatible opposite = 12103  (54.29%)
+members with exactly one candidate     =  1539  ( 6.90%)
+members with multiple candidates       =  8653  (38.81%)
+
+members with any compatible opposite   = 10192  (45.71%)
+
+nearest-neighbour tie cardinality
+  zero                                 = 12103
+  one                                  = 10146
+  multiple                             =    46
+
+compatible candidate pairs             = 148050
+unique nearest candidate pairs         =   8416
 ```
 
-The large `not_directly_comparable` bucket is mostly template names omitted by the delta source:
+Compatible-pair distance distribution in `zone_percent` space:
 
 ```text
-creature name not_directly_comparable   = 4604
-gameobject name not_directly_comparable = 3073
-total name NDC                          = 7677 / 8252 (93.03%)
+(0,0.1]       =     19
+(0.1,0.5]     =    240
+(0.5,1]       =    777
+(1,2]         =   3171
+(2,5]         =  20645
+>5            = 123198
 ```
 
-### Closeout decision
+Only 4,207 / 148,050 compatible pair possibilities are within 2 zone-percentage points, while
+123,198 / 148,050 are farther than 5. These are pair-level descriptive counts, not identity proofs.
 
-P5-T03 found **no basis for a general `pfquest-octo` authority promotion or D-026 change**.
-
-The comparison source overwhelmingly agrees where directly comparable, while the meaningful remainder
-is concentrated in complete spawn-set membership differences rather than changed coordinates for
-shared spawn identities.
-
-The next bounded task is therefore not a selection-policy rewrite. It is a read-only characterization
-of the 22,295 unique active-only/comparison-only spawn memberships so the project can distinguish:
-
-- genuine additions/removals;
-- likely coordinate-relocation candidates represented as one removed + one added spawn identity;
-- zone/template-localized source differences;
-- differences associated with base versus Turtle effective active selections.
-
-Detailed P5-T03 implementation and closeout evidence is recorded in:
+The divergence is strongly concentrated by zone/direction but much less concentrated by individual
+parent:
 
 ```text
-docs/project/tasks/P5-T03.md
+top 10 zone/direction buckets = 16386 / 22295 = 73.50%
+top 20 zone/direction buckets = 19728 / 22295 = 88.49%
+
+top 10 parent concentrations  =  2334 / 22295 = 10.47%
+top 25 parent concentrations  =  4123 / 22295 = 18.49%
 ```
+
+Largest observed zone/direction buckets include:
+
+```text
+creature active-only     Grim Reaches          = 3262
+creature active-only     Stonetalon Mountains  = 2283
+gameobject active-only   Grim Reaches          = 1800
+creature comparison-only Stonetalon Mountains  = 1753
+creature active-only     Northwind             = 1748
+gameobject active-only   Stonetalon Mountains  = 1497
+```
+
+### Validation evidence
+
+The human ran the previously required classic suite successfully before the hotfix.
+
+After the duplicate-membership hotfix, the autonomous local wrapper additionally passed:
+
+```text
+targeted P5-T04 pytest = 4 passed
+targeted Ruff          = passed
+targeted compileall    = passed
+```
+
+The Level-2 validator then passed:
+
+```text
+canonical migration-13 DB exists
+no WAL/SHM sidecars
+canonical SHA-256 baseline
+snapshot byte identity
+PRAGMA integrity_check
+PRAGMA foreign_key_check
+migration 13
+P5-T04 scope/source/revision
+exact P5-T04 membership baseline
+parent/source/provenance partitions
+candidate-cardinality partitions
+bounded real examples
+P5-T03 record/state/membership baselines unchanged
+snapshot byte identity after audit
+canonical byte identity after audit
+```
+
+Final canonical SHA-256 remained exactly:
+
+```text
+623e29d83abd20335506d2a23dcbd525331de4f1bc10d38fccd7aa550a7613d7
+```
+
+The first failed Level-2 attempt is retained as useful validation history: it exposed a P5-T04 bug
+where duplicate `spawn_key` rows caused a whole persisted complete set to be rejected. The hotfix
+aligned P5-T04 with P5-T03 unique-set semantics and the corrected Level-2 run passed all fixed
+baselines.
+
+## Closeout interpretation
+
+P5-T04 does **not** support automatically pairing or merging one-sided spawn identities:
+
+- a majority (54.29%) have no coordinate-compatible opposite at all;
+- only 6.90% have exactly one compatible opposite;
+- 38.81% have multiple compatible opposites;
+- the candidate-pair distance distribution is dominated by pairs farther than 5 zone-percentage
+  points;
+- the one-sided population is overwhelmingly attached to the active Turtle effective view and is
+  strongly concentrated by zone.
+
+This is stronger evidence for **source-view/content-set divergence** than for a single global
+coordinate-identity problem, but P5-T04 alone cannot say which overlay introduced or removed each
+membership relative to the common base source.
+
+No authority or selection-policy change is justified yet.
 
 ## Active task
 
-### P5-T04 — pfquest-octo spawn membership divergence characterization
+### P5-T05 — three-way base/Turtle/Octo spawn divergence attribution
 
 **Status: READY_FOR_IMPLEMENTATION.**
 
 Task contract:
 
 ```text
-docs/project/tasks/P5-T04.md
+docs/project/tasks/P5-T05.md
 ```
 
-P5-T04 remains read-only and bounded to the P1 creature/gameobject spawn topology exposed by P5-T03.
-It must not merge spawn identities, mutate canonical data, promote `pfquest-octo`, or change D-026.
+P5-T05 is a bounded read-only provenance audit. It should use persisted complete-set observations to
+compare three views for the same P1 spawn family:
 
-Its primary job is to turn the 22,295 unique membership differences into deterministic aggregate and
-drill-down evidence, including cautious relocation-candidate analysis within the same template/zone.
+```text
+pfquest base
+active selected effective view (normally pfquest-turtle)
+pfquest-octo comparison
+```
+
+For every P5-T04 one-sided spawn key, determine its base/active/comparison membership vector and
+partition the 22,295 members into source-attribution classes. The primary goal is to distinguish:
+
+- an Octo-side absence/change relative to a base membership;
+- a Turtle-side addition relative to base;
+- a Turtle-side absence/change relative to a base membership;
+- an Octo-side addition relative to base.
+
+The task may then use the P5-T04 coordinate analysis only as secondary evidence for source-local
+coordinate replacement patterns. It must not merge identities or alter canonical selection.
+
+No new source path should be required unless persisted provenance proves insufficient.
 
 ## Next action
 
-Apply this P5-T03 closeout delta **after** the already-applied P5-T03 implementation delta, review the
-combined Git diff, then commit and push both together to `main`.
-
-After that push, the next conversation should read the new GitHub `main`, confirm:
-
-```text
-P5-T03 = VALIDATED
-P5-T04 = READY_FOR_IMPLEMENTATION
-```
-
-and implement P5-T04 from its task document.
-
-## Next-conversation guard
-
-Until the human commits and pushes the stacked P5-T03 implementation + closeout state, a fresh
-conversation must not assume GitHub `main` already contains the validated P5-T03 implementation.
-
-Expected durable state after push:
-
-```text
-P5-T03 = VALIDATED
-P5-T04 = READY_FOR_IMPLEMENTATION
-canonical DB schema = migration 13
-canonical DB SHA-256 = 623e29d83abd20335506d2a23dcbd525331de4f1bc10d38fccd7aa550a7613d7
-D-026 = unchanged
-```
+Implement P5-T05 from `docs/project/tasks/P5-T05.md` after the human commits and pushes the combined
+P5-T04 implementation/hotfix/closeout.

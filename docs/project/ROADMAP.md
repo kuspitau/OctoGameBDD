@@ -91,9 +91,6 @@ P1-T04 / D-026. P5-T02 found no missing selection policy or reconciliation cover
 
 **VALIDATED.**
 
-P5-T03 added and fully validated a deterministic read-only comparison report for the bounded P1 world
-families.
-
 Measured full-data result:
 
 ```text
@@ -103,16 +100,6 @@ different_value               =   2759
 active_only                   =  32078
 comparison_only               =  12600
 not_directly_comparable       =   8252
-```
-
-`same_value` accounts for 87.64% of audited records.
-
-The directly differing population is overwhelmingly `spawn_set`:
-
-```text
-creature spawn_set different_value   = 1062
-gameobject spawn_set different_value = 1508
-total                                = 2570 / 2759 (93.15%)
 ```
 
 Unique spawn membership differences:
@@ -125,9 +112,6 @@ total unique membership differences      = 22295
 
 Shared-spawn positions have zero differing values, while only 21 shared `respawn_seconds` facts differ.
 
-The evidence does not justify promoting `pfquest-octo` or changing D-026. P5-T03 therefore routes to a
-more focused spawn-topology characterization task.
-
 Detailed evidence:
 
 ```text
@@ -136,36 +120,79 @@ docs/project/tasks/P5-T03.md
 
 ### P5-T04 — pfquest-octo spawn membership divergence characterization
 
-**READY_FOR_IMPLEMENTATION.**
+**VALIDATED.**
 
-P5-T04 is the next bounded read-only audit.
+P5-T04 fully validated the unique one-sided spawn population without mutating canonical data.
 
-It should characterize the 22,295 unique active-only/comparison-only spawn memberships by:
+Measured topology:
 
-- creature versus gameobject;
-- parent template;
-- zone/map context;
-- active selected source/policy;
-- direction (`active_only` versus `comparison_only`);
-- concentration/distribution across parents and zones;
-- cautious relocation-candidate pairing within the same parent template and zone.
+```text
+shared members                  = 145447
+active-only members             =  16005
+comparison-only members         =   6290
+one-sided members               =  22295
 
-A relocation candidate is analytical evidence only. P5-T04 must not merge identities or mutate
-canonical data.
+directly comparable parents     =  24992
+shared_only                     =  22428
+active_only_members             =   1274
+comparison_only_members         =    154
+mixed_one_sided_members         =   1136
+```
 
-The task should also quantify how much of the apparent add/remove population can plausibly be explained
-by close coordinate replacements versus genuinely one-sided memberships.
+Candidate cardinality:
 
-Detailed contract:
+```text
+zero compatible opposite        = 12103  (54.29%)
+exactly one candidate           =  1539  ( 6.90%)
+multiple candidates             =  8653  (38.81%)
+```
+
+The active complete-set context is `pfquest-turtle` for 22,264 / 22,295 one-sided memberships.
+Divergence is strongly concentrated by zone/direction: the top 10 reported zone/direction buckets
+contain 73.50% of the one-sided population, while the top 10 individual parents contain only 10.47%.
+
+The evidence does not justify automatic coordinate matching, source promotion, or a D-026 change.
+
+Detailed evidence:
 
 ```text
 docs/project/tasks/P5-T04.md
 ```
 
-No migration, canonical mutation, automatic source promotion, D-026 change, or P2/P3/P4 expansion
-belongs in P5-T04.
+### P5-T05 — three-way base/Turtle/Octo spawn divergence attribution
 
-Later P5 work remains routed from measured findings.
+**READY_FOR_IMPLEMENTATION.**
+
+P5-T05 should explain the P5-T04 population by comparing each one-sided spawn membership across:
+
+```text
+pfquest base
+active selected effective view
+pfquest-octo comparison
+```
+
+The primary four source-attribution patterns are:
+
+```text
+base=1 active=1 comparison=0  -> comparison-side absence/change relative to base
+base=0 active=1 comparison=0  -> active/Turtle-side addition relative to base
+base=1 active=0 comparison=1  -> active/Turtle-side absence/change relative to base
+base=0 active=0 comparison=1  -> comparison/Octo-side addition relative to base
+```
+
+P5-T05 should quantify those patterns by creature/gameobject, parent and zone/map, then use
+coordinate-neighbour evidence only as a secondary descriptive layer for likely source-local moves.
+
+It remains read-only and must not merge spawn identities, change canonical selection, promote
+`pfquest-octo`, or change D-025/D-026.
+
+Detailed contract:
+
+```text
+docs/project/tasks/P5-T05.md
+```
+
+Later P5 work remains routed from measured P5-T05 findings.
 
 ## P6 — Full Octo import / scaling
 
