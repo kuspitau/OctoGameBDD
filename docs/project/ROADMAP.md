@@ -196,22 +196,43 @@ identity change was made.
 
 ### P5-T07 — concentrated spawn-addition raw-source semantic audit
 
+Status: `VALIDATED`.
+
+Full local validation passed on 2026-08-28 against the exact migration-13 canonical DB and exact
+pfQuest / pfQuest-turtle / pfquest-octo raw revisions.
+
+Validated routing evidence:
+
+```text
+four-zone audited members                         = 15607
+both overlays add parent count                     =   747
+both whole-entry replacement parent count          =  1085
+different replacement payload parent count         =  1085
+shared exact added members in routed four zones    =     3
+```
+
+Blackrock Depths is overwhelmingly base-present enrichment (99.762658%); Stonetalon and Grim Reaches
+are also majority base-present extra membership (~62%); Northwind is majority parent-absent
+(55.153203%). Stonetalon/Blackrock receive both source families while Grim Reaches/Northwind are
+active-only in the routed slice.
+
+No migration, canonical mutation, source promotion, spawn identity merge or D-025/D-026 change was
+made.
+
+### P5-T08 — shared-parent overlay replacement semantic divergence audit
+
 Status: `READY_FOR_IMPLEMENTATION`.
 
-Bounded purpose:
+Route a bounded read-only audit over the 1,085 common whole-entry replacement parents from P5-T07.
+Measure exact base/active/comparison effective spawn-set relations and whether raw payload differences
+are confined to spawn membership or extend to other top-entry fields.
 
-- inspect the exact raw-source/composition semantics behind the four dominant P5-T06 zones;
-- distinguish inherited base content, overlay-added parents, whole-entry replacement and added spawn
-  membership without inventing cross-source spawn identity;
-- trace representative high-contribution parents and source files for both active/Turtle and
-  pfquest-octo comparison sides;
-- verify exact local source revisions before drawing conclusions;
-- keep the task read-only and defer any authority/policy change until the source mechanics are
-  demonstrated.
+Required set classes include equality, active strict superset, comparison strict superset, partial
+overlap and disjoint. Stratify by parent kind, routed-zone contribution, base-parent class and source
+family. Preserve source-relative evidence and exact revision fail-closed behavior.
 
-The result should determine whether a later P5 task should review field/relation-specific source
-authority for spawn membership, isolate source-family coverage differences, or treat some
-concentrations as expected custom-content overlays.
+P5-T08 is explicitly pre-authority: no source promotion, no selection-policy change, no identity
+pairing and no distance-threshold semantics.
 
 ## P6 — broader source ingestion and remaining domains
 

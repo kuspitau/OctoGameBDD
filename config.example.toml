@@ -23,5 +23,7 @@ samples = "data/samples"
 # octo_dbc = "C:/Games/OctoWow/Data/..."
 #
 # P3-T05B Level-2 validation requires wow_root and tortoise_repo.
+# P5-T07 Level-2 validation requires pfquest, pfquest_turtle and pfquest_octo,
+# each reproducing the exact persisted source revision recorded by the task.
 # Task-specific get_path.bat helpers may discover/request these paths and
 # update config.local.toml without changing unrelated configuration.
