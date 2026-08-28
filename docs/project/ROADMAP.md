@@ -163,20 +163,55 @@ concentrated. No D-025/D-026, authority, selection or identity change was made.
 
 ### P5-T06 — overlay-addition coverage by base-parent and zone provenance
 
+Status: `VALIDATED`.
+
+Validated Level-2 result:
+
+```text
+parent_absent_from_base            =  7984
+spawn_added_to_base_present_parent = 12723
+included additions                 = 20707
+```
+
+Cross-overlay grouping coverage:
+
+```text
+same parent, both overlays add = 10917 members
+same zone/map, both add        = 10760 members
+```
+
+The top four zones account for 15,607 / 20,707 additions (75.37%):
+
+```text
+Stonetalon Mountains = 5145
+Grim Reaches         = 5062
+Northwind            = 2872
+Blackrock Depths     = 2528
+```
+
+The result shows a mixed source-completeness picture: base-present-parent extra membership is the
+larger global class, both overlays contribute large distinct sets in the same parent/zone contexts,
+and geographic concentration is strong. No source authority, D-025/D-026, selection or spawn
+identity change was made.
+
+### P5-T07 — concentrated spawn-addition raw-source semantic audit
+
 Status: `READY_FOR_IMPLEMENTATION`.
 
 Bounded purpose:
 
-- audit only `active_only_vs_base` and `comparison_only_vs_base`;
-- distinguish additions on parents absent from the complete base view from extra spawn memberships
-  on base-present parents;
-- aggregate by active/comparison overlay, parent, zone/map and cross-overlay coverage;
-- measure concentration/cumulative coverage without assuming custom-zone authority;
-- preserve P5-T05 counts as fixed regression baselines;
-- remain read-only with no migration, canonical mutation, source promotion or spawn-identity merge.
+- inspect the exact raw-source/composition semantics behind the four dominant P5-T06 zones;
+- distinguish inherited base content, overlay-added parents, whole-entry replacement and added spawn
+  membership without inventing cross-source spawn identity;
+- trace representative high-contribution parents and source files for both active/Turtle and
+  pfquest-octo comparison sides;
+- verify exact local source revisions before drawing conclusions;
+- keep the task read-only and defer any authority/policy change until the source mechanics are
+  demonstrated.
 
-The result should determine whether the next evidence task belongs to source-completeness/authority
-review, a bounded raw-source audit of dominant zones/parent families, or another P5 coverage slice.
+The result should determine whether a later P5 task should review field/relation-specific source
+authority for spawn membership, isolate source-family coverage differences, or treat some
+concentrations as expected custom-content overlays.
 
 ## P6 — broader source ingestion and remaining domains
 
