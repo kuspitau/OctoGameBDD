@@ -401,6 +401,11 @@ def test_full_four_zone_report_reconciles_and_is_deterministic(tmp_path, monkeyp
         },
     )
     monkeypatch.setattr(audit, "_load_composition_inputs", lambda *_args, **_kwargs: object())
+    monkeypatch.setattr(
+        audit,
+        "_persisted_spawn_set_contexts",
+        lambda *_args, **_kwargs: {},
+    )
 
     transforms = {
         "10": ("overlay_whole_entry_replaced", "overlay_whole_entry_replaced"),
@@ -497,7 +502,6 @@ def test_full_four_zone_report_reconciles_and_is_deterministic(tmp_path, monkeyp
     assert set(first["reconciliation"].values()) == {audit.EXPECTED_FOUR_ZONE_TOTAL}
     assert first["filtered_member_count"] == audit.EXPECTED_FOUR_ZONE_TOTAL
     assert json.dumps(first, sort_keys=True) == json.dumps(second, sort_keys=True)
-
 
 def test_persistence_fallback_accepts_raw_transform_without_spawn_set_change(monkeypatch):
     import octogamedb.audit_spawn_raw_semantics as audit

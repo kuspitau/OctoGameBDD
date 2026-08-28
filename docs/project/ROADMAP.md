@@ -1,73 +1,46 @@
 # Roadmap
 
-The roadmap is staged to keep source semantics, provenance, and canonical selection auditable before
+The roadmap is staged to keep source semantics, provenance and canonical selection auditable before
 large-scale ingestion or UI work.
 
 ## P0 — foundation and provenance
 
 Status: `VALIDATED`.
 
-Delivered:
-
-- project/package skeleton;
-- migration runner and schema versioning;
-- import metadata and provenance primitives;
-- source observations and canonical selections;
-- audit/query primitives for source disagreements.
+Delivered project/package skeleton, migration/versioning, provenance primitives, source observations,
+canonical selections and audit/query primitives.
 
 ## P1 — world foundation
 
 Status: `VALIDATED` through P1-T04.
 
-Delivered:
-
-- maps, zones, creatures, gameobjects and separate spawn rows;
-- pfQuest base world import;
-- direct Octo client DBC map/area hierarchy;
-- Turtle/Octo overlay source inspection and effective-view reconstruction;
-- D-026 complete-set `spawn_set` and source-view deletion semantics;
-- Turtle active effective-view reconciliation while preserving comparison evidence.
+Delivered maps/zones, creature/gameobject identities and separate spawns, direct Octo DBC geography,
+pfQuest base world import, Turtle/Octo overlay composition, D-026 complete `spawn_set` evidence and
+managed Turtle effective-view reconciliation.
 
 ## P2 — items and acquisition sources
 
 Status: `VALIDATED` through P2-T04.
 
-Delivered:
-
-- item identity;
-- direct creature/gameobject loot;
-- reference-loot expansion;
-- vendor relations;
-- Turtle item/acquisition effective-view reconciliation;
-- geography derived through P1 source identities/spawns rather than duplicated onto item relations.
+Delivered item identity plus direct/reference loot and vendor relations, with Turtle effective-view
+reconciliation for the bounded P2 fact family. Template/stat fields beyond that bounded family remain
+for P6.
 
 ## P3 — quests
 
 Status: `VALIDATED` through P3-T05B.
 
-Delivered:
-
-- quest identity and creature/gameobject endpoints;
-- Turtle quest effective-view reconciliation;
-- progression/prerequisite relations;
-- structured objectives;
-- quest item requirements/provided/reward facts;
-- direct Octo live quest-query and structured Turtle-lineage evidence paths with conservative
-  source-specific authority.
+Delivered quest identity/endpoints, restrictions/progression, structured objectives, item
+requirements/rewards and conservative Octo/Turtle source-specific evidence.
 
 ## P4 — spells, recipes, reagents and acquisition
 
 Status: `VALIDATED` through P4-T04.
 
-Delivered:
+Delivered recipe/spell identity, outputs, reagents and trainer/recipe-item acquisition sources.
+Canonical schema baseline remains migration 13.
 
-- source semantics for spells/recipes;
-- direct Octo DBC recipe identity/output;
-- canonical reagent relations;
-- trainer and recipe-item acquisition sources;
-- migration 13 canonical schema baseline.
-
-Canonical database SHA-256 after P4-T04 remains:
+Canonical SHA-256:
 
 ```text
 623e29d83abd20335506d2a23dcbd525331de4f1bc10d38fccd7aa550a7613d7
@@ -75,46 +48,36 @@ Canonical database SHA-256 after P4-T04 remains:
 
 ## P5 — coverage, provenance and conflict auditing
 
+Status: `VALIDATED` through P5-T08. The current world-spawn source-conflict audit thread is complete.
+
 ### P5-T01 — first post-P4 coverage audit
 
 Status: `VALIDATED`.
 
-Established the bounded audit layer and identified world-source comparison as the next highest-value
-coverage question.
+Established the bounded audit layer and routed world-source comparison.
 
 ### P5-T02 — comparison-source readiness
 
 Status: `VALIDATED`.
 
-Established that `pfquest-octo` could be persisted and compared without changing D-026 authority.
+Established that `pfquest-octo` can be persisted/compared without changing D-026 authority.
 
 ### P5-T03 — selected world vs pfquest-octo comparison
 
 Status: `VALIDATED`.
 
-Validated fixed baseline:
-
 ```text
-audited records               = 450659
-same_value                    = 394970
-different_value               =   2759
-active_only                   =  32078
-comparison_only               =  12600
-not_directly_comparable       =   8252
-```
-
-Spawn membership one-sided baseline:
-
-```text
-creature active-only / comparison-only   = 10255 / 3928
-gameobject active-only / comparison-only =  5750 / 2362
+audited records          = 450659
+same_value               = 394970
+different_value          =   2759
+active_only              =  32078
+comparison_only          =  12600
+not_directly_comparable  =   8252
 ```
 
 ### P5-T04 — spawn membership divergence geometry/topology
 
 Status: `VALIDATED`.
-
-Validated unique membership baseline:
 
 ```text
 shared total          = 145447
@@ -123,49 +86,24 @@ comparison-only total =   6290
 one-sided total       =  22295
 ```
 
-Validated directly comparable parent topology:
-
-```text
-shared_only             = 22428
-active_only_members     =  1274
-comparison_only_members =   154
-mixed_one_sided_members =  1136
-```
-
-Validated coordinate-compatible candidate cardinality:
-
-```text
-zero     = 12103
-one      =  1539
-multiple =  8653
-```
-
-The result rejected a global automatic relocation/identity explanation and routed source-side
-attribution before any authority decision.
+Rejected a global automatic relocation/identity explanation.
 
 ### P5-T05 — three-way base/Turtle/Octo spawn divergence attribution
 
 Status: `VALIDATED`.
-
-Validated attribution:
 
 ```text
 base_active_not_comparison     =    17
 active_only_vs_base            = 15988
 base_comparison_not_active     =  1571
 comparison_only_vs_base        =  4719
-one-sided total                = 22295
 ```
 
-The result shows that 20,707 / 22,295 one-sided memberships (92.88%) are overlay additions relative
-to base. Source-local replacement evidence is sparse, while divergence is geographically
-concentrated. No D-025/D-026, authority, selection or identity change was made.
+20,707 / 22,295 one-sided memberships are overlay additions relative to base.
 
 ### P5-T06 — overlay-addition coverage by base-parent and zone provenance
 
 Status: `VALIDATED`.
-
-Validated Level-2 result:
 
 ```text
 parent_absent_from_base            =  7984
@@ -173,14 +111,7 @@ spawn_added_to_base_present_parent = 12723
 included additions                 = 20707
 ```
 
-Cross-overlay grouping coverage:
-
-```text
-same parent, both overlays add = 10917 members
-same zone/map, both add        = 10760 members
-```
-
-The top four zones account for 15,607 / 20,707 additions (75.37%):
+Top four routed zones contain 15,607 additions:
 
 ```text
 Stonetalon Mountains = 5145
@@ -189,76 +120,108 @@ Northwind            = 2872
 Blackrock Depths     = 2528
 ```
 
-The result shows a mixed source-completeness picture: base-present-parent extra membership is the
-larger global class, both overlays contribute large distinct sets in the same parent/zone contexts,
-and geographic concentration is strong. No source authority, D-025/D-026, selection or spawn
-identity change was made.
-
 ### P5-T07 — concentrated spawn-addition raw-source semantic audit
 
 Status: `VALIDATED`.
 
-Full local validation passed on 2026-08-28 against the exact migration-13 canonical DB and exact
-pfQuest / pfQuest-turtle / pfquest-octo raw revisions.
-
-Validated routing evidence:
-
 ```text
-four-zone audited members                         = 15607
-both overlays add parent count                     =   747
-both whole-entry replacement parent count          =  1085
-different replacement payload parent count         =  1085
-shared exact added members in routed four zones    =     3
+both overlays add parents                         =  747
+both whole-entry replacement parents              = 1085
+different whole-entry replacement payload parents = 1085
+shared exact added routed members                 =    3
 ```
 
-Blackrock Depths is overwhelmingly base-present enrichment (99.762658%); Stonetalon and Grim Reaches
-are also majority base-present extra membership (~62%); Northwind is majority parent-absent
-(55.153203%). Stonetalon/Blackrock receive both source families while Grim Reaches/Northwind are
-active-only in the routed slice.
-
-No migration, canonical mutation, source promotion, spawn identity merge or D-025/D-026 change was
-made.
+Established that common replacement is widespread while exact added membership is almost entirely
+source-specific.
 
 ### P5-T08 — shared-parent overlay replacement semantic divergence audit
 
-Status: `READY_FOR_IMPLEMENTATION`.
+Status: `VALIDATED`.
 
-Route a bounded read-only audit over the 1,085 common whole-entry replacement parents from P5-T07.
-Measure exact base/active/comparison effective spawn-set relations and whether raw payload differences
-are confined to spawn membership or extend to other top-entry fields.
+Human Level-2 validation passed on 2026-08-28 with 222 pytest tests, Ruff, compileall, exact canonical
+SHA/source revisions and deterministic read-only semantic evidence.
 
-Required set classes include equality, active strict superset, comparison strict superset, partial
-overlap and disjoint. Stratify by parent kind, routed-zone contribution, base-parent class and source
-family. Preserve source-relative evidence and exact revision fail-closed behavior.
+Fixed common-replacement population:
 
-P5-T08 is explicitly pre-authority: no source promotion, no selection-policy change, no identity
-pairing and no distance-threshold semantics.
+```text
+parents = 1085
+creature = 439
+gameobject = 646
+```
+
+Exact A/C set relations:
+
+```text
+active_equals_comparison      =   0
+active_strict_superset         = 472
+comparison_strict_superset     =   0
+partial_overlap                = 164
+disjoint                       = 449
+```
+
+Raw semantic difference classes:
+
+```text
+spawn_membership_only          = 1084
+spawn_plus_other_fields        =    1
+localization_name_only         =    0
+other_top_entry_fields_only    =    0
+unsupported_unclassified       =    0
+```
+
+Interpretation:
+
+- disagreement is overwhelmingly isolated to complete spawn membership;
+- no fixed parent has equal active/comparison spawn sets;
+- active is a strict superset for 43.50%, while 56.50% are partial-overlap or disjoint;
+- comparison is never a strict superset in this population, but partial/disjoint cases retain
+  comparison-only evidence;
+- no global merge, source promotion, source-interchangeability assumption or coordinate identity rule
+  is justified;
+- D-025/D-026 remain unchanged and `pfquest-octo` remains comparison evidence.
+
+The current P5 world-source conflict question is therefore closed. Reopen it only for a concrete
+consumer requirement or materially stronger direct Octo evidence.
 
 ## P6 — broader source ingestion and remaining domains
 
-Status: `PLANNED`.
+Status: `READY_FOR_IMPLEMENTATION` through P6-T01 routing.
 
-Potential work after P5 evidence is sufficient:
+### P6-T01 — item template/stat source contract and bounded ingestion slice
 
-- expand source coverage beyond validated vertical slices;
-- ingest additional item/world/quest/spell facts where consumers require them;
-- add remaining gameobject/creature/item metadata and unresolved source families;
-- keep field/relation-specific source policy explicit rather than introducing a universal priority.
+Status: `READY_FOR_IMPLEMENTATION`.
+
+Establish exact field/source semantics and a bounded provenance-preserving ingestion slice for the
+item properties needed by stat-aware search: quality/levels/class/subclass/slot, armor/block,
+weapon damage/speed, durability, stats and supported restrictions/icon facts. Inspect current primary
+Octo/pfQuest/Turtle/baseline sources before choosing any field-specific authority.
+
+Do not begin with a full-world import. Validate a representative slice, conflict preservation,
+idempotence, traceability and a small stat-filter query first. Route full ingestion/effects/remaining
+coverage only from measured P6-T01 evidence.
+
+Potential later P6 work:
+
+- full item template/stat ingestion after the bounded contract is validated;
+- item effects/spell/tooltip semantics;
+- additional item/world/quest/spell/acquisition coverage required by consumers;
+- unresolved source families with explicit field/relation policy.
 
 ## P7 — query/exploration layer
 
 Status: `PLANNED`.
 
-Build richer cross-domain exploration once coverage and conflict semantics are stable:
+Build richer provenance-aware cross-domain exploration after sufficient P6 coverage:
 
 - item acquisition/source exploration;
+- arbitrary item stat filtering/sorting and weighted scores;
 - quest chains/objectives/rewards;
-- creature/gameobject geographic views;
+- creature/gameobject geography;
 - recipe/reagent/acquisition traversal;
-- filtering/sorting by canonical and provenance-aware fields.
+- configurable columns, saved searches and comparisons.
 
 ## P8 — UI/application workflow
 
 Status: `PLANNED`.
 
-Add user-facing interfaces only after the underlying data semantics and audit behavior are reliable.
+Add the user-facing local browser UI only after the data/query semantics are reliable.

@@ -153,7 +153,7 @@ def _validate_report(report: dict[str, Any]) -> None:
 
     reconciliation = report["reconciliation"]
     _require(
-        set(int(value) for value in reconciliation.values()) == {EXPECTED_P5_T07_TOTAL},
+        {int(value) for value in reconciliation.values()} == {EXPECTED_P5_T07_TOTAL},
         "all four-zone member aggregates independently reconcile to 15,607",
     )
     _require(

@@ -6,8 +6,8 @@ import argparse
 import os
 import re
 import tomllib
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 EXPECTED_REVISIONS = {
     "pfquest": "sha256:5087d2d0a5b1c2706b7fc7ccb5ffd447c91aa24d91a23f102f2c7ac1d7440147",

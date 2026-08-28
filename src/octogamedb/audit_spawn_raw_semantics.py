@@ -536,7 +536,6 @@ def _persisted_spawn_set_contexts(
     """Bulk-load persisted spawn_set evidence for the requested parents."""
 
     from octogamedb.audit_comparison import _resolve_source_revision, _source_groups
-    from octogamedb.audit_spawn_attribution import _group_batches
     from octogamedb.audit_spawn_divergence import _spawn_members
 
     source_id, revision, _source_batches = _resolve_source_revision(
@@ -623,14 +622,16 @@ def _persisted_spawn_set_context(
         parents={(parent_kind, str(parent_key))},
     ).get((parent_kind, str(parent_key)))
 
+
 def _verify_overlay_persistence(
+    connection: sqlite3.Connection | object | None = None,
     *,
     parent_kind: str,
     parent_key: str,
     side: str,
     view: dict[str, Any],
     base_context: dict[str, Any],
-    persisted_context: dict[str, Any] | None,
+    persisted_context: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     if view["raw_transformation_class"] == "overlay_entry_inherited":
         persisted = {
@@ -645,6 +646,14 @@ def _verify_overlay_persistence(
         source_revision = (
             EXPECTED_ACTIVE_REVISION if side == "active" else EXPECTED_COMPARISON_REVISION
         )
+        if persisted_context is None and connection is not None:
+            persisted_context = _persisted_spawn_set_context(
+                connection,
+                source_key=source_key,
+                source_revision=source_revision,
+                parent_kind=parent_kind,
+                parent_key=parent_key,
+            )
         persisted = persisted_context
         if persisted is None:
             raw_keys = set(view["effective_member_keys"])
