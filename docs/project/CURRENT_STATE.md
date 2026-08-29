@@ -6,246 +6,149 @@ validated local delta not yet pushed.
 
 ## Integration baseline for this handoff
 
-Visible GitHub `main` head while this closeout is prepared:
+GitHub `main` head verified for the P6-T01 implementation/validation cycle:
 
 ```text
-eeb8d1393f7520264e155dcaa3e7717fec755087
-Validate P5-T07 raw spawn semantics and route P5-T08
+d0f26f13b91dabd68b8403d65811447ab0abccca
+Validate P5-T08 replacement semantics and route P6-T01
 ```
 
-P5-T08 was implemented and corrected locally on top of that commit. The human then completed the full
-P5-T08 validation loop successfully on 2026-08-28. This closeout/routing delta is therefore
-**intentionally stacked on the validated local P5-T08 integration state** and must not be applied to a
-bare `eeb8d139...` checkout without the preceding P5-T08 implementation/correction deltas.
+P6-T01 was implemented, corrected and fully validated locally on top of that commit. This closeout
+is therefore **intentionally stacked on the complete validated local P6-T01 implementation delta**.
+Do not apply this closeout to a bare `d0f26f...` checkout without first applying the P6-T01
+implementation/correction delta.
 
-The validated local stack includes the P5-T08 audit/validator/tests, the P5-T07 compatibility and Ruff
-fixes discovered during full-suite validation, and the working P5-T08 local-validation BAT. Commit and
-push that complete local stack together with this closeout before starting a new coding conversation.
+Commit and push the complete P6-T01 implementation plus this closeout together before beginning a new
+coding conversation, so the next conversation can again treat GitHub `main` as the complete tracked
+source of truth.
 
 ## Validated cumulative state
 
-P0 through **P5-T08** are `VALIDATED`.
+P0 through **P6-T01** are `VALIDATED`.
 
-The canonical schema remains:
+P6-T01 accepted a bounded direct-Octo item-template/stat source contract and migration-14 schema
+capability, but it deliberately did **not** promote the generated canonical DB.
 
-```text
-P4-T04 / migration 13 / 0013_recipe_acquisition_sources.sql
-```
+## Canonical DB baseline
 
-P5-T01 through P5-T08 are read-only audit work and introduce no migration.
-
-Validated canonical SHA-256 remains:
+The accepted canonical local DB remains:
 
 ```text
-623e29d83abd20335506d2a23dcbd525331de4f1bc10d38fccd7aa550a7613d7
+schema migration = 13 / 0013_recipe_acquisition_sources.sql
+SHA-256 = 623e29d83abd20335506d2a23dcbd525331de4f1bc10d38fccd7aa550a7613d7
 ```
 
-The P5-T08 human run selected the project-local `data/octogamedb.sqlite3` compatibility location
-because `data/generated/octogamedb.sqlite3` was absent on that machine, and verified the exact hash
-above. This does not supersede D-029's canonical lifecycle/path contract; no architecture decision is
-changed by P5-T08.
+Migration 14 (`0014_item_template_facts.sql`) is validated in code and on a disposable copy, but the
+project has not performed a D-029 canonical mutation/promotion cycle for it. `CANONICAL_DB.md` therefore
+remains unchanged. Do not describe migration 14 as the current canonical baseline.
 
-D-025 and D-026 remain unchanged. `pfquest-octo` remains comparison evidence only.
+## P6-T01 validated result — 2026-08-29
 
-## Exact raw-source revisions retained by P5-T08
+Classical local validation passed:
 
 ```text
-pfquest base
-sha256:5087d2d0a5b1c2706b7fc7ccb5ffd447c91aa24d91a23f102f2c7ac1d7440147
-
-pfquest-turtle active
-sha256:7fd719cac7a7a26e80c6865fa62b6100ccfa2301dabe3b2a399c0f1551372d8c
-
-pfquest-octo comparison
-sha256:eddd325a9a0eab2616c7b70d03e23d55f1a0c4127a293426ea07a17c0f2421db
+python -m pip install -e ".[dev]"      passed
+pytest --basetemp=...                  228 passed
+python -m ruff check src tests         passed
+python -m compileall -q src tests      passed
 ```
 
-Future work that reuses this raw-source evidence must fail closed if the configured inputs drift.
+The real-client Level-2 validator then resolved the local Octo `itemcache.wdb` through existing project
+configuration/derived addon paths and ran only against a dedicated validation DB copied from the
+migration-13 canonical baseline.
 
-## P5 regression context
-
-### P5-T03 / P5-T04
+Successful Level-2 markers and measurements:
 
 ```text
-P5-T03 audited records               = 450659
-same_value                           = 394970
-different_value                      =   2759
-active_only                          =  32078
-comparison_only                      =  12600
-not_directly_comparable              =   8252
-
-P5-T04 shared spawn members          = 145447
-active-only spawn members            =  16005
-comparison-only spawn members        =   6290
-one-sided spawn members              =  22295
+P6_T01_LOCAL_VALIDATION_OK
+canonical_sha256=623e29d83abd20335506d2a23dcbd525331de4f1bc10d38fccd7aa550a7613d7
+selected_item_count=25
+selected_item_ids=4,8,10,25,16,24,26,27,28,31,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49
+first_rows_inserted=28
+first_rows_updated=0
+item_templates=25
+item_stat_modifiers=3
+source_observations=2208906
+canonical_db_unchanged=true
+P6_T01_REMAINING_LOCAL_VALIDATION_COMPLETE
 ```
 
-P5-T04 rejected a global automatic relocation/identity explanation and did not justify spawn-key
-pairing or source-authority changes.
+The validator also checked rerun idempotence, canonical selections, provenance, foreign keys and
+SQLite integrity. The migration-13 canonical SHA remained byte-identical before and after validation.
 
-### P5-T05
+The final local validation log is an ignored machine-local artifact under:
 
 ```text
-base_active_not_comparison     =    17
-active_only_vs_base            = 15988
-base_comparison_not_active     =  1571
-comparison_only_vs_base        =  4719
-                                -----
-one-sided total                = 22295
-
-overlay additions vs base     = 20707  (92.87733%)
-base-present absences/changes  =  1588  ( 7.12267%)
+data/generated/validation_logs/P6-T01_remaining_validation_20260829_003035.log
 ```
 
-### P5-T06
+The v3 wrapper buffered the inner validator output until completion, so the run looked stalled while
+it was working. That is a validation-helper UX defect, not a semantic failure; future long-running
+validators should stream progress instead of capturing all output until the end.
+
+## Accepted P6-T01 contract
+
+Durable source/model contract:
 
 ```text
-parent_absent_from_base              =  7984
-spawn_added_to_base_present_parent   = 12723
-included additions                   = 20707
+docs/project/P6_ITEM_TEMPLATE_SOURCE_CONTRACT.md
 ```
 
-The four routed concentration zones contain 15,607 / 20,707 additions:
+Decision:
 
 ```text
-Stonetalon Mountains = 5145
-Grim Reaches         = 5062
-Northwind            = 2872
-Blackrock Depths     = 2528
+D-036 — P6 item-template/stat cache evidence is field-specific direct Octo positive evidence
 ```
 
-### P5-T07
+Accepted bounded semantics:
 
-Validated raw replacement routing signal:
+- a successfully parsed `itemcache.wdb` record is direct Octo client/server-observed positive evidence
+  for the supported item-query fields;
+- cache absence is unknown, never negative evidence;
+- a pre-existing cache record does not by itself prove freshness/current-server state;
+- the ten ordered stat slots of a present record form a complete-set observation for that record;
+- direct Octo observations may supersede only known managed P6 selections for the supported field
+  family; manual/custom selections remain protected;
+- competing observations remain preserved;
+- cache-only native IDs do not create fabricated canonical item identities;
+- migration 14 provides `item_templates` and `item_stat_modifiers` as rebuildable selected projections;
+- the production P6-T01 importer remains explicitly bounded and has no unbounded default.
 
-```text
-both overlays add parents                         =  747
-both whole-entry replacement parents              = 1085
-different whole-entry replacement payload parents = 1085
-shared exact added members in routed zones        =    3
-```
-
-This established that common top-entry replacement is widespread while exact added membership is
-almost entirely source-specific.
-
-## P5-T08 validated result — 2026-08-28
-
-Human evidence:
-
-```text
-data/generated/validation_logs/P5-T08_validation_20260828_171220.json
-```
-
-Final local validation additionally recorded:
-
-```text
-222 pytest tests passed
-Ruff passed
-compileall passed
-P5-T08 semantic validator passed
-COMPLETE LOCAL VALIDATION PASSED
-```
-
-The fixed population is exactly 1,085 base-present parents where both overlays whole-entry replace the
-same parent and both raw replacement payloads differ.
-
-Parent kind split:
-
-```text
-creature   = 439
-gameobject = 646
-             ----
-total      = 1085
-```
-
-Exact active/comparison effective `spawn_set` relations:
-
-```text
-active_equals_comparison      =   0  ( 0.00%)
-active_strict_superset         = 472  (43.50%)
-comparison_strict_superset     =   0  ( 0.00%)
-partial_overlap                = 164  (15.12%)
-disjoint                       = 449  (41.38%)
-                                ----
-total                          = 1085
-```
-
-Raw replacement semantic difference classes:
-
-```text
-spawn_membership_only          = 1084  (99.908%)
-spawn_plus_other_fields        =    1  ( 0.092%)
-localization_name_only         =    0
-other_top_entry_fields_only    =    0
-unsupported_unclassified       =    0
-```
-
-Routed contribution classes:
-
-```text
-active_only   = 603
-both_sources  = 482
-                ----
-total         = 1085
-```
-
-All 1,085 parents are `spawn_added_to_base_present_parent`. The audit emitted 25 bounded
-representative examples and classified every fixed parent exactly once.
-
-Bulk provenance behavior is validated:
-
-```text
-base membership bulk loads             = 1
-active persisted spawn_set bulk loads   = 1
-comparison persisted spawn_set loads    = 1
-per-parent provenance query loop        = false
-```
-
-Canonical SHA-256 is byte-identical before and after the read-only validation.
-
-### P5 conclusion
-
-P5-T08 resolves the current P5 world-source conflict question sufficiently to stop iterating on the
-same spawn divergence without a new consumer-driven requirement:
-
-- the disagreement is overwhelmingly field-local to complete `spawn_set` membership;
-- the two effective source families are never equal on the fixed common-replacement population;
-- active is a strict superset in 43.50%, but 56.50% of parents are partial-overlap or disjoint;
-- comparison is never a strict superset in this population, but partial/disjoint classes still retain
-  comparison-only members and therefore do not justify discarding comparison evidence;
-- the single `spawn_plus_other_fields` outlier is isolated and does not justify a generalized
-  non-spawn replacement policy;
-- no evidence supports a global source merge, global source promotion, coordinate-based identity
-  merge or D-025/D-026 change.
-
-Current policy therefore remains conservative and field-specific: Turtle remains the selected managed
-world view under D-026; `pfquest-octo` remains preserved comparison evidence; divergent complete spawn
-sets retain separate source semantics.
-
-P5 is complete for this bounded question. Reopen spawn-authority work only if a concrete P6/P7
-consumer requires a more authoritative relation-specific choice or direct Octo evidence becomes
-available.
+The real validation proves parser/import/query compatibility with the user's current cache shape. It
+does **not** prove whole-cache completeness or freshness. The selected 25-item probe produced only 3
+materialized non-empty stat modifiers, reinforcing the need to characterize coverage before broad
+promotion.
 
 ## Active task
 
-### P6-T01 — item template/stat source contract and bounded ingestion slice
+### P6-T02 — direct Octo item-cache freshness, coverage and bounded refresh probe
 
-**Status: READY_FOR_IMPLEMENTATION.**
+**Status: `READY_FOR_IMPLEMENTATION`.**
 
 Task contract:
 
 ```text
-docs/project/tasks/P6-T01.md
+docs/project/tasks/P6-T02.md
 ```
-
-P6-T01 begins the broader-ingestion phase with the item properties required by the project's intended
-stat-aware search/exploration layer but deliberately deferred by P2.
 
 Primary goal:
 
-> Establish source-native, provenance-preserving semantics for filterable item template/stat facts,
-> then implement a bounded representative ingestion slice without guessing a universal source
-> priority.
+> Measure what the current direct Octo item cache actually covers, establish whether/how bounded item
+> records can be refreshed or directly queried reproducibly, and define a freshness-aware acquisition
+> contract before full item-template/stat ingestion or canonical migration-14 promotion.
 
-The task must first inspect current primary sources and establish field-specific authority/coverage
-before schema/import changes. It must not start with a full-world scrape/import.
+P6-T02 should remain read-only with respect to the canonical DB. It should use source/capture artifacts
+and disposable validation outputs, not mutate the migration-13 baseline.
+
+Do not begin a whole-cache canonical import merely because P6-T01's parser passed. The next task must
+first distinguish parser correctness from source coverage/freshness.
+
+## Next-conversation start
+
+After the complete P6-T01 stack and this closeout are committed/pushed:
+
+1. verify the new GitHub `main` HEAD;
+2. read this file and `docs/project/tasks/P6-T02.md`;
+3. inspect only the P6-T02 source/client/query paths needed to establish the freshness/coverage probe;
+4. keep the canonical DB at migration 13 unless a later validated D-029 promotion explicitly advances
+   it.

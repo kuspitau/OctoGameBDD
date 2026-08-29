@@ -21,6 +21,7 @@ CURRENT_MIGRATIONS = (
     (11, "0011_recipe_identity.sql"),
     (12, "0012_recipe_reagents.sql"),
     (13, "0013_recipe_acquisition_sources.sql"),
+    (14, "0014_item_template_facts.sql"),
 )
 CURRENT_MIGRATION_VERSIONS = [version for version, _ in CURRENT_MIGRATIONS]
 

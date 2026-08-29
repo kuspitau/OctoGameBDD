@@ -185,27 +185,45 @@ consumer requirement or materially stronger direct Octo evidence.
 
 ## P6 — broader source ingestion and remaining domains
 
-Status: `READY_FOR_IMPLEMENTATION` through P6-T01 routing.
+Status: `VALIDATED` through P6-T01; P6-T02 is `READY_FOR_IMPLEMENTATION`.
 
 ### P6-T01 — item template/stat source contract and bounded ingestion slice
 
+Status: `VALIDATED`.
+
+Accepted the bounded direct-Octo `itemcache.wdb` contract recorded by D-036 for class/subclass,
+quality, inventory type, item/required levels, class/race masks, supported skill/spell/reputation
+requirements, armor/resistances, durability and ten ordered raw stat slots. Cache absence remains
+unknown and arbitrary cache presence does not itself prove freshness.
+
+Migration 14 provides validated `item_templates` / `item_stat_modifiers` projection capability, but
+P6-T01 deliberately validated it only on a disposable copy. The cumulative canonical DB remains
+migration 13.
+
+Human validation on 2026-08-29 passed the 228-test suite, Ruff, compileall and the real Octo
+`itemcache.wdb` Level-2 probe. The bounded real slice selected 25 canonical item IDs, materialized 25
+template rows and 3 non-empty stat modifiers, passed repeated-import idempotence/provenance/FK/SQLite
+integrity checks and left the canonical SHA byte-identical.
+
+### P6-T02 — direct Octo item-cache freshness, coverage and bounded refresh probe
+
 Status: `READY_FOR_IMPLEMENTATION`.
 
-Establish exact field/source semantics and a bounded provenance-preserving ingestion slice for the
-item properties needed by stat-aware search: quality/levels/class/subclass/slot, armor/block,
-weapon damage/speed, durability, stats and supported restrictions/icon facts. Inspect current primary
-Octo/pfQuest/Turtle/baseline sources before choosing any field-specific authority.
+Measure actual `itemcache.wdb` coverage against the known item population and establish whether/how a
+bounded selected item set can be refreshed or directly queried with observable currentness evidence.
+Keep cache absence unknown, avoid arbitrary ID brute force and keep the canonical DB read-only.
 
-Do not begin with a full-world import. Validate a representative slice, conflict preservation,
-idempotence, traceability and a small stat-filter query first. Route full ingestion/effects/remaining
-coverage only from measured P6-T01 evidence.
+Use the measured freshness/coverage result to route one of:
 
-Potential later P6 work:
-
-- full item template/stat ingestion after the bounded contract is validated;
+- broader/full item template/stat ingestion;
+- weapon damage/speed/block semantics;
 - item effects/spell/tooltip semantics;
-- additional item/world/quest/spell/acquisition coverage required by consumers;
-- unresolved source families with explicit field/relation policy.
+- a field-specific OctoDB/Tortoise/Vanilla fallback where direct coverage is insufficient;
+- explicit migration-14 canonical promotion under D-029 after the intended cumulative data state is
+  defined and validated.
+
+Potential later P6 work remains consumer-driven and field-specific; no universal source priority is
+introduced.
 
 ## P7 — query/exploration layer
 
