@@ -28,3 +28,11 @@ addopts = "-ra"
 [tool.ruff]
 target-version = "py311"
 line-length = 100
+
+[tool.ruff.lint.per-file-ignores]
+# These two P6-T03 files validate serialized external evidence and operational state.
+# ValueError/RuntimeError are intentional public validation semantics there rather than
+# Python API argument-type errors. The validator also has one deliberate CLI-boundary
+# catch that converts operational failures into the stable P6_T03_VALIDATION_FAILED marker.
+"src/octogamedb/itemcache_campaign.py" = ["TRY004"]
+"scripts/validate_p6_t03.py" = ["BLE001", "TRY004"]
