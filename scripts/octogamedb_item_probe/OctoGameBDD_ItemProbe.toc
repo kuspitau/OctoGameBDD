@@ -1,0 +1,8 @@
+## Interface: 11200
+## Title: OctoGameBDD Item Probe
+## Notes: Bounded P6-T02 item-query freshness probe
+## Author: OctoGameBDD
+## Version: 1.0.0
+## SavedVariables: OctoGameBDD_ItemProbeDB, OctoGameBDD_ItemProbeExport
+
+OctoGameBDD_ItemProbe.lua

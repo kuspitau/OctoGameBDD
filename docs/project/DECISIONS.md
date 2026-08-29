@@ -727,3 +727,90 @@ Migration 13 materializes one semantic acquisition row per item-slot/trainer-cre
 path. It records whether the selected learning proof is exact Octo DBC or Tortoise server fallback,
 while preserving corroborating proof details in provenance. No derived vendor/loot/zone relation is
 copied into the recipe tables.
+
+## D-036 — P6 item-template/stat cache evidence is field-specific direct Octo positive evidence
+
+**Status:** accepted
+
+P6-T01 establishes `octo-itemcache` as direct Octo client/server-observed positive evidence for the
+bounded item-template family adopted by migration 14:
+
+- class/subclass;
+- quality and inventory type;
+- item/required levels;
+- class/race masks;
+- supported skill/spell/reputation requirements;
+- armor and six resistances;
+- durability;
+- the complete ordered ten raw stat slots of a successfully parsed record.
+
+A present supported `itemcache.wdb` record proves only what that exact cached server response contains.
+Cache absence is unknown and never negative item evidence. A cache-only native ID does not authorize
+fabricating canonical item identity. The ten stat slots are complete-set evidence within a present
+supported record; only non-empty slots need be materialized into the query projection while the full
+slot payload remains provenance.
+
+The managed direct-Octo selection policy is field-family-specific. It may replace only known managed
+P6 selections for the same field family and must preserve explicit/manual/custom selections and all
+competing observations. This decision does not introduce a universal source priority.
+
+Migration 14 (`0014_item_template_facts.sql`) provides validated rebuildable `item_templates` and
+`item_stat_modifiers` projections, but P6-T01 did not promote the cumulative canonical DB. Migration
+13 remains the canonical baseline until an explicit D-029 mutation/promotion cycle succeeds.
+
+A pre-existing cache record is not, by presence alone, proof of current-server freshness. Freshness
+classification and safe acquisition are therefore governed separately by D-037.
+
+## D-037 — P6 direct item-query freshness is query-scoped and cache coverage remains partial-positive
+
+**Status:** accepted
+
+P6-T02 validated a bounded direct item-query path in the user's actual Octo client. The client probe
+uses the Vanilla-compatible item hyperlink/query path one item at a time, with bounded retries and
+explicit timeout state. Candidate IDs come only from known canonical item identities; arbitrary
+numeric brute force is not permitted.
+
+Freshness classes are evidence classes, not item-existence states:
+
+1. `refresh_proven_direct_observation` requires all of:
+   - the canonical item ID was absent from the pre-probe cache snapshot;
+   - the bounded current-session probe reported `loaded_after_query`;
+   - a post-session `itemcache.wdb` raw record exists for that ID and its exact bytes are hashed.
+2. `session_observed_freshness_limited` means a pre-probe cache miss became an observable successful
+   current-session load but no post-WDB raw record is available. It proves session behavior but does
+   not provide persisted field bytes suitable for automatic item-template materialization.
+3. `historical_cache_only` means the item already existed in the pre-probe cache. Re-reading or
+   resolving that local record does not prove a server refresh.
+4. `unknown` covers timeout, missing response, or otherwise insufficient evidence. Unknown is never
+   negative item evidence.
+
+The validated real-client P6-T02 run on 2026-08-29 measured:
+
+```text
+canonical item identities                 = 23336
+itemcache records                         =  7119
+cache records matching canonical identity =  6667
+cache-only native IDs                     =   452
+canonical IDs missing from cache          = 16669
+bounded missing-ID probe                  =     5
+refresh-proven direct observations        =     3
+unknown probe outcomes                    =     2
+```
+
+The spontaneous matching cache coverage is therefore partial and must not be interpreted as an
+exhaustive current Octo item database. The successful 3/5 bounded probe nevertheless proves that
+known canonical cache misses can be acquired reproducibly as current direct observations.
+
+Consequences:
+
+- later P6 ingestion may automatically treat `refresh_proven_direct_observation` records as current
+  direct-Octo evidence for the D-036 field family;
+- historical cache records remain valid positive observations but must retain their historical/
+  freshness-limited status when currentness matters;
+- session-only success without persisted field payload is acquisition evidence, not a substitute for
+  the raw item-template record;
+- timeout/missing remains unknown and cannot delete, deselect, or fabricate facts;
+- no whole-cache canonical import or migration-14 promotion is authorized by P6-T02 alone;
+- the next bounded step is a resumable acquisition campaign over known canonical cache-missing IDs,
+  preserving one-outstanding-query behavior and the validated rate/timeout constraints before any
+  broad canonical promotion.

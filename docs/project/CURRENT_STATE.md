@@ -6,28 +6,29 @@ validated local delta not yet pushed.
 
 ## Integration baseline for this handoff
 
-GitHub `main` head verified for the P6-T01 implementation/validation cycle:
+Visible GitHub `main` while the P6-T02 closeout is prepared:
 
 ```text
-d0f26f13b91dabd68b8403d65811447ab0abccca
-Validate P5-T08 replacement semantics and route P6-T01
+72cb4e415b611938175addf7e9160872f2ab369b
+Validate P6-T01 item template/stat slice and route P6-T02
 ```
 
-P6-T01 was implemented, corrected and fully validated locally on top of that commit. This closeout
-is therefore **intentionally stacked on the complete validated local P6-T01 implementation delta**.
-Do not apply this closeout to a bare `d0f26f...` checkout without first applying the P6-T01
-implementation/correction delta.
+P6-T02 was implemented, corrected and fully validated locally on top of that commit. This closeout is
+therefore **intentionally stacked on the complete local P6-T02 implementation/correction state**,
+including the clean-WDB support and the final Ruff/path-validation hotfixes. Do not apply this closeout
+to a bare `72cb4e...` checkout without first applying the complete P6-T02 implementation stack already
+validated on the user's machine.
 
-Commit and push the complete P6-T01 implementation plus this closeout together before beginning a new
-coding conversation, so the next conversation can again treat GitHub `main` as the complete tracked
-source of truth.
+Commit and push the complete P6-T02 implementation/corrections plus this closeout together before a
+new coding conversation, so GitHub `main` again becomes the complete tracked source of truth.
 
 ## Validated cumulative state
 
-P0 through **P6-T01** are `VALIDATED`.
+P0 through **P6-T02** are `VALIDATED`.
 
-P6-T01 accepted a bounded direct-Octo item-template/stat source contract and migration-14 schema
-capability, but it deliberately did **not** promote the generated canonical DB.
+P6-T01 established the bounded direct-Octo item-template/stat source and migration-14 projection
+capability. P6-T02 established actual cache coverage and a reproducible bounded freshness proof for
+cache-missing canonical item IDs.
 
 ## Canonical DB baseline
 
@@ -38,55 +39,11 @@ schema migration = 13 / 0013_recipe_acquisition_sources.sql
 SHA-256 = 623e29d83abd20335506d2a23dcbd525331de4f1bc10d38fccd7aa550a7613d7
 ```
 
-Migration 14 (`0014_item_template_facts.sql`) is validated in code and on a disposable copy, but the
-project has not performed a D-029 canonical mutation/promotion cycle for it. `CANONICAL_DB.md` therefore
-remains unchanged. Do not describe migration 14 as the current canonical baseline.
+Migration 14 (`0014_item_template_facts.sql`) remains validated schema capability only. P6-T02 was
+read-only with respect to the canonical DB and explicitly reverified the exact migration-13 hash after
+the real-client probe. No D-029 promotion cycle has occurred.
 
-## P6-T01 validated result — 2026-08-29
-
-Classical local validation passed:
-
-```text
-python -m pip install -e ".[dev]"      passed
-pytest --basetemp=...                  228 passed
-python -m ruff check src tests         passed
-python -m compileall -q src tests      passed
-```
-
-The real-client Level-2 validator then resolved the local Octo `itemcache.wdb` through existing project
-configuration/derived addon paths and ran only against a dedicated validation DB copied from the
-migration-13 canonical baseline.
-
-Successful Level-2 markers and measurements:
-
-```text
-P6_T01_LOCAL_VALIDATION_OK
-canonical_sha256=623e29d83abd20335506d2a23dcbd525331de4f1bc10d38fccd7aa550a7613d7
-selected_item_count=25
-selected_item_ids=4,8,10,25,16,24,26,27,28,31,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49
-first_rows_inserted=28
-first_rows_updated=0
-item_templates=25
-item_stat_modifiers=3
-source_observations=2208906
-canonical_db_unchanged=true
-P6_T01_REMAINING_LOCAL_VALIDATION_COMPLETE
-```
-
-The validator also checked rerun idempotence, canonical selections, provenance, foreign keys and
-SQLite integrity. The migration-13 canonical SHA remained byte-identical before and after validation.
-
-The final local validation log is an ignored machine-local artifact under:
-
-```text
-data/generated/validation_logs/P6-T01_remaining_validation_20260829_003035.log
-```
-
-The v3 wrapper buffered the inner validator output until completion, so the run looked stalled while
-it was working. That is a validation-helper UX defect, not a semantic failure; future long-running
-validators should stream progress instead of capturing all output until the end.
-
-## Accepted P6-T01 contract
+## P6-T01 accepted contract
 
 Durable source/model contract:
 
@@ -100,55 +57,136 @@ Decision:
 D-036 — P6 item-template/stat cache evidence is field-specific direct Octo positive evidence
 ```
 
-Accepted bounded semantics:
+Core boundaries remain:
 
-- a successfully parsed `itemcache.wdb` record is direct Octo client/server-observed positive evidence
-  for the supported item-query fields;
+- present supported `itemcache.wdb` records are direct Octo positive evidence for the adopted field
+  family;
 - cache absence is unknown, never negative evidence;
-- a pre-existing cache record does not by itself prove freshness/current-server state;
-- the ten ordered stat slots of a present record form a complete-set observation for that record;
-- direct Octo observations may supersede only known managed P6 selections for the supported field
-  family; manual/custom selections remain protected;
-- competing observations remain preserved;
-- cache-only native IDs do not create fabricated canonical item identities;
-- migration 14 provides `item_templates` and `item_stat_modifiers` as rebuildable selected projections;
-- the production P6-T01 importer remains explicitly bounded and has no unbounded default.
+- cache-only IDs do not fabricate canonical item identities;
+- the ten stat slots are complete within a present supported record;
+- managed P6 selections preserve manual/custom and competing observations;
+- arbitrary pre-existing cache presence does not prove currentness;
+- migration 14 remains unpromoted.
 
-The real validation proves parser/import/query compatibility with the user's current cache shape. It
-does **not** prove whole-cache completeness or freshness. The selected 25-item probe produced only 3
-materialized non-empty stat modifiers, reinforcing the need to characterize coverage before broad
-promotion.
+## P6-T02 validated result — 2026-08-29
+
+Durable freshness/coverage contract:
+
+```text
+docs/project/P6_ITEMCACHE_FRESHNESS_CONTRACT.md
+```
+
+Decision:
+
+```text
+D-037 — P6 direct item-query freshness is query-scoped and cache coverage remains partial-positive
+```
+
+The user first completed the requested classical local gates successfully:
+
+```text
+python -m pip install -e ".[dev]"                          passed
+pytest --basetemp=<local temp>                             passed
+python -m ruff check src tests                            passed
+python -m compileall -q src tests                         passed
+```
+
+The clean-WDB corrective path then passed its focused regressions:
+
+```text
+pytest tests/test_itemcache_coverage.py tests/test_p6_t02_validator.py   10 passed
+python -m ruff check <P6-T02 corrective files>                          passed
+python -m compileall -q <P6-T02 corrective Python files>                passed
+```
+
+Final real-client Level-2 evidence:
+
+```text
+P6_T02_PREFLIGHT_OK
+canonical_sha256=623e29d83abd20335506d2a23dcbd525331de4f1bc10d38fccd7aa550a7613d7
+cache_pre_exists=true
+cache_records=7119
+canonical_items=23336
+matching_canonical_cache_records=6667
+cache_only_native_ids=452
+canonical_missing_unknown=16669
+probe_item_ids=1,7646,15984,41360,93116
+
+P6_T02_LOCAL_VALIDATION_OK
+canonical_db_unchanged=true
+itemcache_post_exists=true
+freshness_refresh_proven_direct_observation=3
+freshness_unknown=2
+P6_T02_REMAINING_LOCAL_VALIDATION_COMPLETE
+```
+
+The final local validation log is an ignored machine-local artifact:
+
+```text
+data/generated/validation_logs/P6-T02_remaining_local_20260829_193935_323.log
+```
+
+Interpretation:
+
+- the real cache is useful but incomplete: 6,667 / 23,336 canonical item identities were represented
+  by the observed cache snapshot;
+- 452 cache records have native IDs not currently represented by canonical item identity and remain
+  source evidence only;
+- 16,669 canonical item IDs were missing from that cache snapshot; all remain unknown, not absent;
+- the bounded current-session query succeeded with post-WDB raw-record proof for 3 of 5 selected
+  cache-missing canonical IDs;
+- the other 2 outcomes remain unknown;
+- therefore direct current acquisition is proven, but spontaneous whole-cache coverage is insufficient
+  to justify an unqualified whole-cache import or migration-14 promotion.
+
+The validated freshness classes are:
+
+```text
+refresh_proven_direct_observation
+session_observed_freshness_limited
+historical_cache_only
+unknown
+```
+
+Only the first class combines pre-probe cache miss, current-session successful load and post-session
+raw WDB record proof. Session-only success is useful acquisition evidence but not a persisted template
+payload. Historical cache records remain positive evidence without a currentness claim. Unknown is
+never negative evidence.
 
 ## Active task
 
-### P6-T02 — direct Octo item-cache freshness, coverage and bounded refresh probe
+### P6-T03 — resumable direct-Octo acquisition campaign for known canonical cache misses
 
 **Status: `READY_FOR_IMPLEMENTATION`.**
 
 Task contract:
 
 ```text
-docs/project/tasks/P6-T02.md
+docs/project/tasks/P6-T03.md
 ```
 
 Primary goal:
 
-> Measure what the current direct Octo item cache actually covers, establish whether/how bounded item
-> records can be refreshed or directly queried reproducibly, and define a freshness-aware acquisition
-> contract before full item-template/stat ingestion or canonical migration-14 promotion.
+> Turn the P6-T02 five-ID proof into a conservative, resumable acquisition workflow over known
+> canonical item IDs that are missing from the current cache, while preserving one-outstanding-query
+> behavior, bounded batches, per-ID evidence state and the D-037 freshness classes.
 
-P6-T02 should remain read-only with respect to the canonical DB. It should use source/capture artifacts
-and disposable validation outputs, not mutate the migration-13 baseline.
+P6-T03 remains an acquisition task. It must not brute-force arbitrary native IDs, must not reinterpret
+timeouts as absence, and must not promote migration 14 or mutate the canonical migration-13 DB.
 
-Do not begin a whole-cache canonical import merely because P6-T01's parser passed. The next task must
-first distinguish parser correctness from source coverage/freshness.
+The first implementation should focus on a durable ignored acquisition ledger/checkpoint plus a
+bounded client batch workflow. It should prove safe resume/retry behavior and measure how much direct
+fresh coverage can be acquired without manual per-ID selection.
 
 ## Next-conversation start
 
-After the complete P6-T01 stack and this closeout are committed/pushed:
+After the complete P6-T02 stack and this closeout are committed/pushed:
 
 1. verify the new GitHub `main` HEAD;
-2. read this file and `docs/project/tasks/P6-T02.md`;
-3. inspect only the P6-T02 source/client/query paths needed to establish the freshness/coverage probe;
-4. keep the canonical DB at migration 13 unless a later validated D-029 promotion explicitly advances
-   it.
+2. read this file and `docs/project/tasks/P6-T03.md`;
+3. inspect the validated P6-T02 addon/validator/coverage code and only the dependencies needed for a
+   resumable acquisition campaign;
+4. read `LOCAL_PATHS.md` before changing WoW-root handling; use the established ignored local config
+   contract instead of hard-coded paths;
+5. keep the canonical DB at migration 13 and read-only throughout P6-T03;
+6. do not begin migration-14 canonical promotion until a later explicitly routed D-029 cycle.

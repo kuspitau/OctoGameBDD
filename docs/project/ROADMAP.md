@@ -185,7 +185,7 @@ consumer requirement or materially stronger direct Octo evidence.
 
 ## P6 — broader source ingestion and remaining domains
 
-Status: `VALIDATED` through P6-T01; P6-T02 is `READY_FOR_IMPLEMENTATION`.
+Status: `VALIDATED` through P6-T02; P6-T03 is `READY_FOR_IMPLEMENTATION`.
 
 ### P6-T01 — item template/stat source contract and bounded ingestion slice
 
@@ -200,30 +200,67 @@ Migration 14 provides validated `item_templates` / `item_stat_modifiers` project
 P6-T01 deliberately validated it only on a disposable copy. The cumulative canonical DB remains
 migration 13.
 
-Human validation on 2026-08-29 passed the 228-test suite, Ruff, compileall and the real Octo
-`itemcache.wdb` Level-2 probe. The bounded real slice selected 25 canonical item IDs, materialized 25
-template rows and 3 non-empty stat modifiers, passed repeated-import idempotence/provenance/FK/SQLite
-integrity checks and left the canonical SHA byte-identical.
+Human validation on 2026-08-29 passed the classical suite and the real Octo `itemcache.wdb` Level-2
+slice. The bounded real slice selected 25 canonical item IDs, materialized 25 template rows and 3
+non-empty stat modifiers, passed repeated-import idempotence/provenance/FK/SQLite integrity checks and
+left the canonical SHA byte-identical.
 
 ### P6-T02 — direct Octo item-cache freshness, coverage and bounded refresh probe
 
+Status: `VALIDATED`.
+
+P6-T02 measured the real cache against the canonical item population and validated D-037's
+freshness-aware bounded query path.
+
+Final real-client measurements on 2026-08-29:
+
+```text
+canonical item identities                 = 23336
+itemcache records                         =  7119
+cache records matching canonical identity =  6667
+cache-only native IDs                     =   452
+canonical IDs missing from cache          = 16669
+bounded missing-ID probe                  =     5
+refresh-proven direct observations        =     3
+unknown probe outcomes                    =     2
+canonical DB unchanged                    =  true
+```
+
+A pre-probe cache miss plus successful current-session load plus post-session raw WDB record is now a
+`refresh_proven_direct_observation`. Session-only successful loads, pre-existing historical cache
+records and unknown/timeouts remain distinct evidence classes. Missing/timeout never becomes negative
+item evidence.
+
+The result proves a safe direct acquisition mechanism but also proves that spontaneous cache coverage
+is too partial to justify an unqualified whole-cache canonical import. Migration 14 therefore remains
+unpromoted.
+
+### P6-T03 — resumable direct-Octo acquisition campaign for known canonical cache misses
+
 Status: `READY_FOR_IMPLEMENTATION`.
 
-Measure actual `itemcache.wdb` coverage against the known item population and establish whether/how a
-bounded selected item set can be refreshed or directly queried with observable currentness evidence.
-Keep cache absence unknown, avoid arbitrary ID brute force and keep the canonical DB read-only.
+Turn the validated five-ID P6-T02 probe into a conservative, resumable acquisition workflow over known
+canonical item IDs that are absent from the current cache.
 
-Use the measured freshness/coverage result to route one of:
+Required boundaries:
 
-- broader/full item template/stat ingestion;
-- weapon damage/speed/block semantics;
-- item effects/spell/tooltip semantics;
-- a field-specific OctoDB/Tortoise/Vanilla fallback where direct coverage is insufficient;
-- explicit migration-14 canonical promotion under D-029 after the intended cumulative data state is
-  defined and validated.
+- canonical-ID input only; no arbitrary numeric brute force;
+- preserve the validated one-outstanding-query behavior and conservative retry/timeout semantics;
+- bounded batches and explicit user-triggered sessions;
+- durable ignored checkpoint/ledger with per-ID status, session metadata and raw-record hashes when
+  available;
+- deterministic selection of the next missing candidates and safe resume after interruption;
+- timeout/missing remains unknown;
+- canonical DB remains read-only at migration 13;
+- no migration-14 promotion during P6-T03.
 
-Potential later P6 work remains consumer-driven and field-specific; no universal source priority is
-introduced.
+The P6-T03 result should quantify how much fresh direct coverage can be acquired reproducibly and route
+whether the next step is broad migration-14 ingestion/promotion, continued acquisition, or a
+field-specific fallback source for unresolved coverage.
+
+Potential later P6 work remains consumer-driven and field-specific, including weapon damage/speed/
+block, item effects/spells/tooltips, and explicit fallback adapters where direct Octo coverage is not
+sufficient. No universal source priority is introduced.
 
 ## P7 — query/exploration layer
 
