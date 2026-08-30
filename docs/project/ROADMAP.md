@@ -103,7 +103,7 @@ Later P6 ingestion remains consumer-driven; another acquisition tranche is not a
 
 ## P7 — query/exploration layer
 
-Status: `IN_PROGRESS`; validated through P7-T02. Next task is P7-T03.
+Status: `IN_PROGRESS`; validated through P7-T03. P7-T04 is `READY_FOR_IMPLEMENTATION`.
 
 P7 builds richer provenance-aware cross-domain exploration:
 
@@ -182,27 +182,64 @@ docs/project/tasks/P7-T02.md
 
 ### P7-T03 — provenance-aware quest exploration and progression/geography query
 
-Status: `READY_FOR_IMPLEMENTATION`.
+Status: `VALIDATED`.
 
-Build a stable bounded read-only quest search/exploration surface over the validated P3 domain. Reuse
-`quest_by_id()`, objective and item-fact read models to expose/filter relation-specific giver, finisher
-and objective geography; prerequisite `any_of` sets and derived follow-ups; close sets kept separate;
-and explicit required/provided/reward item facts with provenance and unresolved/unknown semantics.
+Delivered a stable bounded read-only quest search/exploration surface over the validated P3 domain. It
+keeps giver, finisher and objective geography role-specific; preserves unresolved/unlocated evidence;
+retains `any_of` prerequisite semantics and derived follow-ups; isolates close sets from progression;
+and exposes P3-T05 required/provided/guaranteed/choice item facts without reinterpretation.
 
-Do not collapse quests to one primary zone or invent linear chain-step numbers for branching/ambiguous
-progression graphs. Generalized dungeon classification and graphical UI remain later work.
+Traversal is deterministic, bounded and cycle-safe. Breadth-first depth is explicitly derived edge
+distance rather than a canonical chain-step number. No migration, source-selection rule, persisted
+`quest -> zone` truth, dungeon classifier, route planner or graphical UI was introduced.
 
-Task contract:
+Human repository gates and accepted-canonical Level 2 completed on 2026-08-30. The validator observed
+6,498 canonical quest identities, representative giver/finisher/objective/progression/item/Turtle and
+unlocated-endpoint cases, FK/integrity success and byte-identical preservation of the accepted
+canonical SHA. Final marker:
+
+```text
+P7_T03_LOCAL_VALIDATION_OK
+```
+
+Contract:
+
+```text
+docs/project/P7_QUEST_QUERY_CONTRACT.md
+```
+
+Task/closeout:
 
 ```text
 docs/project/tasks/P7-T03.md
 ```
 
+### P7-T04 — provenance-aware recipe/reagent/acquisition exploration
+
+Status: `READY_FOR_IMPLEMENTATION`.
+
+Compose the validated P4 recipe identity/skill-line/output/reagent/learning-source domain with the P7
+item acquisition and quest/geography surfaces. The first bounded recipe consumer should make it
+practical to search recipes, inspect exact reagents and quantities, inspect output items, and explain
+how a recipe is learned through teaching items, trainers or quest reward spells while retaining native
+IDs, provenance, unresolved identities and conservative unknown geography/acquisition semantics.
+
+Teaching-item availability must remain derived through P2/P7-T02 item acquisition; trainer geography
+through P1 creature spawns; and quest-learning context through P3/P7-T03. Do not persist simplified
+`recipe -> vendor`, `recipe -> loot source` or `recipe -> zone` primary truths.
+
+Task contract:
+
+```text
+docs/project/tasks/P7-T04.md
+```
+
 ### Later P7 tasks
 
-Later bounded tasks may add richer item field families, weighted scoring, saved queries/comparisons,
-quest exploration, recipe traversal, ownership/inventory integration and other consumer capabilities as
-concrete needs emerge. Coverage gaps should drive explicit P6 work rather than silent fallback logic.
+After P7-T04, later bounded tasks may add richer item field families, weighted scoring, saved
+queries/comparisons, dungeon/zone quest views built on P7-T03, ownership/inventory integration and
+other consumer capabilities as concrete needs emerge. Coverage gaps should drive explicit P6 work
+rather than silent fallback logic.
 
 ## P8 — UI/application workflow
 
