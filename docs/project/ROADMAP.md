@@ -27,7 +27,7 @@ effective-view reconciliation.
 
 ## P3 — quests
 
-Status: `VALIDATED` through P3-T05B.
+Status: `VALIDATED` through P3-T05.
 
 Delivered quest identity/endpoints, restrictions/progression, structured objectives, item
 requirements/rewards and conservative Octo/Turtle source-specific evidence.
@@ -103,7 +103,7 @@ Later P6 ingestion remains consumer-driven; another acquisition tranche is not a
 
 ## P7 — query/exploration layer
 
-Status: `IN_PROGRESS`; validated through P7-T01. Next task is P7-T02.
+Status: `IN_PROGRESS`; validated through P7-T02. Next task is P7-T03.
 
 P7 builds richer provenance-aware cross-domain exploration:
 
@@ -148,27 +148,54 @@ docs/project/P7_ITEM_QUERY_CONTRACT.md
 
 ### P7-T02 — provenance-aware item acquisition/source exploration
 
-Status: `READY_FOR_IMPLEMENTATION`.
+Status: `VALIDATED`.
 
-Compose P7-T01 item predicates with the validated P2 direct/reference/vendor acquisition graph and P1
-derived geography. The bounded surface should expose/filter known acquisition type, known path drop
-chance and known zone/map context while preserving primitive provenance, separate acquisition paths,
-unlocated-source diagnostics and conservative unknown semantics.
+Implemented the composition of P7-T01 item predicates with the validated P2 direct/reference/vendor
+acquisition graph and P1 derived geography. The bounded surface now exposes/filters:
 
-This is the next direct step toward queries such as:
+- known acquisition path kind and source-template kind;
+- known path-level drop chance without probability combination;
+- known derived zone/map context;
+- primitive acquisition/reference/location provenance;
+- unlocated known sources;
+- conservative acquisition `unknown` when no known matching path can prove the requested predicate;
+- deterministic bounded library/JSON output and a read-only CLI.
+
+No migration, `item -> zone` primary truth, combined probability model, global source-priority rule or
+new P6 acquisition tranche was introduced. `vendor_max_count` remains distinct from drop chance.
+
+Human Level 2 completed on 2026-08-30. The validator confirmed 13,113 item identities with
+materialized P2 acquisition, representative direct/reference/vendor/located/unknown/template+acquisition
+queries, FK/integrity success and byte-identical preservation of the accepted canonical SHA.
+
+Contract:
 
 ```text
-Leather chest items, required level <= 40, Agility >= 10, Stamina >= 8,
-obtainable from a known source with drop chance >= 5% in a requested zone/map.
+docs/project/P7_ITEM_ACQUISITION_QUERY_CONTRACT.md
 ```
 
-P7-T02 is read-only and must not add `item -> zone` primary truth, combine drop probabilities, trigger
-new P6 acquisition, or turn missing source/geography evidence into universal negative facts.
+Task contract and validation record:
+
+```text
+docs/project/tasks/P7-T02.md
+```
+
+### P7-T03 — provenance-aware quest exploration and progression/geography query
+
+Status: `READY_FOR_IMPLEMENTATION`.
+
+Build a stable bounded read-only quest search/exploration surface over the validated P3 domain. Reuse
+`quest_by_id()`, objective and item-fact read models to expose/filter relation-specific giver, finisher
+and objective geography; prerequisite `any_of` sets and derived follow-ups; close sets kept separate;
+and explicit required/provided/reward item facts with provenance and unresolved/unknown semantics.
+
+Do not collapse quests to one primary zone or invent linear chain-step numbers for branching/ambiguous
+progression graphs. Generalized dungeon classification and graphical UI remain later work.
 
 Task contract:
 
 ```text
-docs/project/tasks/P7-T02.md
+docs/project/tasks/P7-T03.md
 ```
 
 ### Later P7 tasks
