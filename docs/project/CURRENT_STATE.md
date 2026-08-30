@@ -5,24 +5,22 @@ additional task-specific context it points to.
 
 ## Source of truth and integration state
 
-Tracked GitHub source of truth currently visible to this closeout:
+GitHub source of truth was re-resolved during P7-T04 closeout and still pointed to:
 
 ```text
 GitHub repository: kuspitau/OctoGameBDD
 branch: main
-visible head: 0034abb9e2bb657b286515820690606f981fda32
-commit: Validate P7-T02 provenance-aware item acquisition exploration and route P7-T03
+tracked head: e9edbd30afa852f27a422f826271d3ba7e58dde1
+commit: Validate P7-T03 quest exploration and route P7-T04
 ```
 
-P7-T03 was implemented and fully validated as a local delta on that base. This closeout is therefore
-**stacked on the complete local P7-T03 implementation**. Do not apply only this closeout to a bare
-`0034abb...` checkout; the P7-T03 implementation files from the preceding handoff must already be
-present in the working tree.
+The human working tree already contains the P7-T04 implementation handoff validated below. This
+closeout is therefore intentionally **stacked on that local P7-T04 delta**; it is not a standalone
+patch against `e9edbd30...`.
 
-After the human commits and pushes the complete P7-T03 implementation + this closeout, the actual new
-GitHub `main` head supersedes `0034abb...`. Every fresh conversation must resolve that current head
-again before editing. P7-T04 must not be implemented against bare `0034abb...` while assuming P7-T03
-exists.
+Commit and push the complete validated P7-T04 working tree plus this closeout before starting P7-T05.
+A fresh conversation must resolve the actual current GitHub `main` again and must not implement P7-T05
+if `main` still lacks the P7-T04 validated closure.
 
 ## Accepted cumulative canonical database
 
@@ -43,10 +41,10 @@ schema_version = 14
 SHA-256 = d57e0c79ac44d4fa0436b8c25e854a1d2b579d72dea1c327b23e9fe0fc4d1a8b
 ```
 
-P7-T03 was a read-only consumer task. It did not mutate either SQLite file, replace the rollback,
-apply a migration, alter source priority or authorize another P6 acquisition tranche.
+P7-T04 was a read-only consumer task. Its validated closure did not mutate either SQLite file,
+replace the rollback, alter source priority or authorize another P6 acquisition tranche.
 
-## Validated phase state
+## Phase state
 
 ```text
 P0  foundation/provenance                         VALIDATED
@@ -56,14 +54,18 @@ P3  quests                                        VALIDATED through P3-T05
 P4  spells/recipes/reagents/acquisition           VALIDATED through P4-T04
 P5  provenance/coverage/conflict audit            VALIDATED through P5-T08
 P6  broader item-template acquisition/promotion   VALIDATED through P6-T05
-P7  query/exploration                             VALIDATED through P7-T03; P7-T04 READY
+P7  query/exploration                             VALIDATED through P7-T04;
+                                                    P7-T05 READY_FOR_IMPLEMENTATION
 P8  UI/application workflow                       PLANNED
 ```
 
 P7-T01 remains the authoritative item identity/template/stat predicate layer. P7-T02 composes that
-with item acquisition/source geography. P7-T03 is now the authoritative bounded quest exploration,
-relation-specific geography and prerequisite/follow-up traversal layer. Missing materialization or
-geography remains unknown/not-proven unless the underlying validated source contract proves a negative.
+with item acquisition/source geography. P7-T03 remains the authoritative bounded quest exploration,
+relation-specific geography and prerequisite/follow-up traversal layer. P7-T04 adds a validated bounded
+recipe consumer surface on top of those layers without changing their source semantics.
+
+Missing materialization or derived geography remains unknown/not-proven unless the underlying
+validated source contract explicitly proves a negative.
 
 ## P7-T03 validated closure — 2026-08-30
 
@@ -88,80 +90,130 @@ tests/test_quest_search.py
 scripts/validate_p7_t03.py
 ```
 
-Validated semantics to preserve:
+Validated semantics to preserve include relation-specific giver/finisher/objective geography,
+`any_of` prerequisites, derived follow-ups, separate close sets, explicit unresolved evidence and
+strict read-only SQLite access.
 
-- canonical quest ID/title search and known quest/minimum-level filtering use explicit
-  `known_match` / `known_non_match` / `unknown` states;
-- raw race/class masks remain raw source-domain values;
-- giver, finisher and objective geography are distinct positive-evidence roles rather than one
-  fabricated `quest -> zone` truth;
-- same-role zone+map predicates must be satisfied by the same concrete known location;
-- known relations with missing geography remain known relations with unknown geography;
-- selected-but-unmaterialized endpoint/prerequisite/close IDs are retained from existing provenance;
-- prerequisites retain `any_of` semantics; follow-ups are derived reverse prerequisite membership;
-- close/exclusive sets remain separate from progression;
-- prerequisite/follow-up traversal is bounded, deterministic, cycle-safe and reports BFS depth only as
-  a derived edge distance, never a canonical linear chain step;
-- P3-T04 objective membership and P3-T05 required/provided/guaranteed/choice item facts remain distinct;
-- SQLite access is strict read-only `mode=ro`;
-- no migration, source-selection rule or canonical mutation was introduced.
-
-Human local gates after the final Ruff/read-model correction all passed:
-
-```text
-python -m pytest -q                         PASS
-python -m ruff check src tests              PASS
-python -m compileall -q src tests scripts   PASS
-```
-
-Dedicated accepted-canonical Level-2 validation passed:
+Human local gates and accepted-canonical Level 2 passed with:
 
 ```text
 P7_T03_LOCAL_VALIDATION_OK
 canonical_sha256=60aeb4093fa68e6b3a7a8c513e5a127862d88db8bc9aab4f6f3e4a0f4c0d5a23
 schema_version=14
 quest_identities=6498
-located_giver_sample_quest_id=5
-located_finisher_sample_quest_id=2
-located_objective_sample_quest_id=7
-prerequisite_sample_quest_id=2
-prerequisite_sample_member_id=6383
-close_sample_quest_id=96
-required_item_sample_quest_id=2
-reward_item_sample_quest_id=16
-turtle_selected_sample_quest_id=105
-unlocated_endpoint_sample_quest_id=96
 foreign_key_check=[]
 integrity_check=ok
 canonical_db_unchanged=true
 ```
 
-The canonical DB remained byte-identical. P7-T03 is `VALIDATED` and is no longer the active task.
+P7-T03 is `VALIDATED` and is not the active implementation task.
 
-## Active task
+## P7-T04 validated closure — 2026-08-31
+
+Task/validation record:
 
 ```text
-P7-T04 — provenance-aware recipe/reagent/acquisition exploration
+docs/project/tasks/P7-T04.md
+```
+
+Durable query contract:
+
+```text
+docs/project/P7_RECIPE_QUERY_CONTRACT.md
+```
+
+Validated implementation surfaces:
+
+```text
+src/octogamedb/recipe_search.py
+src/octogamedb/recipe_cli.py
+tests/test_recipe_search.py
+scripts/validate_p7_t04.py
+```
+
+Validated semantics include:
+
+- recipe ID/crafting-spell name search;
+- same-membership skill-line ID/name and required-skill filtering;
+- native output/reagent item filtering while keeping canonical resolution separate;
+- all output/reagent slots retained independently, including unresolved native IDs;
+- exact validated reagent quantities;
+- teaching-item, direct/template trainer and quest-reward-spell learning paths kept separate;
+- learning proof kind, acquisition wrapper spell and selected provenance exposed;
+- teaching-item acquisition composed through P7-T02;
+- trainer geography composed through P1 world locations;
+- quest-learning context composed through P7-T03;
+- teaching/trainer/quest geography roles kept distinct;
+- derived acquisition/geography filters use positive evidence or `unknown`;
+- deterministic bounded JSON-friendly output and strict read-only CLI.
+
+Human repository gates passed:
+
+```text
+pytest --basetemp="$env:TEMP\OctoGameDB_pytest"
+336 passed in 13.90s
+
+python -m ruff check src tests
+All checks passed!
+
+python -m compileall -q src tests
+PASS
+```
+
+Accepted-canonical Level 2 passed:
+
+```text
+P7_T04_LOCAL_VALIDATION_OK
+canonical_sha256=60aeb4093fa68e6b3a7a8c513e5a127862d88db8bc9aab4f6f3e4a0f4c0d5a23
+schema_version=14
+recipe_identities=1739
+identity_skill_output_sample_recipe_id=37
+multi_reagent_sample_recipe_id=37
+teaching_item_sample_recipe_id=37
+teaching_item_sample_native_item_id=16
+located_teaching_item_sample_recipe_id=37
+located_teaching_item_sample_item_id=16
+located_direct_trainer_sample_recipe_id=587
+located_direct_trainer_sample_entry=198
+template_trainer_sample_recipe_id=41001
+template_trainer_sample_entry=61906
+quest_learning_sample_recipe_id=9972
+quest_learning_sample_quest_id=2773
+unresolved_learning_sample_recipe_id=597
+unresolved_learning_sample_kind=teaching_item
+unresolved_learning_sample_native_id=1099
+foreign_key_check=[]
+integrity_check=ok
+canonical_db_unchanged=true
+```
+
+The sample IDs are observations only. The canonical remained byte-identical. P7-T04 is `VALIDATED`.
+
+## Active task / next action
+
+```text
+P7-T05 — provenance-aware creature/gameobject exploration and role/geography query
 status: READY_FOR_IMPLEMENTATION
 ```
 
 Task contract:
 
 ```text
-docs/project/tasks/P7-T04.md
+docs/project/tasks/P7-T05.md
 ```
 
-P7-T04 is the next bounded consumer task because P4-T01..T04 already validate recipe identity,
-skill-line requirements, outputs, reagents and direct learning sources, while P7-T01..T03 now provide
-reusable item acquisition and quest/geography exploration. The task should compose those existing
-surfaces rather than introduce new source acquisition or schema.
+P7-T05 should provide the missing first-class creature/gameobject consumer surface by composing the
+validated P1 world identities/spawns with relevant P2 acquisition/vendor, P3 quest-role/objective and
+P4 trainer evidence. Template entities and spawn instances remain distinct; geography remains derived
+from spawn evidence; unresolved/unlocated relations remain explicit.
 
-Before implementation, a fresh conversation must resolve the actual current GitHub `main` head and
-confirm that the complete P7-T03 implementation/closeout has been committed. Then inspect only the P4
-recipe contracts/read paths and the P7 composition surfaces needed by `docs/project/tasks/P7-T04.md`.
+Do not begin P7-T05 against the currently observed GitHub head `e9edbd30...`. First commit/push the
+validated P7-T04 implementation plus closeout, then resolve the new `main` and use that as the task
+base.
 
 ## Routing constraints that remain active
 
 Further P6 acquisition remains consumer-driven. Weapon damage/speed/block, item effects/tooltips,
-weighted scores, saved searches, ownership/inventory integration, generalized dungeon classification
-and graphical UI remain later bounded tasks unless a future task demonstrates a concrete prerequisite.
+weighted scores, saved searches, ownership/inventory integration, generalized dungeon classification,
+economics/profit modeling and graphical UI remain later bounded tasks unless a future task demonstrates
+a concrete prerequisite.

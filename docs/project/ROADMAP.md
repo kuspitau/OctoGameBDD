@@ -36,7 +36,8 @@ requirements/rewards and conservative Octo/Turtle source-specific evidence.
 
 Status: `VALIDATED` through P4-T04.
 
-Delivered recipe/spell identity, outputs, reagents and trainer/recipe-item acquisition sources.
+Delivered recipe/spell identity, outputs, reagents and teaching-item/trainer/quest-reward-spell
+learning sources while keeping acquisition wrappers and derived availability distinct.
 
 ## P5 — coverage, provenance and conflict auditing
 
@@ -103,7 +104,7 @@ Later P6 ingestion remains consumer-driven; another acquisition tranche is not a
 
 ## P7 — query/exploration layer
 
-Status: `IN_PROGRESS`; validated through P7-T03. P7-T04 is `READY_FOR_IMPLEMENTATION`.
+Status: `IN_PROGRESS`; validated through P7-T04. P7-T05 is `READY_FOR_IMPLEMENTATION`.
 
 P7 builds richer provenance-aware cross-domain exploration:
 
@@ -151,22 +152,12 @@ docs/project/P7_ITEM_QUERY_CONTRACT.md
 Status: `VALIDATED`.
 
 Implemented the composition of P7-T01 item predicates with the validated P2 direct/reference/vendor
-acquisition graph and P1 derived geography. The bounded surface now exposes/filters:
+acquisition graph and P1 derived geography. The bounded surface exposes/filters known acquisition path
+kind, source-template kind, path-level drop chance, derived zone/map context and primitive provenance.
+Unlocated or absent known paths remain conservative `unknown`; vendor metadata is not interpreted as
+drop chance.
 
-- known acquisition path kind and source-template kind;
-- known path-level drop chance without probability combination;
-- known derived zone/map context;
-- primitive acquisition/reference/location provenance;
-- unlocated known sources;
-- conservative acquisition `unknown` when no known matching path can prove the requested predicate;
-- deterministic bounded library/JSON output and a read-only CLI.
-
-No migration, `item -> zone` primary truth, combined probability model, global source-priority rule or
-new P6 acquisition tranche was introduced. `vendor_max_count` remains distinct from drop chance.
-
-Human Level 2 completed on 2026-08-30. The validator confirmed 13,113 item identities with
-materialized P2 acquisition, representative direct/reference/vendor/located/unknown/template+acquisition
-queries, FK/integrity success and byte-identical preservation of the accepted canonical SHA.
+Human Level 2 completed on 2026-08-30 and preserved the accepted canonical SHA byte-identically.
 
 Contract:
 
@@ -174,7 +165,7 @@ Contract:
 docs/project/P7_ITEM_ACQUISITION_QUERY_CONTRACT.md
 ```
 
-Task contract and validation record:
+Task/closeout:
 
 ```text
 docs/project/tasks/P7-T02.md
@@ -216,30 +207,67 @@ docs/project/tasks/P7-T03.md
 
 ### P7-T04 — provenance-aware recipe/reagent/acquisition exploration
 
-Status: `READY_FOR_IMPLEMENTATION`.
+Status: `VALIDATED`.
 
-Compose the validated P4 recipe identity/skill-line/output/reagent/learning-source domain with the P7
-item acquisition and quest/geography surfaces. The first bounded recipe consumer should make it
-practical to search recipes, inspect exact reagents and quantities, inspect output items, and explain
-how a recipe is learned through teaching items, trainers or quest reward spells while retaining native
-IDs, provenance, unresolved identities and conservative unknown geography/acquisition semantics.
+P7-T04 composes the validated P4 recipe identity/skill-line/output/reagent/learning-source domain with
+P7-T02 item acquisition, P1 world geography and P7-T03 quest exploration. The bounded consumer surface
+provides recipe/skill/output/reagent filtering, exact reagent quantities, separate teaching-item /
+direct-or-template-trainer / quest-reward-spell learning paths, selected provenance and conservative
+derived geography/acquisition semantics.
 
-Teaching-item availability must remain derived through P2/P7-T02 item acquisition; trainer geography
-through P1 creature spawns; and quest-learning context through P3/P7-T03. Do not persist simplified
-`recipe -> vendor`, `recipe -> loot source` or `recipe -> zone` primary truths.
+Human repository gates and accepted-canonical Level 2 completed on 2026-08-31. Observed closure:
 
-Task contract:
+```text
+336 passed in 13.90s
+All checks passed!
+P7_T04_LOCAL_VALIDATION_OK
+recipe_identities=1739
+foreign_key_check=[]
+integrity_check=ok
+canonical_db_unchanged=true
+canonical_sha256=60aeb4093fa68e6b3a7a8c513e5a127862d88db8bc9aab4f6f3e4a0f4c0d5a23
+```
+
+No migration, source ingestion, source-priority rule, probability combination or simplified primary
+`recipe -> vendor/loot/zone` relation was introduced.
+
+Contract:
+
+```text
+docs/project/P7_RECIPE_QUERY_CONTRACT.md
+```
+
+Task/closeout:
 
 ```text
 docs/project/tasks/P7-T04.md
 ```
 
+### P7-T05 — provenance-aware creature/gameobject exploration and role/geography query
+
+Status: `READY_FOR_IMPLEMENTATION`.
+
+Build the missing bounded first-class creature/gameobject consumer surface. Compose P1 template/spawn
+geography with already-validated relations from P2/P3/P4 while preserving the distinction between
+template identity, spawn evidence and semantic roles. The first task should support practical entity
+search plus inspection/filtering of known spawn geography and relevant loot/vendor/trainer/quest
+relations without materializing a simplified universal `entity -> zone` truth.
+
+Task contract:
+
+```text
+docs/project/tasks/P7-T05.md
+```
+
+P7-T05 must start only after the validated P7-T04 closeout is committed/pushed and the new GitHub
+`main` is resolved.
+
 ### Later P7 tasks
 
-After P7-T04, later bounded tasks may add richer item field families, weighted scoring, saved
-queries/comparisons, dungeon/zone quest views built on P7-T03, ownership/inventory integration and
-other consumer capabilities as concrete needs emerge. Coverage gaps should drive explicit P6 work
-rather than silent fallback logic.
+After P7-T05, later bounded tasks may add zone/dungeon views, richer item field families, weighted
+scoring, saved queries/comparisons, dungeon/zone quest views built on P7-T03, ownership/inventory integration,
+craft economics, recursive BOM analysis and other consumer capabilities as concrete needs emerge.
+Coverage gaps should drive explicit P6 work rather than silent fallback logic.
 
 ## P8 — UI/application workflow
 

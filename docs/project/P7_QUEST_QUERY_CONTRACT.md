@@ -1,6 +1,6 @@
 # P7 quest query contract
 
-Status: `IMPLEMENTED_AWAITING_LOCAL_VALIDATION`
+Status: `VALIDATED`
 
 Task: `P7-T03`
 
@@ -197,6 +197,22 @@ python -m octogamedb.quest_cli --quest-id 123 --traverse prerequisite --max-dept
 python -m octogamedb.quest_cli --quest-id 123 --traverse follow_up --max-depth 4 --json
 ```
 
+## Validation status
+
+P7-T03 completed repository gates and accepted-canonical Level-2 validation on 2026-08-30. The
+canonical migration-14 database remained byte-identical and the final marker was:
+
+```text
+P7_T03_LOCAL_VALIDATION_OK
+```
+
+The authoritative detailed validation record remains:
+
+```text
+docs/project/tasks/P7-T03.md
+docs/project/CURRENT_STATE.md
+```
+
 ## Non-goals and deferred work
 
 P7-T03 deliberately does not add:
@@ -210,4 +226,4 @@ P7-T03 deliberately does not add:
 - new quest ingestion;
 - saved searches or graphical UI.
 
-Those remain separately routed consumer tasks after this contract passes real-canonical validation.
+Those remain separately routed consumer tasks.
