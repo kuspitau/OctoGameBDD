@@ -1,143 +1,196 @@
-# Current State
+# Current Project State
 
-This file is the permanent task router. GitHub `main` is the tracked source of truth. Every new coding
-conversation must verify the actual current head before editing and account explicitly for any local
-validated delta not yet pushed.
+This file is the permanent task router. Read `AGENTS.md` first, then this file, then only the
+additional task-specific context it points to.
 
-## Integration baseline for this handoff
+## Source of truth and integration state
 
-GitHub `main` remained at the P6-T04 closeout while P6-T05 was implemented and validated locally:
+Tracked project source of truth:
 
 ```text
-ae1ce41e7c155a2f1327157c2b132682cb1d09ae
-Validate P6-T04 migration-14 canonical promotion and route P6-T05
+GitHub repository: kuspitau/OctoGameBDD
+branch: main
 ```
 
-This closeout is therefore stacked on the complete local P6-T05 implementation/hotfix/validation
-state. It must not be applied to a bare `ae1ce41e...` checkout without that stack.
-
-## Validated cumulative state
-
-P0 through **P6-T05** are `VALIDATED`.
-
-P6-T01 established direct-Octo item-template/stat semantics and migration-14 projection capability.
-P6-T02 established cache coverage/current-session freshness proof. P6-T03 established durable bounded
-acquisition. P6-T04 completed the first guarded migration-14 promotion. P6-T05 proved bounded
-migration-14 -> migration-14 incremental acquisition/promotion without weakening D-036/D-037.
-
-## Current accepted canonical DB
+The visible GitHub base at the time of the P7-T01 implementation/validation handoff was:
 
 ```text
-schema migration = 14 / 0014_item_template_facts.sql
+35c8a9da803c35348eb5602b7c203972d4a17d36
+Validate P6-T05 reusable migration-14 promotion workflow and route P7-T01
+```
+
+P7-T01 was then implemented and fully validated locally as a stacked delta before this closeout. This
+closeout is therefore also stacked on that complete local P7-T01 state. Do not apply this closeout to a
+bare `35c8a9d...` checkout without first reconciling the P7-T01 implementation files.
+
+After the human commits and pushes the complete P7-T01 implementation + closeout, the actual new
+GitHub `main` head supersedes `35c8a9d...`; every fresh conversation must resolve that current head
+again before editing.
+
+## Accepted cumulative canonical database
+
+The validated local canonical data baseline remains unchanged by P7-T01:
+
+```text
+data/generated/octogamedb.sqlite3
+schema_version = 14
+latest migration = 0014_item_template_facts.sql
 SHA-256 = 60aeb4093fa68e6b3a7a8c513e5a127862d88db8bc9aab4f6f3e4a0f4c0d5a23
 ```
 
-Immediate D-029 rollback is now the exact pre-P6-T05 migration-14 canonical:
+Immediate D-029 rollback:
 
 ```text
 data/generated/octogamedb_bak.sqlite3
+schema_version = 14
 SHA-256 = d57e0c79ac44d4fa0436b8c25e854a1d2b579d72dea1c327b23e9fe0fc4d1a8b
 ```
 
-The previous migration-13 baseline `623e29d8...a7613d7` remains historical P6-T04 input evidence, not
-the current rollback file.
+P7-T01 was a read-only consumer task. It did not mutate the canonical DB, replace D-029, apply a
+migration, or authorize another P6 acquisition tranche.
 
-SQLite DB files remain local/generated and must never enter Git or `changes.zip`.
-
-## P6-T05 validated closure — 2026-08-30
-
-The successful v5 run used two bounded real-client sessions and reached the required threshold before
-the 100-new-ID ceiling:
+## Validated phase state
 
 ```text
-attempted_unique = 19
-refresh_proven = 15
-retryable = 3
-remaining_new_unique_capacity = 81
+P0  foundation/provenance                         VALIDATED
+P1  world foundation                              VALIDATED through P1-T04
+P2  items/acquisition                             VALIDATED through P2-T04
+P3  quests                                        VALIDATED through P3-T05B
+P4  spells/recipes/reagents/acquisition           VALIDATED through P4-T04
+P5  provenance/coverage/conflict audit            VALIDATED through P5-T08
+P6  broader item-template acquisition/promotion   VALIDATED through P6-T05
+P7  query/exploration                             VALIDATED through P7-T01; P7-T02 READY
+P8  UI/application workflow                       PLANNED
 ```
 
-The final deterministic promotion plan recorded:
+P6-T05 accepted state relevant to current P7 work:
 
 ```text
-plan_revision = sha256:685f02faa83af9d0c7c7135e244e55702ec867c76670dc8b71bf2ce4ca59b952
-canonical_items = 23336
-cache_records = 6400
-cache_records_with_canonical_identity = 5995
-canonical_cache_coverage_ratio = 0.25689921
-canonical_item_ids_missing_from_cache_unknown = 17341
-cache_only_native_ids = 405
-eligible_item_count = 15
-already_current_noop_count = 3
+canonical item identities = 23336
+materialized item_templates = 18
+item_stat_modifiers = 14
+current matching WDB identity coverage measured during P6-T05 = 5995 / 23336
 ```
 
-Shadow validation passed with the real canonical byte-identical. The guarded real promotion then
-succeeded, replaced D-029 with the exact pre-promotion migration-14 bytes, kept migration 14, and left
-rollback available. The complete validation runner finished with exit code 0.
+The migration-14 projection remains intentionally partial. D-036/D-037 remain authoritative: cache or
+projection absence is unknown, never universal negative item evidence.
 
-Measured canonical promotion:
+## P7-T01 validated closure — 2026-08-30
 
-```text
-item_templates_promoted = 15
-item_templates_new_rows = 15
-item_stat_modifiers_promoted = 12
-item_stat_modifiers_net_new_rows = 12
-source_observations_added_first_pass = 330
-protected_selection_count = 0
-first_import rows_inserted / rows_updated = 27 / 0
-second_import rows_inserted / rows_updated = 0 / 0
-foreign_key_check = []
-integrity_check = ok
-```
-
-The authoritative retained local report is:
-
-```text
-data/generated/validation_logs/P6-T05_promote_20260830T173826Z.json
-```
-
-Active migration-14 acquisition/promotion tooling now defaults to
-`ACCEPTED_CANONICAL_BASELINE` (`60ae...`) and separate current generated artifacts
-(`p6_itemcache_*`). Historical P6-T05 replay is explicit with `--baseline p6-t05-input`, preserving
-`P6_T05_INPUT_BASELINE` (`d57e...`) without making it current again. The original
-`scripts/validate_p6_t03.py` remains historical migration-13 tooling and is reused only through the
-migration-14 adapter.
-
-Read-only current baseline verification:
-
-```powershell
-python scripts\validate_p6_t05.py verify-baseline
-```
-
-Expected: SHA `60ae...`, migration `14`, `foreign_key_check=[]`, `integrity_check=ok`.
-
-## Evidence semantics retained
-
-Automatic selection remains limited to `refresh_proven_direct_observation` with an exact current
-raw-record hash match. `historical_cache_only`, `session_observed_freshness_limited` and `unknown`
-remain ineligible. Cache-only IDs cannot fabricate canonical identity and manual/custom/protected
-selections remain protected.
-
-The Windows-safe D-029 protocol remains copy-before-lock: verify baseline and sidecars, copy and
-SHA-verify the backup, detect drift around the copy window, acquire `BEGIN IMMEDIATE`, mutate only the
-validated slice, then run idempotence/domain/FK/integrity checks and restore on failure.
-
-## Active task
-
-### P7-T01 — provenance-aware item query/filter contract
-
-**Status: `READY_FOR_IMPLEMENTATION`.**
-
-Task contract:
+Task:
 
 ```text
 docs/project/tasks/P7-T01.md
 ```
 
-P7-T01 starts the query/exploration layer over the validated migration-14 item-template/stat surface.
-It must explicitly expose incomplete coverage rather than treating the current slice as exhaustive.
-No new canonical mutation, schema migration, or source-authority rule belongs in P7-T01.
+Durable query contract:
+
+```text
+docs/project/P7_ITEM_QUERY_CONTRACT.md
+```
+
+Validated code/test surfaces introduced by the P7-T01 implementation stack:
+
+```text
+src/octogamedb/item_search.py
+src/octogamedb/item_query_cli.py
+tests/test_item_search.py
+scripts/validate_p7_t01.py
+```
+
+P7-T01 semantics to preserve:
+
+- query universe is canonical `items`, not only materialized `item_templates`;
+- template/stat predicates distinguish `known_match`, `known_non_match`, and `unknown`;
+- missing `item_templates` means unknown template/stat coverage;
+- for a materialized P6 template, the ten raw stat slots are complete, so a missing requested raw
+  stat type is a known non-match;
+- combined predicates use conservative conjunction: known false -> non-match; otherwise unknown ->
+  unknown; otherwise match;
+- no fallback/default fact may be manufactured;
+- selected `template.*` provenance is returned for materialized results;
+- sorting is deterministic and unknown sort values are last;
+- result pages are bounded to `1..1000`, while summary state counts are exhaustive over canonical
+  item identities;
+- the original P6 `query_item_templates()` compatibility helper remains available;
+- the P7 CLI opens SQLite read-only and performs no migration/acquisition.
+
+Agent Level-1 focused result:
+
+```text
+9 passed
+```
+
+Human standard local checks passed:
+
+```text
+python -m pip install -e ".[dev]"
+pytest --basetemp="$env:TEMP\OctoGameDB_pytest"
+python -m ruff check src tests
+python -m compileall -q src tests
+```
+
+The remaining autonomous Level-2 validation ran on a TEMP byte-identical copy of the accepted
+canonical DB and returned:
+
+```text
+P7_T01_LOCAL_VALIDATION_OK
+canonical_sha256=60aeb4093fa68e6b3a7a8c513e5a127862d88db8bc9aab4f6f3e4a0f4c0d5a23
+schema_version=14
+item_identities=23336
+materialized_templates=18
+unknown_templates=23318
+match_sample_item_id=3565
+nonmatch_sample_item_id=3565
+unknown_sample_item_id=1
+stat_sample=3565:type4>=3
+foreign_key_check=[]
+integrity_check=ok
+canonical_db_unchanged=true
+```
+
+The canonical DB remained byte-identical throughout. P7-T01 is `VALIDATED` and must not be re-run as
+the active task merely because a future conversation is fresh.
+
+## Active task
+
+```text
+P7-T02 — provenance-aware item acquisition/source exploration
+status: READY_FOR_IMPLEMENTATION
+```
+
+Task contract:
+
+```text
+docs/project/tasks/P7-T02.md
+```
+
+P7-T02 composes the validated P7-T01 item predicate surface with the existing P2 acquisition graph and
+P1 geography. It should expose/filter known direct/reference/vendor acquisition paths, known drop
+chance and derived zone/map context while preserving path provenance and conservative unknown
+semantics.
+
+### P7-T02 constraints to preserve
+
+- read-only consumer task; no canonical DB mutation;
+- no schema migration unless a concrete blocker is first demonstrated and routed separately;
+- no automatic P6 acquisition/promotion tranche;
+- no new global source-priority rule;
+- reuse existing `find_item_sources()` / P2 acquisition semantics rather than duplicating them;
+- direct/reference paths remain separate and their probabilities are never combined without an
+  explicit validated model;
+- vendor `max_count` is not drop chance;
+- acquisition geography remains derived through source template -> spawn -> zone/map; do not persist
+  arbitrary `item -> zone` truth;
+- unlocated sources remain valid known acquisition evidence with unknown geography;
+- absence of a path/geography must not become a negative item fact unless exact completeness is proven
+  from the relevant P2/P1 source-view evidence.
 
 ## Routing
 
-Implement **P7-T01** next. Further P6 acquisition remains consumer-driven and may be added later when
-P7 reveals a concrete coverage or field-family requirement.
+Implement **P7-T02** next after confirming the complete P7-T01 implementation/closeout has been
+committed to the actual current GitHub `main`.
+
+Further P6 acquisition remains consumer-driven. Weapon damage/speed/block, item effects/tooltips,
+weighted scores, saved searches, ownership, broad recipe/quest traversal and graphical UI remain later
+bounded tasks.

@@ -44,7 +44,7 @@ Status: `VALIDATED` through P5-T08.
 
 The bounded world-source conflict audit established that pfQuest/Turtle/Octo spawn disagreement is
 predominantly source-specific complete spawn-membership divergence. No global merge/source-promotion
-rule was justified; D-025/D-026 remained unchanged.
+rule was justified; D-025/D-026 remain unchanged.
 
 ## P6 — broader source ingestion and remaining domains
 
@@ -90,82 +90,96 @@ Status: `VALIDATED`.
 Completed the first explicit D-029 promotion cycle for migration 14. Automatic selection was limited
 to `refresh_proven_direct_observation` evidence with exact current raw-record hash match.
 
-Final real promotion:
-
-```text
-eligible/promoted item IDs      = 7886, 15784, 41278
-item_templates_promoted         = 3
-item_stat_modifiers_promoted    = 2
-second import inserts/updates   = 0 / 0
-foreign_key_check               = []
-integrity_check                 = ok
-canonical SHA-256               = d57e0c79ac44d4fa0436b8c25e854a1d2b579d72dea1c327b23e9fe0fc4d1a8b
-```
-
-Eleven older refresh-proven records were correctly excluded because the current WDB no longer
-contained a record matching the original proof hash.
-
 ### P6-T05 — migration-14 coverage expansion and incremental promotion
 
 Status: `VALIDATED`.
 
-Completed the bounded migration-14 -> migration-14 acquisition/promotion path without schema
-reapplication or freshness weakening. Final measured tranche:
+Validated the reusable migration-14 -> migration-14 acquisition/promotion workflow without schema
+reapplication or freshness weakening. The accepted canonical contains 23,336 item identities, 18
+materialized item templates and 14 materialized non-empty stat modifiers while remaining explicitly
+partial in template/stat coverage.
 
-```text
-attempted_unique = 19
-refresh_proven = 15
-retryable = 3
-eligible_item_count = 15
-already_current_noop_count = 3
-canonical item population = 23336
-current matching WDB identity coverage = 5995 / 23336 (0.25689921)
-plan revision = sha256:685f02faa83af9d0c7c7135e244e55702ec867c76670dc8b71bf2ce4ca59b952
-canonical SHA-256 = 60aeb4093fa68e6b3a7a8c513e5a127862d88db8bc9aab4f6f3e4a0f4c0d5a23
-```
-
-Shadow validation and the guarded real promotion passed; D-029 now contains the exact pre-P6-T05
-`d57e...` migration-14 bytes and rollback remains available. The real promotion added 15 new template
-rows and 12 net new stat-modifier rows; the immediate replay inserted/updated `0 / 0` and FK/integrity
-checks remained clean.
-
-Active migration-14 acquisition/promotion tooling defaults to the accepted `60ae...` baseline and
-separate `p6_itemcache_*` generated artifacts. Historical P6-T05 replay remains explicit through
-`--baseline p6-t05-input`; the original P6-T03 validator stays historical migration-13 tooling.
-
-This proves the incremental path and provides a larger real item/stat slice, but it does not claim
-whole-population template/stat completeness. Later P6 work remains consumer-driven, including weapon
-damage/speed/block, item effects/spells/tooltips, explicit fallback adapters, or another acquisition
-tranche only when a P7 requirement justifies it.
+Later P6 ingestion remains consumer-driven; another acquisition tranche is not automatic.
 
 ## P7 — query/exploration layer
 
-Status: `READY_FOR_IMPLEMENTATION`; next task is P7-T01.
+Status: `IN_PROGRESS`; validated through P7-T01. Next task is P7-T02.
 
-Build richer provenance-aware cross-domain exploration:
+P7 builds richer provenance-aware cross-domain exploration:
 
 - item acquisition/source exploration;
-- arbitrary item stat filtering/sorting and weighted scores;
+- arbitrary item stat filtering/sorting and later weighted scores;
 - quest chains/objectives/rewards;
 - creature/gameobject geography;
 - recipe/reagent/acquisition traversal;
 - configurable columns, saved searches and comparisons.
 
-The existing small P6 `item_search.py` surface is a useful vertical slice, not yet the final P7 query
-contract. P7 must expose partial/unknown coverage explicitly rather than presenting absent projections
-as negative game facts.
+The query layer must expose partial/unknown coverage explicitly rather than presenting absent
+projections as negative game facts.
 
 ### P7-T01 — provenance-aware item query/filter contract
 
+Status: `VALIDATED`.
+
+Delivered the first stable item identity/template/stat consumer contract over migration 14:
+
+- canonical item identity/name universe;
+- P6 scalar/stat filters;
+- deterministic sort/limit;
+- explicit `known_match` / `known_non_match` / `unknown` evaluation;
+- materialized vs unknown template/stat coverage;
+- selected `template.*` provenance trace;
+- deterministic JSON-friendly library output;
+- read-only `python -m octogamedb.item_query_cli` surface;
+- read-only real-canonical validation with byte-level SHA preservation.
+
+Human Level 2 completed on 2026-08-30. The accepted canonical remained byte-identical and the final
+marker was:
+
+```text
+P7_T01_LOCAL_VALIDATION_OK
+```
+
+Contract:
+
+```text
+docs/project/P7_ITEM_QUERY_CONTRACT.md
+```
+
+### P7-T02 — provenance-aware item acquisition/source exploration
+
 Status: `READY_FOR_IMPLEMENTATION`.
 
-Define the first stable consumer-facing item-template/stat query contract over the validated
-migration-14 surface: filters, sorting, provenance/coverage trace and deterministic CLI/library output.
-No canonical mutation or new source-authority rule belongs in this task.
+Compose P7-T01 item predicates with the validated P2 direct/reference/vendor acquisition graph and P1
+derived geography. The bounded surface should expose/filter known acquisition type, known path drop
+chance and known zone/map context while preserving primitive provenance, separate acquisition paths,
+unlocated-source diagnostics and conservative unknown semantics.
+
+This is the next direct step toward queries such as:
+
+```text
+Leather chest items, required level <= 40, Agility >= 10, Stamina >= 8,
+obtainable from a known source with drop chance >= 5% in a requested zone/map.
+```
+
+P7-T02 is read-only and must not add `item -> zone` primary truth, combine drop probabilities, trigger
+new P6 acquisition, or turn missing source/geography evidence into universal negative facts.
+
+Task contract:
+
+```text
+docs/project/tasks/P7-T02.md
+```
+
+### Later P7 tasks
+
+Later bounded tasks may add richer item field families, weighted scoring, saved queries/comparisons,
+quest exploration, recipe traversal, ownership/inventory integration and other consumer capabilities as
+concrete needs emerge. Coverage gaps should drive explicit P6 work rather than silent fallback logic.
 
 ## P8 — UI/application workflow
 
 Status: `PLANNED`.
 
-Add the user-facing local browser UI after the query/data semantics and required real-data coverage are
+Add the user-facing local/browser UI after the query/data semantics and required real-data coverage are
 reliable.
