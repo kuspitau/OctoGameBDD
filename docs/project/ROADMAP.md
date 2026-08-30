@@ -48,19 +48,19 @@ rule was justified; D-025/D-026 remained unchanged.
 
 ## P6 — broader source ingestion and remaining domains
 
-Status: `VALIDATED` through P6-T04; P6-T05 is `READY_FOR_IMPLEMENTATION`.
+Status: `VALIDATED` through P6-T05.
 
 Current accepted canonical DB:
 
 ```text
 migration 14 / 0014_item_template_facts.sql
-SHA-256 = d57e0c79ac44d4fa0436b8c25e854a1d2b579d72dea1c327b23e9fe0fc4d1a8b
+SHA-256 = 60aeb4093fa68e6b3a7a8c513e5a127862d88db8bc9aab4f6f3e4a0f4c0d5a23
 ```
 
-Immediate D-029 rollback is the exact migration-13 baseline:
+Immediate D-029 rollback is the exact pre-P6-T05 migration-14 canonical:
 
 ```text
-623e29d83abd20335506d2a23dcbd525331de4f1bc10d38fccd7aa550a7613d7
+d57e0c79ac44d4fa0436b8c25e854a1d2b579d72dea1c327b23e9fe0fc4d1a8b
 ```
 
 ### P6-T01 — item template/stat source contract and bounded ingestion slice
@@ -107,27 +107,40 @@ contained a record matching the original proof hash.
 
 ### P6-T05 — migration-14 coverage expansion and incremental promotion
 
-Status: `READY_FOR_IMPLEMENTATION`.
+Status: `VALIDATED`.
 
-Use the now-accepted migration-14 canonical as the baseline for one bounded additional acquisition
-tranche and a safe incremental promotion. The task should remove obsolete migration-13 assumptions
-from P6 acquisition validators, preserve old evidence without treating it as current, and prove that
-new current records can be added to the migration-14 canonical without reapplying migration 14.
+Completed the bounded migration-14 -> migration-14 acquisition/promotion path without schema
+reapplication or freshness weakening. Final measured tranche:
 
-P6-T05 is driven by a concrete consumer need: P7 item/stat search should not begin against a canonical
-real-data slice containing only three promoted templates.
+```text
+attempted_unique = 19
+refresh_proven = 15
+retryable = 3
+eligible_item_count = 15
+already_current_noop_count = 3
+canonical item population = 23336
+current matching WDB identity coverage = 5995 / 23336 (0.25689921)
+plan revision = sha256:685f02faa83af9d0c7c7135e244e55702ec867c76670dc8b71bf2ce4ca59b952
+canonical SHA-256 = 60aeb4093fa68e6b3a7a8c513e5a127862d88db8bc9aab4f6f3e4a0f4c0d5a23
+```
 
-P6-T05 does **not** require exhaustive acquisition of every remaining candidate. After its bounded
-tranche, measured coverage should determine whether P7-T01 can start or whether another explicitly
-justified P6 coverage tranche is needed.
+Shadow validation and the guarded real promotion passed; D-029 now contains the exact pre-P6-T05
+`d57e...` migration-14 bytes and rollback remains available. The real promotion added 15 new template
+rows and 12 net new stat-modifier rows; the immediate replay inserted/updated `0 / 0` and FK/integrity
+checks remained clean.
 
-Potential later field-specific P6 work remains consumer-driven, including weapon damage/speed/block,
-item effects/spells/tooltips, and explicit fallback adapters where direct Octo evidence is insufficient.
-No universal source priority is introduced.
+Active migration-14 acquisition/promotion tooling defaults to the accepted `60ae...` baseline and
+separate `p6_itemcache_*` generated artifacts. Historical P6-T05 replay remains explicit through
+`--baseline p6-t05-input`; the original P6-T03 validator stays historical migration-13 tooling.
+
+This proves the incremental path and provides a larger real item/stat slice, but it does not claim
+whole-population template/stat completeness. Later P6 work remains consumer-driven, including weapon
+damage/speed/block, item effects/spells/tooltips, explicit fallback adapters, or another acquisition
+tranche only when a P7 requirement justifies it.
 
 ## P7 — query/exploration layer
 
-Status: `PLANNED`; blocked pending the P6-T05 coverage reassessment.
+Status: `READY_FOR_IMPLEMENTATION`; next task is P7-T01.
 
 Build richer provenance-aware cross-domain exploration:
 
@@ -139,7 +152,16 @@ Build richer provenance-aware cross-domain exploration:
 - configurable columns, saved searches and comparisons.
 
 The existing small P6 `item_search.py` surface is a useful vertical slice, not yet the final P7 query
-contract.
+contract. P7 must expose partial/unknown coverage explicitly rather than presenting absent projections
+as negative game facts.
+
+### P7-T01 — provenance-aware item query/filter contract
+
+Status: `READY_FOR_IMPLEMENTATION`.
+
+Define the first stable consumer-facing item-template/stat query contract over the validated
+migration-14 surface: filters, sorting, provenance/coverage trace and deterministic CLI/library output.
+No canonical mutation or new source-authority rule belongs in this task.
 
 ## P8 — UI/application workflow
 

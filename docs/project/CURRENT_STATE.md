@@ -1,219 +1,143 @@
 # Current State
 
 This file is the permanent task router. GitHub `main` is the tracked source of truth. Every new coding
-conversation must verify the actual current head before editing and must account explicitly for any
-validated local delta not yet pushed.
+conversation must verify the actual current head before editing and account explicitly for any local
+validated delta not yet pushed.
 
 ## Integration baseline for this handoff
 
-Visible GitHub `main` at the time of this closeout is:
+GitHub `main` remained at the P6-T04 closeout while P6-T05 was implemented and validated locally:
 
 ```text
-8e4dd342e9ceaec171b00d0ffab49bc47f52101a
-Validate P6-T03 direct-Octo acquisition campaign and route P6-T04
+ae1ce41e7c155a2f1327157c2b132682cb1d09ae
+Validate P6-T04 migration-14 canonical promotion and route P6-T05
 ```
 
-P6-T04 was implemented and fully validated locally on top of that commit, including the final Windows
-D-029 backup/locking corrections. This closeout is intentionally stacked on that complete local
-P6-T04 implementation state.
-
-Do not apply this closeout to a bare `8e4dd342...` checkout without first applying the complete local
-P6-T04 implementation/hotfix stack already validated on the user's machine. Commit and push the
-complete P6-T04 stack plus this closeout together so GitHub `main` again becomes the complete tracked
-source of truth.
+This closeout is therefore stacked on the complete local P6-T05 implementation/hotfix/validation
+state. It must not be applied to a bare `ae1ce41e...` checkout without that stack.
 
 ## Validated cumulative state
 
-P0 through **P6-T04** are `VALIDATED`.
+P0 through **P6-T05** are `VALIDATED`.
 
-P6-T01 established the bounded direct-Octo item-template/stat source and migration-14 projection
-capability. P6-T02 established cache coverage and current-session freshness proof. P6-T03 scaled that
-proof mechanism into a deterministic resumable campaign. P6-T04 completed the first D-029 canonical
-promotion of strictly eligible current item-template/stat evidence.
+P6-T01 established direct-Octo item-template/stat semantics and migration-14 projection capability.
+P6-T02 established cache coverage/current-session freshness proof. P6-T03 established durable bounded
+acquisition. P6-T04 completed the first guarded migration-14 promotion. P6-T05 proved bounded
+migration-14 -> migration-14 incremental acquisition/promotion without weakening D-036/D-037.
 
-## Canonical DB baseline
-
-The accepted canonical local DB is now:
+## Current accepted canonical DB
 
 ```text
 schema migration = 14 / 0014_item_template_facts.sql
-SHA-256 = d57e0c79ac44d4fa0436b8c25e854a1d2b579d72dea1c327b23e9fe0fc4d1a8b
+SHA-256 = 60aeb4093fa68e6b3a7a8c513e5a127862d88db8bc9aab4f6f3e4a0f4c0d5a23
 ```
 
-The immediate D-029 rollback file is the exact previous migration-13 canonical:
+Immediate D-029 rollback is now the exact pre-P6-T05 migration-14 canonical:
 
 ```text
 data/generated/octogamedb_bak.sqlite3
-SHA-256 = 623e29d83abd20335506d2a23dcbd525331de4f1bc10d38fccd7aa550a7613d7
+SHA-256 = d57e0c79ac44d4fa0436b8c25e854a1d2b579d72dea1c327b23e9fe0fc4d1a8b
 ```
 
-Both SQLite files remain generated/local and must never be committed or included in `changes.zip`.
+The previous migration-13 baseline `623e29d8...a7613d7` remains historical P6-T04 input evidence, not
+the current rollback file.
 
-## P6-T04 — final validated result — 2026-08-30
+SQLite DB files remain local/generated and must never enter Git or `changes.zip`.
 
-Task contract:
+## P6-T05 validated closure — 2026-08-30
+
+The successful v5 run used two bounded real-client sessions and reached the required threshold before
+the 100-new-ID ceiling:
 
 ```text
-docs/project/tasks/P6-T04.md
+attempted_unique = 19
+refresh_proven = 15
+retryable = 3
+remaining_new_unique_capacity = 81
 ```
 
-Promotion/source contract implemented by the local P6-T04 stack:
+The final deterministic promotion plan recorded:
 
 ```text
-docs/project/P6_ITEM_TEMPLATE_PROMOTION_CONTRACT.md
+plan_revision = sha256:685f02faa83af9d0c7c7135e244e55702ec867c76670dc8b71bf2ce4ca59b952
+canonical_items = 23336
+cache_records = 6400
+cache_records_with_canonical_identity = 5995
+canonical_cache_coverage_ratio = 0.25689921
+canonical_item_ids_missing_from_cache_unknown = 17341
+cache_only_native_ids = 405
+eligible_item_count = 15
+already_current_noop_count = 3
 ```
 
-### Accepted promotion policy
+Shadow validation passed with the real canonical byte-identical. The guarded real promotion then
+succeeded, replaced D-029 with the exact pre-promotion migration-14 bytes, kept migration 14, and left
+rollback available. The complete validation runner finished with exit code 0.
 
-Automatic managed selection is restricted to:
+Measured canonical promotion:
 
 ```text
-refresh_proven_direct_observation
+item_templates_promoted = 15
+item_templates_new_rows = 15
+item_stat_modifiers_promoted = 12
+item_stat_modifiers_net_new_rows = 12
+source_observations_added_first_pass = 330
+protected_selection_count = 0
+first_import rows_inserted / rows_updated = 27 / 0
+second_import rows_inserted / rows_updated = 0 / 0
+foreign_key_check = []
+integrity_check = ok
 ```
 
-and requires an exact raw-record SHA match between the current `itemcache.wdb` record and a persisted
-freshness proof.
-
-The following remain ineligible for automatic canonical selection:
+The authoritative retained local report is:
 
 ```text
-session_observed_freshness_limited
-historical_cache_only
-unknown
+data/generated/validation_logs/P6-T05_promote_20260830T173826Z.json
 ```
 
-Cache-only IDs do not create canonical identities. Timeout/missing evidence is never negative item
-evidence. Manual/custom or otherwise protected selections remain protected.
+Active migration-14 acquisition/promotion tooling now defaults to
+`ACCEPTED_CANONICAL_BASELINE` (`60ae...`) and separate current generated artifacts
+(`p6_itemcache_*`). Historical P6-T05 replay is explicit with `--baseline p6-t05-input`, preserving
+`P6_T05_INPUT_BASELINE` (`d57e...`) without making it current again. The original
+`scripts/validate_p6_t03.py` remains historical migration-13 tooling and is reused only through the
+migration-14 adapter.
 
-### Real evidence used by the accepted promotion
+Read-only current baseline verification:
 
-The final plan revision was:
-
-```text
-sha256:7852a2cfd54bbd139420d99e0f42f27c05a54c87611dde1174375da3dacbabc2
+```powershell
+python scripts\validate_p6_t05.py verify-baseline
 ```
 
-Final evidence-class totals observed by the plan:
+Expected: SHA `60ae...`, migration `14`, `foreign_key_check=[]`, `integrity_check=ok`.
 
-```text
-historical_cache_only                 =    85
-refresh_proven_direct_observation     =    14
-unknown                               = 15693
-```
+## Evidence semantics retained
 
-A previously used WDB was lost before final promotion. The conservative current-hash rule correctly
-excluded eleven historical refresh-proven records whose proven raw records were no longer present with
-matching current hashes.
+Automatic selection remains limited to `refresh_proven_direct_observation` with an exact current
+raw-record hash match. `historical_cache_only`, `session_observed_freshness_limited` and `unknown`
+remain ineligible. Cache-only IDs cannot fabricate canonical identity and manual/custom/protected
+selections remain protected.
 
-A fresh bounded P6-T02 recovery probe established three new current proofs. The only eligible/promoted
-item IDs were:
-
-```text
-7886
-15784
-41278
-```
-
-### Real canonical promotion
-
-The accepted real promotion produced:
-
-```text
-backup_sha256                         = 623e29d83abd20335506d2a23dcbd525331de4f1bc10d38fccd7aa550a7613d7
-canonical_sha256                      = d57e0c79ac44d4fa0436b8c25e854a1d2b579d72dea1c327b23e9fe0fc4d1a8b
-canonical_migration                   = 14
-rollback_available                    = true
-
-item_templates_promoted               = 3
-item_stat_modifiers_promoted          = 2
-protected_selection_count             = 0
-foreign_key_check                     = []
-integrity_check                       = ok
-```
-
-The import source revision was:
-
-```text
-sha256:982e7f4cd6ecc075669bdda5c21b4dc7711ef4e1d51806feb8edc721978f9445
-```
-
-First import:
-
-```text
-rows_read      = 3
-rows_accepted  = 3
-rows_inserted  = 5
-rows_updated   = 0
-rows_skipped   = 0
-errors         = 0
-warnings       = 0
-```
-
-Immediate second import proved canonical idempotence:
-
-```text
-rows_read      = 3
-rows_accepted  = 3
-rows_inserted  = 0
-rows_updated   = 0
-rows_skipped   = 0
-errors         = 0
-warnings       = 0
-```
-
-Representative promoted queries included item 15784 with template facts plus two raw stat modifiers
-(`stat_type=6, value=13` and `stat_type=7, value=12`).
-
-### D-029 Windows behavior
-
-The final validated Windows-safe promotion protocol creates and SHA-verifies the exact backup before
-the SQLite write lock, checks `PRAGMA data_version` plus file size/mtime around the copy window, rejects
-sidecar/drift conditions, then acquires `BEGIN IMMEDIATE` before any canonical mutation.
-
-This replaced the invalid Windows approach that attempted to sequentially raw-read the multi-gigabyte
-SQLite file while SQLite byte-range locks were already held.
-
-### Validation
-
-The complete non-destructive Level-2 rehearsal passed on dedicated copies:
-
-```text
-shadow migration/import/query/idempotence/integrity = passed
-guarded D-029 rehearsal promotion                   = passed
-rehearsal migration                                 = 14
-rehearsal foreign_key_check                         = []
-rehearsal integrity_check                           = ok
-real canonical remained migration 13 during rehearsal
-```
-
-The subsequent real promotion emitted:
-
-```text
-P6_T04_CANONICAL_PROMOTION_OK
-P6_T04_LOCAL_VALIDATION_COMPLETE
-```
-
-After the final validator/hotfix state, the user also reran the complete requested pytest, Ruff and
-compileall gates and reported all of them passing.
+The Windows-safe D-029 protocol remains copy-before-lock: verify baseline and sidecars, copy and
+SHA-verify the backup, detect drift around the copy window, acquire `BEGIN IMMEDIATE`, mutate only the
+validated slice, then run idempotence/domain/FK/integrity checks and restore on failure.
 
 ## Active task
 
-### P6-T05 — migration-14 item-template coverage expansion and incremental promotion
+### P7-T01 — provenance-aware item query/filter contract
 
 **Status: `READY_FOR_IMPLEMENTATION`.**
 
 Task contract:
 
 ```text
-docs/project/tasks/P6-T05.md
+docs/project/tasks/P7-T01.md
 ```
 
-Rationale: P6-T04 proves the canonical migration-14 path, but only three current item-template records
-are promoted. P7's arbitrary stat/item exploration would therefore have misleadingly sparse real-data
-coverage if started now.
+P7-T01 starts the query/exploration layer over the validated migration-14 item-template/stat surface.
+It must explicitly expose incomplete coverage rather than treating the current slice as exhaustive.
+No new canonical mutation, schema migration, or source-authority rule belongs in P7-T01.
 
-P6-T05 should adapt the acquisition/promotion workflow to the new accepted migration-14 baseline,
-perform one bounded additional current-session acquisition tranche over known canonical IDs, and
-support one safe incremental D-029 promotion without reapplying migration 14.
+## Routing
 
-After P6-T05 validation, reassess measured template/stat coverage before routing to P7-T01.
+Implement **P7-T01** next. Further P6 acquisition remains consumer-driven and may be added later when
+P7 reveals a concrete coverage or field-family requirement.
