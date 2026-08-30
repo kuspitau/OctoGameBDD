@@ -2,219 +2,213 @@
 
 ## Purpose
 
-OctoGameDB has two different kinds of project truth that must not be confused.
+OctoGameDB has two distinct sources of truth:
 
-- GitHub `main` is the validated source of truth for tracked code, schema migrations, importers,
-  tests, configuration examples, architecture decisions and project memory.
-- `data/generated/octogamedb.sqlite3` is the **canonical local data database**: the complete local
-  materialization of all gameplay-data stages that have been fully validated up to the current
-  project state.
+- GitHub `main` is the validated source of truth for tracked code, schema migrations, importers, tests,
+  architecture decisions and project memory.
+- `data/generated/octogamedb.sqlite3` is the validated cumulative **local canonical data database**.
 
-The SQLite file is intentionally not committed. It is local/generated, depends on machine-local
-source inputs, and must remain rebuildable from tracked code plus configured local sources.
+The SQLite file is intentionally generated/local, ignored by Git, and must remain rebuildable from
+tracked code plus configured local sources.
 
 ## Canonical paths
 
 ```text
 data/generated/octogamedb.sqlite3
-```
-
-is the canonical local database. The one-step D-029 rollback is:
-
-```text
 data/generated/octogamedb_bak.sqlite3
 ```
 
-Both remain ignored by Git and must never be included in `changes.zip`.
+`octogamedb_bak.sqlite3` is the one-step D-029 rollback state immediately preceding the latest accepted
+canonical mutation. Neither SQLite file may be committed or included in `changes.zip`.
 
-## Current baseline
+## Current accepted baseline — P6-T04 — 2026-08-30
 
-As of the P4-T04 closeout on 2026-08-26, the human has validated the cumulative local database
-through **P4-T04 / migration 13**.
+The human validated the cumulative local database through **P6-T04 / migration 14**.
 
 Latest applied migration:
 
 ```text
-0013_recipe_acquisition_sources.sql
+0014_item_template_facts.sql
 ```
 
-P4-T04 extends the validated recipe identity/reagent slice with explicit acquisition relations:
+Accepted canonical state:
 
 ```text
-recipe_teaching_items
-recipe_trainer_sources
-recipe_quest_learning_sources
+schema_version = 14
+SHA-256        = d57e0c79ac44d4fa0436b8c25e854a1d2b579d72dea1c327b23e9fe0fc4d1a8b
 ```
 
-These tables preserve native acquisition-source IDs, wrapper spell IDs and explicit learning-proof
-provenance. Teaching-item vendor/loot/quest/geography availability remains derived through existing
-item/source relations rather than being duplicated into recipe acquisition tables.
-
-The real canonical database was promoted only after successful disposable Level-2 validation and a
-guarded shadow promotion using the real local data/source files. Final post-promotion checks are:
+Immediate D-029 rollback:
 
 ```text
-schema_version                      = 13
-recipe_count                        = 1739
-teaching_item_count                 = 1065
-trainer_source_count                = 6376
-direct_trainer_source_count         = 5834
-template_trainer_source_count       = 542
-quest_learning_source_count         = 16
-dbc_proven_acquisition_count        = 7457
-server_fallback_acquisition_count   = 0
-unresolved_teaching_item_count      = 28
-unresolved_trainer_count            = 737
-unresolved_quest_learning_count     = 0
-foreign_key_check                   = []
-integrity_check                     = ok
+rollback schema_version = 13
+rollback SHA-256        = 623e29d83abd20335506d2a23dcbd525331de4f1bc10d38fccd7aa550a7613d7
 ```
 
-The second import during guarded promotion was canonically idempotent:
+The rollback file is an exact byte-for-byte copy of the accepted migration-13 canonical immediately
+before the P6-T04 write.
+
+### P6-T04 promoted data
+
+P6-T04 used the documented P6 item-template promotion policy and admitted only
+`refresh_proven_direct_observation` evidence whose raw-record SHA exactly matched the record currently
+present in `itemcache.wdb`.
+
+Accepted eligible/promoted IDs:
 
 ```text
-rows_inserted = 0
-rows_updated  = 0
+7886
+15784
+41278
 ```
 
-Validated P4-T04 source revisions:
+Observed promotion counts:
 
 ```text
-Octo DBC:
-sha256:f82d41ddbb77f5958d36b2483786c819de512128ef736142c758469718f7274d
-
-Tortoise semantic/source commit:
-61a8269151721f6467eddb05e7bed37704d0fc0b
-
-Bounded Tortoise SQL manifest:
-12b7c285b025d228768f0954a12a803a73cf6326d96a71e271308d3baac010b4
+item_templates_promoted       = 3
+item_stat_modifiers_promoted  = 2
+protected_selection_count     = 0
+foreign_key_check             = []
+integrity_check               = ok
 ```
 
-Validated Octo DBC layouts/counts remain:
+Source revision:
 
 ```text
-Spell.dbc             173 fields / 692 bytes / 28001 records
-SkillLine.dbc          22 fields /  88 bytes /   136 records
-SkillLineAbility.dbc   15 fields /  60 bytes /  6795 records
+octo-itemcache
+sha256:982e7f4cd6ecc075669bdda5c21b4dc7711ef4e1d51806feb8edc721978f9445
 ```
 
-The 28 unresolved teaching-item identities and 737 unresolved trainer relations preserve exact native
-IDs with nullable canonical foreign keys. They are reviewed coverage/provenance warnings, not
-fabricated identities or import failures. No quest-learning source remained unresolved and no trainer-template ID remained unmapped.
-
-All 7,457 selected learning proofs in this validated materialization came from exact matching Octo DBC
-`LEARN_SPELL` evidence. D-035 retains pinned Tortoise `spell_learn_spell` as a lower-authority fallback
-for future source snapshots when no matching Octo DBC edge exists; that fallback was not needed here.
-
-### Current rollback/canonical hashes
+Plan revision:
 
 ```text
-migration-12 rollback backup:
-6f9d9c44593225a67576df3be8caa06cbf157fbfb19233b9a932a83612ae5261
-
-validated migration-13 canonical:
-623e29d83abd20335506d2a23dcbd525331de4f1bc10d38fccd7aa550a7613d7
+sha256:7852a2cfd54bbd139420d99e0f42f27c05a54c87611dde1174375da3dacbabc2
 ```
 
-The `_bak` is the exact byte-for-byte canonical database immediately before P4-T04 promotion. It may
-remain until the next validated canonical mutation cycle replaces it.
-
-The canonical hash above is the authoritative observed real promotion result. A disposable shadow
-promotion may have a different byte-level hash because it is a separate generated SQLite artifact;
-shadow hashes are validation evidence, not acceptance constants for the real canonical file.
-
-## Historical P4-T03 baseline
-
-P4-T03 validated migration 12 / `0012_recipe_reagents.sql`. Its canonical hash was:
+First import accepted all three requested items and inserted five rows across the adopted template/stat
+projection:
 
 ```text
-6f9d9c44593225a67576df3be8caa06cbf157fbfb19233b9a932a83612ae5261
+rows_read      = 3
+rows_accepted  = 3
+rows_inserted  = 5
+rows_updated   = 0
+rows_skipped   = 0
 ```
 
-That exact file is now the current D-029 rollback backup after P4-T04 promotion. P4-T03 validated:
+The immediate second import proved idempotence:
 
 ```text
-recipe_count                   = 1739
-recipe_reagent_count           = 5801
-recipes_with_reagents          = 1721
-unresolved_reagent_count       = 85
-zero_quantity_reagent_count    = 0
-ignored_negative_reagent_slots = 0
+rows_read      = 3
+rows_accepted  = 3
+rows_inserted  = 0
+rows_updated   = 0
+rows_skipped   = 0
 ```
 
-## Historical P4-T02 baseline
+### Freshness/coverage interpretation
 
-P4-T02 validated migration 11 / `0011_recipe_identity.sql`. Its canonical hash was:
+The final promotion plan observed:
 
 ```text
-3e2a1b03dd688fc1b944665fcfa79cde68aacb537790f0c580480049a19ad8e7
+historical_cache_only                 =    85
+refresh_proven_direct_observation     =    14
+unknown                               = 15693
 ```
 
-P4-T02 validated 1,739 recipes, 15 represented skill lines, 1,739 outputs, 114 unresolved output
-targets and the same Octo DBC source revision later used by P4-T03/P4-T04.
+Only three records satisfied the current-WDB exact-hash condition at promotion time. Eleven older
+refresh-proven records were conservatively excluded because their current records were missing or no
+longer matched the proof hash after loss/replacement of the earlier WDB.
 
-## Historical P3-T05 baseline
+This is expected partial-positive coverage, not whole-population item-template coverage.
 
-P3-T05 had previously validated migration 10 / `0010_quest_item_facts.sql`. Its canonical hash was:
+## D-029 protocol
 
-```text
-9c637ab40c2c5e3c2843e6c7d52fb5c75bbe05f57d05e2ea4d48ae7bd03b127d
-```
+Before any future canonical write:
 
-Earlier P3 counts, source revisions and D-033 evidence remain documented in the corresponding P3 task
-closeouts rather than duplicated here.
+1. verify the current accepted canonical migration and SHA;
+2. reject unexpected SQLite sidecars or concurrent/drifting writers;
+3. create/replace `data/generated/octogamedb_bak.sqlite3` as an exact copy of the current canonical;
+4. SHA-verify the backup before mutation;
+5. acquire the required SQLite write lock;
+6. perform only the validated migration/import/reconciliation;
+7. run all task-required FK, integrity, idempotence and domain checks;
+8. restore from `_bak` if any required post-mutation validation fails.
 
-## Before mutating the canonical DB
+### Windows note validated by P6-T04
 
-Any future task that writes to `data/generated/octogamedb.sqlite3` must create an exact backup before
-the first mutation:
+On Windows, a sequential raw read of the multi-gigabyte SQLite file can fail when performed after
+SQLite byte-range locks are already held. The validated P6-T04 approach therefore:
 
-1. close any process/connection that may be writing the canonical DB;
-2. replace `data/generated/octogamedb_bak.sqlite3` with an exact copy of the current canonical DB;
-3. verify the copy when the task's validation protocol requires it;
-4. only then begin migrations/import/reconciliation.
+- verifies the accepted source baseline;
+- copies and SHA-verifies the raw backup **before** acquiring the write lock;
+- uses a live SQLite connection plus `PRAGMA data_version`, file size and mtime checks to detect drift
+  around the copy window;
+- rejects forbidden sidecars;
+- acquires `BEGIN IMMEDIATE` before the first canonical write.
 
-The `_bak` file is intentionally a one-step rollback snapshot, not historical version storage.
+Future promotion tooling must preserve equivalent fail-closed guarantees rather than reintroducing the
+raw-read-under-lock failure mode.
 
 ## Validation databases and experiments
 
-Prefer a dedicated copy for:
+Prefer a dedicated disposable copy for:
 
 - exploratory imports;
-- potentially destructive reconciliation tests;
-- first-run Level-2 validation of an unvalidated importer;
-- experiments whose outcome should not immediately become the new canonical state.
+- first-run Level-2 validation of a new importer/reconciliation path;
+- destructive or rollback tests;
+- promotion rehearsals.
 
 Normal safe sequence:
 
 ```text
-canonical DB
+accepted canonical
 -> dedicated validation copy
--> validate importer/reconciliation and invariants
--> create/replace canonical _bak
--> apply the validated evolution to canonical DB
--> final FK/integrity/domain checks
+-> validate complete evolution
+-> create/verify D-029 backup
+-> acquire guarded write access
+-> evolve real canonical
+-> final FK/integrity/domain/idempotence checks
+-> record new accepted SHA
 ```
+
+A shadow/rehearsal SQLite file may have a different byte-level SHA from the real promoted canonical.
+Only the observed real canonical hash becomes the acceptance constant.
 
 ## Failure and rollback
 
 If a canonical evolution fails after mutation:
 
 - stop further writes;
-- preserve diagnostics separately if needed;
-- restore `octogamedb.sqlite3` from `octogamedb_bak.sqlite3` before treating the local canonical
-  state as valid again.
+- preserve diagnostics separately;
+- restore `octogamedb.sqlite3` from `octogamedb_bak.sqlite3`;
+- reverify the restored migration/hash/integrity;
+- do not report the canonical DB as advanced.
 
-Do not report the canonical DB as advanced until the task's required Level-2 checks pass.
+## Historical accepted baseline — P4-T04 / migration 13
 
-## Successful evolution
+Before P6-T04 the accepted canonical baseline was:
 
-After a task is fully validated:
+```text
+schema_version = 13 / 0013_recipe_acquisition_sources.sql
+SHA-256        = 623e29d83abd20335506d2a23dcbd525331de4f1bc10d38fccd7aa550a7613d7
+```
 
-- `octogamedb.sqlite3` becomes the canonical local database through that task;
-- update `CURRENT_STATE.md`, `CANONICAL_DB.md` and the task closeout with real evidence/hashes;
-- `_bak` may remain as the immediately previous rollback state until the next mutation cycle;
-- never add either SQLite file to Git or a delta ZIP.
+That exact file is now the P6-T04 D-029 rollback backup. Detailed P4 recipe/acquisition counts and
+source revisions remain in the P4 task closeouts and Git history.
+
+Earlier accepted hashes retained for audit/history include:
+
+```text
+P4-T03 / migration 12:
+6f9d9c44593225a67576df3be8caa06cbf157fbfb19233b9a932a83612ae5261
+
+P4-T02 / migration 11:
+3e2a1b03dd688fc1b944665fcfa79cde68aacb537790f0c580480049a19ad8e7
+
+P3-T05 / migration 10:
+9c637ab40c2c5e3c2843e6c7d52fb5c75bbe05f57d05e2ea4d48ae7bd03b127d
+```
 
 ## Rebuildability
 
@@ -223,28 +217,25 @@ project must retain the ability to rebuild it from a fresh SQLite file using:
 
 - tracked migrations/importers;
 - `config.local.toml` source paths;
-- corresponding local source revisions;
-- the documented ordered import/reconciliation pipeline.
+- corresponding local/public source revisions;
+- documented ordered import/reconciliation pipelines.
 
-A clean rebuild is appropriate for integrity audits, source changes, uncertain provenance or schema
-transitions that require it. It should not be the default cost for every new task when a known-good
-canonical DB already exists.
+A clean rebuild is appropriate for integrity audits, uncertain provenance or schema/source transitions
+that require it. It is not the default cost of every new task.
 
 ## Agent rule
 
-When a coding conversation needs cumulative real data, it must not assume the database is absent
-merely because GitHub cannot expose it. The expected local path is:
+When cumulative real data is required, the expected local canonical path is:
 
 ```text
 data/generated/octogamedb.sqlite3
 ```
 
-The expected current validated baseline is migration 13 with SHA-256:
+The expected current accepted baseline is migration 14 with SHA-256:
 
 ```text
-623e29d83abd20335506d2a23dcbd525331de4f1bc10d38fccd7aa550a7613d7
+d57e0c79ac44d4fa0436b8c25e854a1d2b579d72dea1c327b23e9fe0fc4d1a8b
 ```
 
-If local validation needs that file and the conversation cannot inspect the user's filesystem, give
-the human exact validation commands/scripts against that path. Do not ask for the generated DB to be
-committed or packaged.
+Do not ask for the generated SQLite files to be committed or packaged. If a future task needs to write
+the canonical DB, it must follow this document and the task-specific D-029 validation protocol.

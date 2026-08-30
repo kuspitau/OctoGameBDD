@@ -1,0 +1,874 @@
+"""P6-T04 guarded migration-14 canonical promotion and Level-2 validator.
+
+The default ``validate`` mode is read-only with respect to the canonical database: it builds an
+exact freshness-bound promotion plan, copies the migration-13 canonical DB, and proves migration/
+import/query/idempotence/integrity on that disposable copy. ``promote`` repeats those gates, then
+creates the D-029 backup before touching the canonical DB and restores it on any failed gate.
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import shutil
+import sqlite3
+import sys
+import tomllib
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
+
+from octogamedb.db import apply_migrations, get_applied_migrations
+from octogamedb.importers.octo_itemcache import import_octo_itemcache_slice, parse_itemcache_wdb
+from octogamedb.item_search import query_item_templates
+from octogamedb.itemcache_campaign import load_ledger
+from octogamedb.itemcache_coverage import itemcache_record_hashes
+from octogamedb.itemcache_promotion import (
+    FRESHNESS_HISTORICAL_CACHE,
+    FRESHNESS_REFRESH_PROVEN,
+    FRESHNESS_SESSION_OBSERVED,
+    FRESHNESS_UNKNOWN,
+    PromotionPlan,
+    build_promotion_plan,
+    load_json_object,
+    proofs_from_p6_t02_report,
+    proofs_from_p6_t03_ledger,
+    sha256_file,
+    write_plan,
+)
+
+EXPECTED_BASELINE_SHA256 = "623e29d83abd20335506d2a23dcbd525331de4f1bc10d38fccd7aa550a7613d7"
+EXPECTED_BASELINE_MIGRATION = 13
+TARGET_MIGRATION = 14
+EXPECTED_TARGET_MIGRATION_NAME = "0014_item_template_facts.sql"
+
+DEFAULT_DB = Path("data/generated/octogamedb.sqlite3")
+DEFAULT_BACKUP = Path("data/generated/octogamedb_bak.sqlite3")
+DEFAULT_VALIDATION_DB = Path("data/generated/p6_t04_validation.sqlite3")
+DEFAULT_PLAN = Path("data/generated/p6_t04_promotion_plan.json")
+DEFAULT_LEDGER = Path("data/generated/p6_t03_campaign.json")
+DEFAULT_REPORT_DIR = Path("data/generated/validation_logs")
+DEFAULT_CONFIG = Path("config.local.toml")
+
+_MANAGED_P6_POLICIES = frozenset(
+    {
+        "p6-item-template/octo-itemcache",
+        "p6-item-template/octodb",
+        "p6-item-template/tortoise-fallback",
+        "p6-item-template/cmangos-fallback",
+    }
+)
+
+
+def progress(message: str) -> None:
+    print(message, flush=True)
+
+
+def timestamp() -> str:
+    return datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+
+
+def write_json(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+
+
+def schema_version(connection: sqlite3.Connection) -> int:
+    row = connection.execute(
+        "SELECT COALESCE(MAX(version), 0) FROM schema_migrations"
+    ).fetchone()
+    return int(row[0])
+
+
+def sqlite_sidecars(path: Path) -> list[Path]:
+    return [
+        candidate
+        for suffix in ("-wal", "-shm", "-journal")
+        if (candidate := Path(str(path) + suffix)).exists()
+    ]
+
+
+def assert_no_sidecars(path: Path) -> None:
+    sidecars = sqlite_sidecars(path)
+    if sidecars:
+        raise RuntimeError(
+            "SQLite sidecar(s) exist; close all writers/clients and resolve them before promotion: "
+            + ", ".join(str(path) for path in sidecars)
+        )
+
+
+def open_connection(path: Path) -> sqlite3.Connection:
+    connection = sqlite3.connect(str(path))
+    connection.row_factory = sqlite3.Row
+    connection.execute("PRAGMA foreign_keys = ON")
+    return connection
+
+
+def assert_canonical_baseline(path: Path) -> str:
+    if not path.is_file():
+        raise FileNotFoundError(f"Canonical DB not found at required D-029 path: {path}")
+    assert_no_sidecars(path)
+    digest = sha256_file(path)
+    if digest != EXPECTED_BASELINE_SHA256:
+        raise RuntimeError(
+            "Canonical DB does not match the accepted migration-13 baseline: "
+            f"expected={EXPECTED_BASELINE_SHA256} actual={digest}"
+        )
+    uri = f"file:{path.resolve().as_posix()}?mode=ro"
+    with sqlite3.connect(uri, uri=True) as connection:
+        version = int(
+            connection.execute(
+                "SELECT COALESCE(MAX(version), 0) FROM schema_migrations"
+            ).fetchone()[0]
+        )
+    if version != EXPECTED_BASELINE_MIGRATION:
+        raise RuntimeError(
+            f"Expected canonical migration {EXPECTED_BASELINE_MIGRATION}, found {version}"
+        )
+    return digest
+
+
+def read_wow_root(config_path: Path) -> Path | None:
+    if not config_path.is_file():
+        return None
+    with config_path.open("rb") as handle:
+        payload = tomllib.load(handle)
+    value = payload.get("source_paths", {}).get("wow_root")
+    if not isinstance(value, str) or not value.strip():
+        return None
+    return Path(value).expanduser()
+
+
+def find_itemcache(wow_root: Path, locale: str) -> Path:
+    roots = (wow_root / "WDB", wow_root / "Cache" / "WDB")
+    candidates: list[Path] = []
+    for root in roots:
+        candidates.append(root / locale / "itemcache.wdb")
+        candidates.append(root / "itemcache.wdb")
+        if root.is_dir():
+            candidates.extend(sorted(root.glob("*/itemcache.wdb")))
+
+    unique: list[Path] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        if not candidate.is_file():
+            continue
+        resolved = candidate.resolve()
+        key = str(resolved)
+        if key not in seen:
+            seen.add(key)
+            unique.append(resolved)
+
+    if not unique:
+        raise FileNotFoundError(
+            f"No itemcache.wdb found below configured wow_root {wow_root}; pass --itemcache"
+        )
+    exact = [path for path in unique if path.parent.name.lower() == locale.lower()]
+    if len(exact) == 1:
+        return exact[0]
+
+    header_matches: list[Path] = []
+    for path in unique:
+        try:
+            if parse_itemcache_wdb(path).header.locale.lower() == locale.lower():
+                header_matches.append(path)
+        except (OSError, ValueError):
+            continue
+    if len(header_matches) == 1:
+        return header_matches[0]
+    if len(unique) == 1:
+        return unique[0]
+    raise RuntimeError(f"Ambiguous itemcache.wdb candidates: {unique}; pass --itemcache")
+
+
+def resolve_itemcache(args: argparse.Namespace) -> Path:
+    if args.itemcache is not None:
+        path = args.itemcache.expanduser().resolve()
+        if not path.is_file():
+            raise FileNotFoundError(path)
+        return path
+    wow_root = read_wow_root(args.config)
+    if wow_root is None:
+        raise RuntimeError(
+            "[source_paths].wow_root is not configured; P6-T04 reuses the path already required by "
+            "P6-T02/P6-T03. Pass --itemcache explicitly if needed."
+        )
+    return find_itemcache(wow_root.expanduser().resolve(), args.locale)
+
+
+def discover_p6_t02_reports(report_dir: Path) -> list[Path]:
+    if not report_dir.is_dir():
+        return []
+    return sorted(report_dir.glob("P6-T02_refresh_probe_*.json"))
+
+
+def build_current_plan(args: argparse.Namespace) -> tuple[PromotionPlan, Path]:
+    canonical = args.db.resolve()
+    baseline_hash = assert_canonical_baseline(canonical)
+    cache_path = resolve_itemcache(args)
+    snapshot = parse_itemcache_wdb(cache_path)
+    cache_hash = sha256_file(cache_path)
+    current_hashes = itemcache_record_hashes(snapshot)
+
+    proofs = []
+    artifacts: list[dict[str, Any]] = []
+    report_paths = [path.resolve() for path in args.p6_t02_report]
+    if not report_paths:
+        report_paths = discover_p6_t02_reports(args.report_dir.resolve())
+    for report_path in report_paths:
+        report_hash = sha256_file(report_path)
+        report = load_json_object(report_path)
+        proofs.extend(
+            proofs_from_p6_t02_report(
+                report,
+                artifact_sha256=report_hash,
+                expected_canonical_sha256=baseline_hash,
+            )
+        )
+        artifacts.append(
+            {
+                "kind": "p6_t02_refresh_report",
+                "name": report_path.name,
+                "sha256": report_hash,
+            }
+        )
+
+    ledger_path = args.ledger.resolve()
+    if not ledger_path.is_file():
+        raise FileNotFoundError(
+            f"Validated P6-T03 campaign ledger not found: {ledger_path}. "
+            "P6-T04 must not infer freshness from the WDB alone."
+        )
+    ledger_hash = sha256_file(ledger_path)
+    ledger = load_ledger(ledger_path)
+    proofs.extend(
+        proofs_from_p6_t03_ledger(
+            ledger,
+            artifact_sha256=ledger_hash,
+            expected_canonical_sha256=baseline_hash,
+        )
+    )
+    artifacts.append(
+        {
+            "kind": "p6_t03_campaign_ledger",
+            "name": ledger_path.name,
+            "sha256": ledger_hash,
+        }
+    )
+
+    plan = build_promotion_plan(
+        canonical_sha256=baseline_hash,
+        canonical_migration=EXPECTED_BASELINE_MIGRATION,
+        itemcache_sha256=cache_hash,
+        itemcache_locale=snapshot.header.locale,
+        itemcache_client_version=snapshot.header.client_version,
+        current_record_sha256=current_hashes,
+        proofs=proofs,
+        evidence_artifacts=artifacts,
+    )
+    if not plan.eligible_item_ids:
+        raise RuntimeError(
+            "No exact refresh-proven WDB record is currently eligible. Historical/session-only/"
+            "unknown evidence is intentionally insufficient for automatic P6-T04 selection."
+        )
+
+    uri = f"file:{canonical.as_posix()}?mode=ro"
+    with sqlite3.connect(uri, uri=True) as connection:
+        placeholders = ",".join("?" for _ in plan.eligible_item_ids)
+        rows = connection.execute(
+            f"SELECT item_id FROM items WHERE item_id IN ({placeholders}) ORDER BY item_id",
+            plan.eligible_item_ids,
+        ).fetchall()
+    canonical_ids = {int(row[0]) for row in rows}
+    missing_identity = sorted(set(plan.eligible_item_ids) - canonical_ids)
+    if missing_identity:
+        raise RuntimeError(
+            "Refresh proof includes IDs without canonical item identity; placeholder creation is "
+            f"forbidden: {missing_identity}"
+        )
+
+    write_plan(args.plan.resolve(), plan)
+    progress(f"[plan] itemcache={cache_path}")
+    progress(f"[plan] plan_revision={plan.plan_revision}")
+    progress(f"[plan] eligible_item_count={len(plan.eligible_item_ids)}")
+    progress(
+        "[plan] evidence_class_counts="
+        + json.dumps(plan.evidence_class_counts, sort_keys=True, separators=(",", ":"))
+    )
+    progress(
+        "[plan] noneligible_unique_item_counts="
+        + json.dumps(plan.noneligible_class_item_counts, sort_keys=True, separators=(",", ":"))
+    )
+    if plan.excluded_refresh_proven:
+        progress(
+            "[plan] refresh_proven_but_current_hash_mismatch="
+            + ",".join(str(row["item_id"]) for row in plan.excluded_refresh_proven)
+        )
+    return plan, cache_path
+
+
+def protected_template_selections(
+    connection: sqlite3.Connection, item_ids: tuple[int, ...]
+) -> dict[int, tuple[int, str | None]]:
+    if not item_ids:
+        return {}
+    placeholders = ",".join("?" for _ in item_ids)
+    rows = connection.execute(
+        f"""
+        SELECT og.id, cs.observation_id, cs.selection_policy
+        FROM observation_groups AS og
+        JOIN canonical_selections AS cs ON cs.observation_group_id = og.id
+        WHERE og.subject_kind = 'item'
+          AND CAST(og.subject_key AS INTEGER) IN ({placeholders})
+          AND og.fact_key LIKE 'template.%'
+        """,
+        item_ids,
+    ).fetchall()
+    protected: dict[int, tuple[int, str | None]] = {}
+    for row in rows:
+        policy = None if row["selection_policy"] is None else str(row["selection_policy"])
+        if policy not in _MANAGED_P6_POLICIES:
+            protected[int(row["id"])] = (int(row["observation_id"]), policy)
+    return protected
+
+
+def attach_promotion_context(
+    connection: sqlite3.Connection,
+    *,
+    source_revision: str,
+    plan: PromotionPlan,
+    phase: str,
+) -> int:
+    row = connection.execute(
+        """
+        SELECT ib.id, ib.details_json
+        FROM import_batches AS ib
+        JOIN data_sources AS ds ON ds.id = ib.source_id
+        WHERE ds.source_key = 'octo-itemcache'
+          AND ib.source_revision = ?
+          AND ib.status = 'succeeded'
+        ORDER BY ib.id DESC
+        LIMIT 1
+        """,
+        (source_revision,),
+    ).fetchone()
+    if row is None:
+        raise RuntimeError("Could not locate the P6 itemcache import batch just written")
+    details: dict[str, Any]
+    if row["details_json"] is None:
+        details = {}
+    else:
+        parsed = json.loads(str(row["details_json"]))
+        if not isinstance(parsed, dict):
+            raise RuntimeError("P6 itemcache import details_json is not an object")
+        details = parsed
+    details["p6_t04_promotion"] = {
+        "phase": phase,
+        "plan_revision": plan.plan_revision,
+        "freshness_class": FRESHNESS_REFRESH_PROVEN,
+        "eligible_item_count": len(plan.eligible_item_ids),
+        "eligible_items": [
+            {
+                "item_id": int(item["item_id"]),
+                "current_record_sha256": item["current_record_sha256"],
+                "proof_revisions": [
+                    proof["proof_revision"] for proof in item["matching_proofs"]
+                ],
+                "proof_kinds": sorted(
+                    {proof["proof_kind"] for proof in item["matching_proofs"]}
+                ),
+            }
+            for item in plan.eligible_items
+        ],
+        "excluded_semantics": {
+            FRESHNESS_SESSION_OBSERVED: "not selected: no persisted fresh field bytes",
+            FRESHNESS_HISTORICAL_CACHE: "not selected: positive but not currentness-proven",
+            FRESHNESS_UNKNOWN: "not selected: unknown is never negative/selection authority",
+        },
+    }
+    connection.execute(
+        "UPDATE import_batches SET details_json = ? WHERE id = ?",
+        (json.dumps(details, sort_keys=True, separators=(",", ":")), int(row["id"])),
+    )
+    return int(row["id"])
+
+
+def assert_integrity(connection: sqlite3.Connection) -> None:
+    foreign_keys = connection.execute("PRAGMA foreign_key_check").fetchall()
+    if foreign_keys:
+        raise RuntimeError(f"PRAGMA foreign_key_check failed: {foreign_keys[:10]}")
+    integrity = [str(row[0]) for row in connection.execute("PRAGMA integrity_check").fetchall()]
+    if integrity != ["ok"]:
+        raise RuntimeError(f"PRAGMA integrity_check failed: {integrity}")
+
+
+def validate_promoted_database(
+    connection: sqlite3.Connection,
+    *,
+    plan: PromotionPlan,
+    cache_path: Path,
+    phase: str,
+) -> dict[str, Any]:
+    if schema_version(connection) != EXPECTED_BASELINE_MIGRATION:
+        raise RuntimeError("Validation target must begin at migration 13")
+
+    protected_before = protected_template_selections(connection, plan.eligible_item_ids)
+    newly_applied = apply_migrations(connection)
+    applied_versions = [migration.version for migration in newly_applied]
+    if applied_versions != [TARGET_MIGRATION]:
+        raise RuntimeError(f"Expected only migration 14 to apply, got {applied_versions}")
+    applied = get_applied_migrations(connection)
+    if applied[-1] != (TARGET_MIGRATION, EXPECTED_TARGET_MIGRATION_NAME):
+        raise RuntimeError(f"Unexpected migration tail: {applied[-1] if applied else None}")
+
+    first = import_octo_itemcache_slice(
+        connection,
+        source_path=cache_path,
+        item_ids=plan.eligible_item_ids,
+    )
+    if first.rows_accepted != len(plan.eligible_item_ids) or first.rows_skipped != 0:
+        raise RuntimeError(
+            "Freshness-bound import no longer matches the promotion plan: "
+            f"accepted={first.rows_accepted} skipped={first.rows_skipped}"
+        )
+    first_batch_id = attach_promotion_context(
+        connection,
+        source_revision=str(first.source_revision),
+        plan=plan,
+        phase=phase,
+    )
+
+    protected_after_first = protected_template_selections(connection, plan.eligible_item_ids)
+    if protected_after_first != protected_before:
+        raise RuntimeError("P6-T04 changed a protected manual/custom template selection")
+
+    placeholders = ",".join("?" for _ in plan.eligible_item_ids)
+    materialized_ids = {
+        int(row[0])
+        for row in connection.execute(
+            f"SELECT item_id FROM item_templates WHERE item_id IN ({placeholders})",
+            plan.eligible_item_ids,
+        ).fetchall()
+    }
+    if materialized_ids != set(plan.eligible_item_ids):
+        raise RuntimeError(
+            "Migration-14 projection does not contain exactly the eligible canonical identities"
+        )
+
+    domain_before = [
+        tuple(row)
+        for row in connection.execute(
+            f"SELECT * FROM item_templates WHERE item_id IN ({placeholders}) ORDER BY item_id",
+            plan.eligible_item_ids,
+        ).fetchall()
+    ]
+    stats_before = [
+        tuple(row)
+        for row in connection.execute(
+            f"""
+            SELECT item_id, slot_index, stat_type, stat_value
+            FROM item_stat_modifiers
+            WHERE item_id IN ({placeholders})
+            ORDER BY item_id, slot_index
+            """,
+            plan.eligible_item_ids,
+        ).fetchall()
+    ]
+    observations_before = int(
+        connection.execute("SELECT COUNT(*) FROM source_observations").fetchone()[0]
+    )
+
+    second = import_octo_itemcache_slice(
+        connection,
+        source_path=cache_path,
+        item_ids=plan.eligible_item_ids,
+    )
+    second_batch_id = attach_promotion_context(
+        connection,
+        source_revision=str(second.source_revision),
+        plan=plan,
+        phase=f"{phase}_idempotence_replay",
+    )
+    if (second.rows_inserted, second.rows_updated) != (0, 0):
+        raise RuntimeError(
+            "P6-T04 rerun changed canonical projection: "
+            f"inserted={second.rows_inserted} updated={second.rows_updated}"
+        )
+    observation_count_after = int(
+        connection.execute("SELECT COUNT(*) FROM source_observations").fetchone()[0]
+    )
+    if observation_count_after != observations_before:
+        raise RuntimeError("P6-T04 rerun duplicated source observations")
+
+    domain_after = [
+        tuple(row)
+        for row in connection.execute(
+            f"SELECT * FROM item_templates WHERE item_id IN ({placeholders}) ORDER BY item_id",
+            plan.eligible_item_ids,
+        ).fetchall()
+    ]
+    stats_after = [
+        tuple(row)
+        for row in connection.execute(
+            f"""
+            SELECT item_id, slot_index, stat_type, stat_value
+            FROM item_stat_modifiers
+            WHERE item_id IN ({placeholders})
+            ORDER BY item_id, slot_index
+            """,
+            plan.eligible_item_ids,
+        ).fetchall()
+    ]
+    if domain_after != domain_before or stats_after != stats_before:
+        raise RuntimeError("P6-T04 idempotence replay changed materialized template/stat rows")
+    if protected_template_selections(connection, plan.eligible_item_ids) != protected_before:
+        raise RuntimeError("P6-T04 idempotence replay changed a protected selection")
+
+    managed_rows = connection.execute(
+        f"""
+        SELECT ds.source_key, cs.selection_policy, COUNT(*) AS count
+        FROM observation_groups AS og
+        JOIN canonical_selections AS cs ON cs.observation_group_id = og.id
+        JOIN source_observations AS so ON so.id = cs.observation_id
+        JOIN data_sources AS ds ON ds.id = so.source_id
+        WHERE og.subject_kind = 'item'
+          AND CAST(og.subject_key AS INTEGER) IN ({placeholders})
+          AND og.fact_key LIKE 'template.%'
+          AND cs.selection_policy IN ({','.join('?' for _ in _MANAGED_P6_POLICIES)})
+        GROUP BY ds.source_key, cs.selection_policy
+        ORDER BY ds.source_key, cs.selection_policy
+        """,
+        (*plan.eligible_item_ids, *sorted(_MANAGED_P6_POLICIES)),
+    ).fetchall()
+    unexpected_managed = [
+        dict(row)
+        for row in managed_rows
+        if str(row["source_key"]) != "octo-itemcache"
+        or str(row["selection_policy"]) != "p6-item-template/octo-itemcache"
+    ]
+    if unexpected_managed:
+        raise RuntimeError(
+            f"Unexpected managed P6 canonical selection after promotion: {unexpected_managed}"
+        )
+
+    query_results = query_item_templates(connection, limit=1000)
+    if not query_results:
+        raise RuntimeError("Migration-14 query surface returned no rows after promotion")
+    traced = [result for result in query_results if result.trace]
+    if not traced:
+        raise RuntimeError("Migration-14 query surface returned no provenance trace")
+
+    representative_ids = tuple(
+        dict.fromkeys(
+            (
+                plan.eligible_item_ids[0],
+                plan.eligible_item_ids[len(plan.eligible_item_ids) // 2],
+                plan.eligible_item_ids[-1],
+            )
+        )
+    )
+    representative: list[dict[str, Any]] = []
+    for item_id in representative_ids:
+        template = connection.execute(
+            """
+            SELECT item_id, class_id, subclass_id, quality, inventory_type, item_level,
+                   required_level, armor, max_durability
+            FROM item_templates
+            WHERE item_id = ?
+            """,
+            (item_id,),
+        ).fetchone()
+        if template is None:
+            raise RuntimeError(f"Representative promoted item {item_id} has no template row")
+        stats = connection.execute(
+            """
+            SELECT slot_index, stat_type, stat_value
+            FROM item_stat_modifiers
+            WHERE item_id = ?
+            ORDER BY slot_index
+            """,
+            (item_id,),
+        ).fetchall()
+        representative.append(
+            {
+                "item_id": item_id,
+                "template": dict(template),
+                "stats": [dict(row) for row in stats],
+            }
+        )
+
+    assert_integrity(connection)
+    return {
+        "first_import": first.to_dict(),
+        "second_import": second.to_dict(),
+        "first_import_batch_id": first_batch_id,
+        "second_import_batch_id": second_batch_id,
+        "item_templates_promoted": len(materialized_ids),
+        "item_stat_modifiers_promoted": len(stats_after),
+        "protected_selection_count": len(protected_before),
+        "managed_selection_groups": [dict(row) for row in managed_rows],
+        "representative_queries": representative,
+        "foreign_key_check": [],
+        "integrity_check": "ok",
+        "migration": schema_version(connection),
+    }
+
+
+def validate_shadow(
+    args: argparse.Namespace, plan: PromotionPlan, cache_path: Path
+) -> dict[str, Any]:
+    canonical = args.db.resolve()
+    baseline_hash = assert_canonical_baseline(canonical)
+    validation_db = args.validation_db.resolve()
+    validation_db.parent.mkdir(parents=True, exist_ok=True)
+    if validation_db.exists():
+        validation_db.unlink()
+    for suffix in ("-wal", "-shm", "-journal"):
+        sidecar = Path(str(validation_db) + suffix)
+        if sidecar.exists():
+            sidecar.unlink()
+    shutil.copy2(canonical, validation_db)
+    if sha256_file(validation_db) != baseline_hash:
+        raise RuntimeError("Disposable validation copy is not byte-identical to canonical baseline")
+
+    connection = open_connection(validation_db)
+    try:
+        details = validate_promoted_database(
+            connection,
+            plan=plan,
+            cache_path=cache_path,
+            phase="shadow_validation",
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+    if sha256_file(canonical) != baseline_hash:
+        raise RuntimeError("Canonical DB changed during supposedly read-only shadow validation")
+    validation_hash = sha256_file(validation_db)
+    result = {
+        "plan_revision": plan.plan_revision,
+        "canonical_sha256_before": baseline_hash,
+        "canonical_db_unchanged": True,
+        "validation_db": str(validation_db),
+        "validation_db_sha256": validation_hash,
+        **details,
+    }
+    progress("P6_T04_SHADOW_VALIDATION_OK")
+    progress(f"plan_revision={plan.plan_revision}")
+    progress(f"eligible_item_count={len(plan.eligible_item_ids)}")
+    progress(f"validation_db_sha256={validation_hash}")
+    progress("canonical_db_unchanged=true")
+    return result
+
+
+def create_guarded_backup(canonical: Path, backup: Path) -> sqlite3.Connection:
+    """Create and verify the exact D-029 backup before the first canonical write.
+
+    On Windows an SQLite exclusive lock can prevent reopening the same file through
+    ``shutil.copy2``. Open the raw canonical file before SQLite takes its exclusive
+    Windows lock, then hash and copy through that already-open read handle.
+    """
+
+    assert_canonical_baseline(canonical)
+    backup.parent.mkdir(parents=True, exist_ok=True)
+
+    if backup.exists():
+        backup.unlink()
+    for suffix in ("-wal", "-shm", "-journal"):
+        sidecar = Path(str(backup) + suffix)
+        if sidecar.exists():
+            sidecar.unlink()
+
+    source_handle = canonical.open("rb")
+    connection = open_connection(canonical)
+    try:
+        connection.execute("PRAGMA busy_timeout = 0")
+        connection.execute("PRAGMA locking_mode = EXCLUSIVE")
+        connection.execute("BEGIN EXCLUSIVE")
+
+        source_handle.seek(0)
+        digest = hashlib.sha256()
+        for chunk in iter(lambda: source_handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+        locked_hash = digest.hexdigest()
+        if locked_hash != EXPECTED_BASELINE_SHA256:
+            raise RuntimeError(
+                "Canonical baseline changed while acquiring the promotion lock: "
+                f"expected={EXPECTED_BASELINE_SHA256} actual={locked_hash}"
+            )
+
+        source_handle.seek(0)
+        with backup.open("wb") as target:
+            shutil.copyfileobj(source_handle, target, length=1024 * 1024)
+            target.flush()
+            os.fsync(target.fileno())
+
+        backup_hash = sha256_file(backup)
+        if backup_hash != EXPECTED_BASELINE_SHA256:
+            raise RuntimeError(
+                "D-029 backup verification failed before mutation: "
+                f"expected={EXPECTED_BASELINE_SHA256} actual={backup_hash}"
+            )
+
+        connection.commit()
+        source_handle.close()
+        return connection
+    except Exception:
+        connection.rollback()
+        connection.close()
+        source_handle.close()
+        raise
+
+
+def restore_backup(canonical: Path, backup: Path) -> None:
+    if not backup.is_file():
+        raise RuntimeError("Cannot restore failed promotion: D-029 backup is missing")
+    if sha256_file(backup) != EXPECTED_BASELINE_SHA256:
+        raise RuntimeError("Cannot restore failed promotion: D-029 backup hash is not the baseline")
+    # All project-owned SQLite connections are closed before rollback. Remove any failed-write
+    # sidecars explicitly so stale WAL/journal bytes cannot replay over the restored baseline.
+    for sidecar in sqlite_sidecars(canonical):
+        sidecar.unlink()
+    shutil.copy2(backup, canonical)
+    restored = sha256_file(canonical)
+    if restored != EXPECTED_BASELINE_SHA256:
+        raise RuntimeError(f"Rollback copy verification failed: {restored}")
+
+
+def promote_canonical(
+    args: argparse.Namespace,
+    plan: PromotionPlan,
+    cache_path: Path,
+    shadow: dict[str, Any],
+) -> dict[str, Any]:
+    canonical = args.db.resolve()
+    backup = args.backup.resolve()
+    if shadow.get("plan_revision") != plan.plan_revision:
+        raise RuntimeError("Shadow validation does not match the current promotion plan")
+    if not shadow.get("canonical_db_unchanged"):
+        raise RuntimeError("Shadow validation did not prove canonical immutability")
+
+    connection: sqlite3.Connection | None = None
+    backup_ready = False
+    try:
+        progress("[promote] acquiring exclusive baseline lock and creating D-029 backup")
+        connection = create_guarded_backup(canonical, backup)
+        backup_ready = True
+        if sha256_file(backup) != EXPECTED_BASELINE_SHA256:
+            raise RuntimeError("Backup changed unexpectedly before canonical mutation")
+
+        details = validate_promoted_database(
+            connection,
+            plan=plan,
+            cache_path=cache_path,
+            phase="canonical_promotion",
+        )
+        connection.commit()
+        connection.close()
+        connection = None
+
+        assert_no_sidecars(canonical)
+        promoted_hash = sha256_file(canonical)
+        if promoted_hash == EXPECTED_BASELINE_SHA256:
+            raise RuntimeError("Canonical promotion produced no byte-level database evolution")
+        verify = open_connection(canonical)
+        try:
+            if schema_version(verify) != TARGET_MIGRATION:
+                raise RuntimeError("Canonical DB is not migration 14 after promotion")
+            assert_integrity(verify)
+        finally:
+            verify.close()
+        if sha256_file(backup) != EXPECTED_BASELINE_SHA256:
+            raise RuntimeError("D-029 backup changed after successful promotion")
+
+        result = {
+            "plan_revision": plan.plan_revision,
+            "backup_path": str(backup),
+            "backup_sha256": EXPECTED_BASELINE_SHA256,
+            "canonical_sha256_before": EXPECTED_BASELINE_SHA256,
+            "canonical_sha256_after": promoted_hash,
+            "canonical_migration_after": TARGET_MIGRATION,
+            "rollback_available": True,
+            **details,
+        }
+        progress("P6_T04_CANONICAL_PROMOTION_OK")
+        progress(f"backup_sha256={EXPECTED_BASELINE_SHA256}")
+        progress(f"canonical_sha256={promoted_hash}")
+        progress(f"canonical_migration={TARGET_MIGRATION}")
+        progress("rollback_available=true")
+        return result
+    except Exception:
+        if connection is not None:
+            connection.rollback()
+            connection.close()
+        if backup_ready:
+            progress(
+                "[rollback] promotion gate failed; restoring migration-13 canonical DB from _bak"
+            )
+            restore_backup(canonical, backup)
+            progress("P6_T04_ROLLBACK_COMPLETE")
+        else:
+            # create_guarded_backup performs no canonical write before the verified backup exists.
+            assert_canonical_baseline(canonical)
+            progress("P6_T04_PROMOTION_ABORTED_BEFORE_MUTATION")
+        raise
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "mode", choices=("plan", "validate", "promote"), nargs="?", default="validate"
+    )
+    parser.add_argument("--db", type=Path, default=DEFAULT_DB)
+    parser.add_argument("--backup", type=Path, default=DEFAULT_BACKUP)
+    parser.add_argument("--validation-db", type=Path, default=DEFAULT_VALIDATION_DB)
+    parser.add_argument("--plan", type=Path, default=DEFAULT_PLAN)
+    parser.add_argument("--ledger", type=Path, default=DEFAULT_LEDGER)
+    parser.add_argument("--report-dir", type=Path, default=DEFAULT_REPORT_DIR)
+    parser.add_argument("--p6-t02-report", type=Path, action="append", default=[])
+    parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
+    parser.add_argument("--itemcache", type=Path)
+    parser.add_argument("--locale", default="enUS")
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = parse_args()
+    try:
+        plan, cache_path = build_current_plan(args)
+        if args.mode == "plan":
+            progress("P6_T04_PLAN_OK")
+            return 0
+
+        shadow = validate_shadow(args, plan, cache_path)
+        report: dict[str, Any] = {
+            "report_version": 1,
+            "mode": args.mode,
+            "created_utc": timestamp(),
+            "plan": plan.to_json(),
+            "shadow_validation": shadow,
+        }
+        if args.mode == "promote":
+            report["canonical_promotion"] = promote_canonical(args, plan, cache_path, shadow)
+
+        report_path = args.report_dir.resolve() / f"P6-T04_{args.mode}_{timestamp()}.json"
+        write_json(report_path, report)
+        progress(f"report={report_path}")
+        if args.mode == "validate":
+            progress("P6_T04_LOCAL_VALIDATION_READY_FOR_PROMOTION")
+        else:
+            progress("P6_T04_LOCAL_VALIDATION_COMPLETE")
+        return 0
+    except (OSError, ValueError, RuntimeError, sqlite3.Error, json.JSONDecodeError) as exc:
+        progress(f"P6_T04_VALIDATION_FAILED: {type(exc).__name__}: {exc}")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -22,8 +22,8 @@ effective-view reconciliation.
 
 Status: `VALIDATED` through P2-T04.
 
-Delivered item identity plus direct/reference loot and vendor relations with bounded Turtle effective-
-view reconciliation. Item template/stat facts are handled in P6.
+Delivered item identity plus direct/reference loot and vendor relations with bounded Turtle
+effective-view reconciliation.
 
 ## P3 — quests
 
@@ -48,9 +48,16 @@ rule was justified; D-025/D-026 remained unchanged.
 
 ## P6 — broader source ingestion and remaining domains
 
-Status: `VALIDATED` through P6-T03; P6-T04 is `READY_FOR_IMPLEMENTATION`.
+Status: `VALIDATED` through P6-T04; P6-T05 is `READY_FOR_IMPLEMENTATION`.
 
-Canonical DB remains migration 13 until P6-T04 completes an explicit D-029 promotion cycle:
+Current accepted canonical DB:
+
+```text
+migration 14 / 0014_item_template_facts.sql
+SHA-256 = d57e0c79ac44d4fa0436b8c25e854a1d2b579d72dea1c327b23e9fe0fc4d1a8b
+```
+
+Immediate D-029 rollback is the exact migration-13 baseline:
 
 ```text
 623e29d83abd20335506d2a23dcbd525331de4f1bc10d38fccd7aa550a7613d7
@@ -61,73 +68,68 @@ Canonical DB remains migration 13 until P6-T04 completes an explicit D-029 promo
 Status: `VALIDATED`.
 
 Accepted D-036's bounded direct-Octo `itemcache.wdb` evidence contract for the supported item-template
-and ten-slot stat family. Migration 14 provides validated projection capability but was intentionally
-validated only on a disposable DB copy.
+and ten-slot stat family. Migration 14 provided the validated projection capability.
 
 ### P6-T02 — direct Octo item-cache freshness, coverage and bounded refresh probe
 
 Status: `VALIDATED`.
 
-Measured partial cache coverage and established D-037's freshness-aware direct query path. A five-ID
-real-client probe produced three `refresh_proven_direct_observation` results and two unknowns while
-leaving the canonical DB byte-identical.
+Measured partial cache coverage and established D-037's freshness-aware direct query path.
 
-### P6-T03 — resumable direct-Octo acquisition campaign for known canonical cache misses
+### P6-T03 — resumable direct-Octo acquisition campaign
 
 Status: `VALIDATED`.
 
-Scaled the P6-T02 probe into a durable, deterministic, interruption-safe bounded campaign with
-conservative retry/unknown semantics and duplicate/no-op replay handling.
+Scaled P6-T02 into a durable, deterministic, interruption-safe bounded campaign over known canonical
+cache misses with conservative retry/unknown semantics and duplicate/no-op replay handling.
 
-Final cumulative real-client campaign evidence on 2026-08-29:
+### P6-T04 — bounded migration-14 canonical promotion
+
+Status: `VALIDATED`.
+
+Completed the first explicit D-029 promotion cycle for migration 14. Automatic selection was limited
+to `refresh_proven_direct_observation` evidence with exact current raw-record hash match.
+
+Final real promotion:
 
 ```text
-canonical item population                = 23336
-initial matching cache coverage          =  7554
-current matching cache coverage          =  7654
-campaign candidate count                 = 15782
-attempted unique IDs                     =    19
-sessions                                 =     2
-retries                                  =     1
-historical_cache_only                    =    85
-refresh_proven_direct_observation        =     8
-unknown_retryable                        =     5
-remaining queued                         = 15684
-refresh-proven rate over attempted IDs   = 42.105263%
-canonical DB unchanged                   = true
+eligible/promoted item IDs      = 7886, 15784, 41278
+item_templates_promoted         = 3
+item_stat_modifiers_promoted    = 2
+second import inserts/updates   = 0 / 0
+foreign_key_check               = []
+integrity_check                 = ok
+canonical SHA-256               = d57e0c79ac44d4fa0436b8c25e854a1d2b579d72dea1c327b23e9fe0fc4d1a8b
 ```
 
-The first DDoS-affected session validated the conservative/interruption path; the later stable session
-validated positive acquisition. Completed-session replay was an evidence-preserving duplicate no-op.
-The full repository suite reached 258 passing tests, with Ruff and compileall also passing.
+Eleven older refresh-proven records were correctly excluded because the current WDB no longer
+contained a record matching the original proof hash.
 
-The dedicated post-hotfix automatic restart-wrapper branch was not deliberately replayed end-to-end,
-but focused tests cover it and the underlying real interruption/recovery mechanism was already
-exercised. This is accepted as non-blocking.
-
-### P6-T04 — bounded migration-14 canonical promotion of validated item-template/stat evidence
+### P6-T05 — migration-14 coverage expansion and incremental promotion
 
 Status: `READY_FOR_IMPLEMENTATION`.
 
-Perform the first explicit D-029 canonical promotion cycle for migration 14. Reuse the validated P6
-schema/import path, define exactly which D-036/D-037 evidence classes are eligible for managed
-canonical selection, preserve provenance/conflicts/custom selections, back up the migration-13
-canonical DB before any write, validate idempotence/integrity/representative queries, and record the
-new canonical SHA only after every Level-2 gate passes.
+Use the now-accepted migration-14 canonical as the baseline for one bounded additional acquisition
+tranche and a safe incremental promotion. The task should remove obsolete migration-13 assumptions
+from P6 acquisition validators, preserve old evidence without treating it as current, and prove that
+new current records can be added to the migration-14 canonical without reapplying migration 14.
 
-P6-T04 does not require acquisition of all 15k+ remaining candidates before promotion. Whole-
-population coverage remains explicitly partial.
+P6-T05 is driven by a concrete consumer need: P7 item/stat search should not begin against a canonical
+real-data slice containing only three promoted templates.
 
-Potential later P6 work remains consumer-driven and field-specific, including weapon damage/speed/
-block, item effects/spells/tooltips, continued/background bounded direct acquisition, and explicit
-fallback adapters where direct Octo coverage is insufficient. No universal source priority is
-introduced.
+P6-T05 does **not** require exhaustive acquisition of every remaining candidate. After its bounded
+tranche, measured coverage should determine whether P7-T01 can start or whether another explicitly
+justified P6 coverage tranche is needed.
+
+Potential later field-specific P6 work remains consumer-driven, including weapon damage/speed/block,
+item effects/spells/tooltips, and explicit fallback adapters where direct Octo evidence is insufficient.
+No universal source priority is introduced.
 
 ## P7 — query/exploration layer
 
-Status: `PLANNED`.
+Status: `PLANNED`; blocked pending the P6-T05 coverage reassessment.
 
-Build richer provenance-aware cross-domain exploration after sufficient P6 canonical coverage:
+Build richer provenance-aware cross-domain exploration:
 
 - item acquisition/source exploration;
 - arbitrary item stat filtering/sorting and weighted scores;
@@ -136,8 +138,12 @@ Build richer provenance-aware cross-domain exploration after sufficient P6 canon
 - recipe/reagent/acquisition traversal;
 - configurable columns, saved searches and comparisons.
 
+The existing small P6 `item_search.py` surface is a useful vertical slice, not yet the final P7 query
+contract.
+
 ## P8 — UI/application workflow
 
 Status: `PLANNED`.
 
-Add the user-facing local browser UI only after the data/query semantics are reliable.
+Add the user-facing local browser UI after the query/data semantics and required real-data coverage are
+reliable.
