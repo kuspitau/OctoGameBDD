@@ -104,14 +104,14 @@ Later P6 ingestion remains consumer-driven; another acquisition tranche is not a
 
 ## P7 — query/exploration layer
 
-Status: `IN_PROGRESS`; validated through P7-T04. P7-T05 is `READY_FOR_IMPLEMENTATION`.
+Status: `IN_PROGRESS`; locally validated through P7-T05. P7-T06 is routed after integration.
 
 P7 builds richer provenance-aware cross-domain exploration:
 
 - item acquisition/source exploration;
 - arbitrary item stat filtering/sorting and later weighted scores;
 - quest chains/objectives/rewards;
-- creature/gameobject geography;
+- creature/gameobject geography and semantic roles;
 - recipe/reagent/acquisition traversal;
 - configurable columns, saved searches and comparisons.
 
@@ -122,24 +122,9 @@ projections as negative game facts.
 
 Status: `VALIDATED`.
 
-Delivered the first stable item identity/template/stat consumer contract over migration 14:
-
-- canonical item identity/name universe;
-- P6 scalar/stat filters;
-- deterministic sort/limit;
-- explicit `known_match` / `known_non_match` / `unknown` evaluation;
-- materialized vs unknown template/stat coverage;
-- selected `template.*` provenance trace;
-- deterministic JSON-friendly library output;
-- read-only `python -m octogamedb.item_query_cli` surface;
-- read-only real-canonical validation with byte-level SHA preservation.
-
-Human Level 2 completed on 2026-08-30. The accepted canonical remained byte-identical and the final
-marker was:
-
-```text
-P7_T01_LOCAL_VALIDATION_OK
-```
+Delivered the first stable item identity/template/stat consumer contract over migration 14 with
+explicit three-state evaluation, selected provenance, deterministic bounded output and strict
+read-only validation.
 
 Contract:
 
@@ -151,13 +136,9 @@ docs/project/P7_ITEM_QUERY_CONTRACT.md
 
 Status: `VALIDATED`.
 
-Implemented the composition of P7-T01 item predicates with the validated P2 direct/reference/vendor
-acquisition graph and P1 derived geography. The bounded surface exposes/filters known acquisition path
-kind, source-template kind, path-level drop chance, derived zone/map context and primitive provenance.
-Unlocated or absent known paths remain conservative `unknown`; vendor metadata is not interpreted as
-drop chance.
-
-Human Level 2 completed on 2026-08-30 and preserved the accepted canonical SHA byte-identically.
+Composes P7-T01 item predicates with validated P2 direct/reference/vendor acquisition and P1 derived
+geography. Path-level chance and vendor metadata remain distinct; absent known acquisition geography
+remains conservative `unknown`.
 
 Contract:
 
@@ -165,33 +146,16 @@ Contract:
 docs/project/P7_ITEM_ACQUISITION_QUERY_CONTRACT.md
 ```
 
-Task/closeout:
-
-```text
-docs/project/tasks/P7-T02.md
-```
-
 ### P7-T03 — provenance-aware quest exploration and progression/geography query
 
 Status: `VALIDATED`.
 
-Delivered a stable bounded read-only quest search/exploration surface over the validated P3 domain. It
-keeps giver, finisher and objective geography role-specific; preserves unresolved/unlocated evidence;
-retains `any_of` prerequisite semantics and derived follow-ups; isolates close sets from progression;
-and exposes P3-T05 required/provided/guaranteed/choice item facts without reinterpretation.
+Delivered bounded quest search/exploration while keeping giver, finisher and objective geography
+role-specific; preserving unresolved/unlocated evidence; retaining `any_of` prerequisite semantics;
+and keeping close sets distinct from progression.
 
-Traversal is deterministic, bounded and cycle-safe. Breadth-first depth is explicitly derived edge
-distance rather than a canonical chain-step number. No migration, source-selection rule, persisted
-`quest -> zone` truth, dungeon classifier, route planner or graphical UI was introduced.
-
-Human repository gates and accepted-canonical Level 2 completed on 2026-08-30. The validator observed
-6,498 canonical quest identities, representative giver/finisher/objective/progression/item/Turtle and
-unlocated-endpoint cases, FK/integrity success and byte-identical preservation of the accepted
-canonical SHA. Final marker:
-
-```text
-P7_T03_LOCAL_VALIDATION_OK
-```
+Human Level 2 completed with `P7_T03_LOCAL_VALIDATION_OK` and byte-identical preservation of the
+accepted canonical SHA.
 
 Contract:
 
@@ -199,23 +163,16 @@ Contract:
 docs/project/P7_QUEST_QUERY_CONTRACT.md
 ```
 
-Task/closeout:
-
-```text
-docs/project/tasks/P7-T03.md
-```
-
 ### P7-T04 — provenance-aware recipe/reagent/acquisition exploration
 
 Status: `VALIDATED`.
 
-P7-T04 composes the validated P4 recipe identity/skill-line/output/reagent/learning-source domain with
-P7-T02 item acquisition, P1 world geography and P7-T03 quest exploration. The bounded consumer surface
-provides recipe/skill/output/reagent filtering, exact reagent quantities, separate teaching-item /
-direct-or-template-trainer / quest-reward-spell learning paths, selected provenance and conservative
-derived geography/acquisition semantics.
+Composes P4 recipe identity/skill/output/reagent/learning-source semantics with P7-T02 item
+acquisition, P1 trainer geography and P7-T03 quest exploration. Teaching-item, direct/template trainer
+and quest-reward-spell paths remain separate and no simplified primary recipe availability relation
+was introduced.
 
-Human repository gates and accepted-canonical Level 2 completed on 2026-08-31. Observed closure:
+Human repository and accepted-canonical Level 2 completed on 2026-08-31:
 
 ```text
 336 passed in 13.90s
@@ -228,46 +185,84 @@ canonical_db_unchanged=true
 canonical_sha256=60aeb4093fa68e6b3a7a8c513e5a127862d88db8bc9aab4f6f3e4a0f4c0d5a23
 ```
 
-No migration, source ingestion, source-priority rule, probability combination or simplified primary
-`recipe -> vendor/loot/zone` relation was introduced.
-
 Contract:
 
 ```text
 docs/project/P7_RECIPE_QUERY_CONTRACT.md
 ```
 
-Task/closeout:
-
-```text
-docs/project/tasks/P7-T04.md
-```
-
 ### P7-T05 — provenance-aware creature/gameobject exploration and role/geography query
 
-Status: `READY_FOR_IMPLEMENTATION`.
+Status: `VALIDATED` locally on 2026-08-31; commit/push pending this closeout.
 
-Build the missing bounded first-class creature/gameobject consumer surface. Compose P1 template/spawn
-geography with already-validated relations from P2/P3/P4 while preserving the distinction between
-template identity, spawn evidence and semantic roles. The first task should support practical entity
-search plus inspection/filtering of known spawn geography and relevant loot/vendor/trainer/quest
-relations without materializing a simplified universal `entity -> zone` truth.
-
-Task contract:
+Implementation base:
 
 ```text
+e7a25cc84df122bf2f3675a0acba262c99c8e43f
+```
+
+P7-T05 adds the first bounded first-class creature/gameobject consumer surface while keeping template
+identity, spawn instances and semantic roles separate. It composes P1 world geography, P2
+direct/reference/vendor acquisition, P3 quest roles/objectives and P4 trainer evidence without
+materializing a universal `entity -> zone` truth.
+
+The real-data Level-2 run exposed a selected D-026 `spawn_set` containing duplicate source membership
+for one canonical `spawn_key`. The final contract preserves the raw multiplicity as diagnostics while
+comparing complete-set membership by distinct canonical spawn identity. This does not alter D-026 or
+source priority.
+
+Human closure:
+
+```text
+346 passed in 14.51s
+All checks passed!
+P7_T05_LOCAL_VALIDATION_OK
+canonical_sha256=60aeb4093fa68e6b3a7a8c513e5a127862d88db8bc9aab4f6f3e4a0f4c0d5a23
+schema_version=14
+creature_identities=13842
+gameobject_identities=20967
+duplicate_spawn_set_sample_id=1852
+duplicate_spawn_set_member_count=1
+foreign_key_check=[]
+integrity_check=ok
+canonical_db_unchanged=true
+```
+
+Contract/task:
+
+```text
+docs/project/P7_WORLD_ENTITY_QUERY_CONTRACT.md
 docs/project/tasks/P7-T05.md
 ```
 
-P7-T05 must start only after the validated P7-T04 closeout is committed/pushed and the new GitHub
-`main` is resolved.
+### P7-T06 — provenance-aware zone-centric exploration
+
+Status: `READY_FOR_IMPLEMENTATION` after the validated P7-T05 tree is committed/pushed and GitHub
+`main` is freshly resolved.
+
+Build the missing first-class zone consumer surface over existing validated contracts. The bounded
+first slice should search canonical zones/maps and compose concrete known geography for world
+entities, quest roles, item acquisition paths and recipe-learning sources while retaining each role
+and source path independently. Missing/unresolved geography remains explicit `unknown`; do not persist
+a simplified universal `zone -> everything` or `entity -> zone` truth.
+
+General dungeon classification, instance grouping and dungeon-specific quest-chain UX are explicitly
+deferred from this first zone slice. P7-T06 establishes the zone-centered substrate they can later
+consume.
+
+Task:
+
+```text
+docs/project/tasks/P7-T06.md
+```
 
 ### Later P7 tasks
 
-After P7-T05, later bounded tasks may add zone/dungeon views, richer item field families, weighted
-scoring, saved queries/comparisons, dungeon/zone quest views built on P7-T03, ownership/inventory integration,
-craft economics, recursive BOM analysis and other consumer capabilities as concrete needs emerge.
-Coverage gaps should drive explicit P6 work rather than silent fallback logic.
+Do not start P7-T06 until the validated P7-T05 tree and this closeout are committed/pushed and GitHub
+`main` is re-resolved. After P7-T06, later bounded tasks may add dungeon/instance views, richer item
+field families, weighted scoring, saved queries/comparisons, ownership/inventory integration, craft
+economics, recursive BOM analysis and other consumer capabilities as concrete needs emerge. Coverage
+gaps should drive explicit P6 work rather than silent fallback logic.
 
 ## P8 — UI/application workflow
 
