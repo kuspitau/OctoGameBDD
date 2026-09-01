@@ -1,5 +1,30 @@
 # Changelog
 
+## 2026-09-01 — P7-T06 validated zone exploration and P7-T07 performance routing
+
+- Closed P7-T06 as `VALIDATED` after the human confirmed the complete repository pytest gate, Ruff and
+  compileall all pass.
+- Accepted-canonical read-only validation completed with `P7_T06_LOCAL_VALIDATION_OK`, schema version
+  `14`, `1,480` canonical zone identities, clean foreign-key/integrity checks and byte-identical
+  preservation of canonical SHA-256
+  `60aeb4093fa68e6b3a7a8c513e5a127862d88db8bc9aab4f6f3e4a0f4c0d5a23`.
+- Recorded representative validation samples: multi-spawn zone `12`; item/quest/trainer/teaching
+  recipe samples in zone `1`; quest-learning recipe sample in zone `3`; five distinct zone-detail
+  cache entries validated. These IDs remain observations rather than semantic constants.
+- Preserved the first interrupted validation attempt as a performance finding rather than a data
+  failure: traceback showed repeated full P7-T04 teaching-item geography traversals inside
+  `inspect_zone()`.
+- Validated the P7-T06 runtime correction: `zone_recipe_projection.py` now derives compact positive
+  recipe-learning evidence from already-computed zone item/trainer/quest roles; full recipe detail
+  remains owned by P7-T04; missing recipe evidence remains `unknown`.
+- Added/validated `include_recipes=False` for bounded non-recipe zone inspection and progress/timing
+  output in the Level-2 validator.
+- Measured residual representative zone-detail latency at roughly `20.85-41.25 s`; similar
+  recipe/no-recipe timings identify P7-T05 world-entity/role/provenance composition as the main
+  remaining hot path.
+- Routed the next bounded task to P7-T07 performance profiling/optimization. Persistent derived caches
+  remain prohibited without measured justification and an explicit architecture decision under D-008.
+
 ## 2026-08-24 — P3-T01 validation catch-up and P3-T02 quest Turtle reconciliation
 
 - Reconciled project memory with the human transition result that P3-T01 already completed its
