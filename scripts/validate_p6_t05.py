@@ -23,8 +23,10 @@ from octogamedb.canonical_baseline import (
     P6_T04_INPUT_BASELINE,
     P6_T05_INPUT_BASELINE,
     CanonicalBaseline,
-    assert_canonical_baseline as assert_shared_canonical_baseline,
     sha256_file,
+)
+from octogamedb.canonical_baseline import (
+    assert_canonical_baseline as assert_shared_canonical_baseline,
 )
 from octogamedb.db import apply_migrations, get_applied_migrations
 from octogamedb.importers.octo_itemcache import (

@@ -36,3 +36,6 @@ line-length = 100
 # catch that converts operational failures into the stable P6_T03_VALIDATION_FAILED marker.
 "src/octogamedb/itemcache_campaign.py" = ["TRY004"]
 "scripts/validate_p6_t03.py" = ["BLE001", "TRY004"]
+# These promotion/acquisition validators preserve stable operational exception markers.
+"scripts/validate_p6_t05.py" = ["TRY004"]
+"scripts/validate_p6_t05_acquisition.py" = ["BLE001", "TRY004"]

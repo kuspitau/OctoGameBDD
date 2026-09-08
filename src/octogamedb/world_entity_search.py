@@ -176,6 +176,63 @@ def _selected_relation_rows(
     return result
 
 
+def _selected_quest_relation_index(
+    connection: sqlite3.Connection,
+) -> dict[
+    tuple[str, str],
+    tuple[tuple[str, str, object, dict[str, Any]], ...],
+]:
+    """Load selected quest role relations once for one world-entity query."""
+
+    rows = connection.execute(
+        """
+        SELECT og.subject_key, og.fact_key, og.fact_instance_key,
+               cs.observation_id, cs.selection_policy, cs.selection_reason,
+               ds.source_key, so.source_revision, so.source_record_type,
+               so.raw_identifier, so.authority_tier, so.value_json
+        FROM observation_groups AS og
+        JOIN canonical_selections AS cs ON cs.observation_group_id = og.id
+        JOIN source_observations AS so ON so.id = cs.observation_id
+        JOIN data_sources AS ds ON ds.id = so.source_id
+        WHERE og.subject_kind = 'quest'
+          AND og.fact_key IN ('endpoint', 'objective_creature', 'objective_gameobject')
+        ORDER BY og.fact_key, og.fact_instance_key, og.subject_key
+        """
+    ).fetchall()
+    grouped: dict[
+        tuple[str, str],
+        list[tuple[str, str, object, dict[str, Any]]],
+    ] = {}
+    for row in rows:
+        provenance = _provenance_from_row(row)
+        key = (str(row["fact_key"]), str(row["fact_instance_key"]))
+        grouped.setdefault(key, []).append(
+            (
+                str(row["subject_key"]),
+                str(row["fact_instance_key"]),
+                provenance["selected_value"],
+                provenance,
+            )
+        )
+    return {key: tuple(value) for key, value in grouped.items()}
+
+
+def _selected_relation_rows_from_index(
+    index: Mapping[
+        tuple[str, str],
+        Sequence[tuple[str, str, object, dict[str, Any]]],
+    ],
+    *,
+    fact_key: str,
+    instance_keys: Sequence[str],
+) -> list[tuple[str, str, object, dict[str, Any]]]:
+    rows: list[tuple[str, str, object, dict[str, Any]]] = []
+    for instance_key in instance_keys:
+        rows.extend(index.get((fact_key, instance_key), ()))
+    rows.sort(key=lambda row: (row[0], row[1]))
+    return rows
+
+
 def _template_rows(connection: sqlite3.Connection) -> list[sqlite3.Row]:
     return connection.execute(
         """
@@ -712,18 +769,39 @@ def _item_roles(
 
 
 def _selected_quest_role_rows(
-    connection: sqlite3.Connection, *, entity_kind: str, entity_id: int
+    connection: sqlite3.Connection,
+    *,
+    entity_kind: str,
+    entity_id: int,
+    selected_relation_index: Mapping[
+        tuple[str, str],
+        Sequence[tuple[str, str, object, dict[str, Any]]],
+    ]
+    | None = None,
 ) -> list[dict[str, Any]]:
     result: list[dict[str, Any]] = []
+
+    def selected_rows(
+        fact_key: str, instance_keys: Sequence[str]
+    ) -> list[tuple[str, str, object, dict[str, Any]]]:
+        if selected_relation_index is None:
+            return _selected_relation_rows(
+                connection,
+                subject_kind="quest",
+                fact_key=fact_key,
+                instance_keys=instance_keys,
+            )
+        return _selected_relation_rows_from_index(
+            selected_relation_index,
+            fact_key=fact_key,
+            instance_keys=instance_keys,
+        )
     endpoint_instances = (
         f"giver:{entity_kind}:{entity_id}",
         f"finisher:{entity_kind}:{entity_id}",
     )
-    for subject_key, _, value, provenance in _selected_relation_rows(
-        connection,
-        subject_kind="quest",
-        fact_key="endpoint",
-        instance_keys=endpoint_instances,
+    for subject_key, _, value, provenance in selected_rows(
+        "endpoint", endpoint_instances
     ):
         if not isinstance(value, dict):
             raise TypeError("selected quest endpoint payload must be an object")
@@ -746,11 +824,8 @@ def _selected_quest_role_rows(
         )
 
     fact_key = "objective_creature" if entity_kind == "creature" else "objective_gameobject"
-    for subject_key, _, value, provenance in _selected_relation_rows(
-        connection,
-        subject_kind="quest",
-        fact_key=fact_key,
-        instance_keys=(str(entity_id),),
+    for subject_key, _, value, provenance in selected_rows(
+        fact_key, (str(entity_id),)
     ):
         if not isinstance(value, dict):
             raise TypeError("selected quest objective payload must be an object")
@@ -771,7 +846,15 @@ def _selected_quest_role_rows(
 
 
 def _quest_roles(
-    connection: sqlite3.Connection, *, entity_kind: str, entity_id: int
+    connection: sqlite3.Connection,
+    *,
+    entity_kind: str,
+    entity_id: int,
+    selected_relation_index: Mapping[
+        tuple[str, str],
+        Sequence[tuple[str, str, object, dict[str, Any]]],
+    ]
+    | None = None,
 ) -> tuple[dict[str, Any], ...]:
     roles: dict[tuple[int, str, str | None], dict[str, Any]] = {}
     if entity_kind == "creature":
@@ -849,7 +932,10 @@ def _quest_roles(
         }
 
     for selected in _selected_quest_role_rows(
-        connection, entity_kind=entity_kind, entity_id=entity_id
+        connection,
+        entity_kind=entity_kind,
+        entity_id=entity_id,
+        selected_relation_index=selected_relation_index,
     ):
         quest_id = int(selected["quest_id"])
         role = str(selected["role"])
@@ -1013,6 +1099,12 @@ def _template_provenance(
 def _entity_detail(
     connection: sqlite3.Connection,
     candidate: _Candidate,
+    *,
+    selected_relation_index: Mapping[
+        tuple[str, str],
+        Sequence[tuple[str, str, object, dict[str, Any]]],
+    ]
+    | None = None,
 ) -> dict[str, Any]:
     row = candidate.row
     kind = candidate.entity_kind
@@ -1032,7 +1124,12 @@ def _entity_detail(
         fact_key="world_presence",
     )
     item_roles = _item_roles(connection, entity_kind=kind, entity_id=entity_id)
-    quest_roles = _quest_roles(connection, entity_kind=kind, entity_id=entity_id)
+    quest_roles = _quest_roles(
+        connection,
+        entity_kind=kind,
+        entity_id=entity_id,
+        selected_relation_index=selected_relation_index,
+    )
     trainer_roles = _trainer_roles(connection, entity_kind=kind, entity_id=entity_id)
 
     path_counts = {"direct": 0, "reference": 0, "vendor": 0}
@@ -1197,9 +1294,16 @@ def query_world_entities(
 
     ordered = _sort_candidates(candidates, sort_by=sort_by, descending=descending)
     selected_candidates = ordered[:limit]
+    selected_quest_relations = (
+        _selected_quest_relation_index(connection) if selected_candidates else {}
+    )
     results = tuple(
         WorldEntityQueryResult(
-            entity=_entity_detail(connection, candidate),
+            entity=_entity_detail(
+                connection,
+                candidate,
+                selected_relation_index=selected_quest_relations,
+            ),
             match_state=candidate.state,
             predicates=candidate.predicates,
         )

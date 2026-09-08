@@ -104,8 +104,7 @@ Later P6 ingestion remains consumer-driven; another acquisition tranche is not a
 
 ## P7 — query/exploration layer
 
-Status: `IN_PROGRESS`; validated through P7-T06. P7-T07 is `READY_FOR_IMPLEMENTATION` after fresh
-GitHub-main confirmation of the P7-T06 closure.
+Status: `VALIDATED` through P7-T07. Later P7 feature tasks are consumer-driven and deferred until a concrete need emerges.
 
 P7 builds richer provenance-aware cross-domain exploration while exposing partial/unknown coverage
 instead of presenting absent projections as negative game facts.
@@ -209,12 +208,13 @@ docs/project/tasks/P7-T06.md
 
 ### P7-T07 — profile and optimize zone-centric query latency
 
-Status: `READY_FOR_IMPLEMENTATION` after fresh `main` confirms P7-T06 integration.
+Status: `VALIDATED` on 2026-09-03.
 
-This is the next bounded task. It must profile the measured P7-T06 hot path, optimize the smallest safe
-read-path component and prove semantic equivalence. Non-persistent query improvements come first. A
-persistent derived cache/index requires measured justification plus an explicit architecture decision
-rather than silently materializing `zone -> everything`.
+Accepted-canonical profiling identified a retained-entity quest-relation N+1 responsible for roughly
+75-78% of representative no-recipe zone latency. The request-local selected-quest-relation batch
+removes it without schema change or persistent cache. Full-data reruns now pass: representative cold
+latency is `5.45-7.84 s`, no-recipe median improves `4.37x`, recipe-sample median improves `3.57x`,
+and P7-T06 semantic/integrity validation remains clean. The final human `ruff check src tests scripts` gate also passes.
 
 Task:
 
@@ -235,7 +235,21 @@ are sufficiently reliable for interactive use.
 
 ## P8 — UI/application workflow
 
-Status: `PLANNED`.
+Status: `IN_PROGRESS`; P8-T01 is `READY_FOR_IMPLEMENTATION`.
 
-Add the user-facing local/browser UI after the query/data semantics and required real-data coverage are
-reliable.
+The validated P7 query layer and P7-T07 latency correction are now sufficient to begin a bounded
+user-facing local/browser vertical slice. P8 must remain a consumer of validated query semantics rather
+than creating parallel SQL truth.
+
+### P8-T01 — local/browser UI foundation and zone explorer vertical slice
+
+Status: `READY_FOR_IMPLEMENTATION`.
+
+Select the UI framework from current primary evidence, establish a local read-only application shell,
+and expose a bounded zone search/detail flow backed by the validated P7-T06/P7-T07 query path.
+
+Task:
+
+```text
+docs/project/tasks/P8-T01.md
+```

@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
-import sys
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from types import ModuleType
@@ -18,7 +17,11 @@ from octogamedb.canonical_baseline import (
     ACCEPTED_CANONICAL_BASELINE,
     P6_T05_INPUT_BASELINE,
     CanonicalBaseline,
+)
+from octogamedb.canonical_baseline import (
     assert_canonical_baseline as assert_shared_canonical_baseline,
+)
+from octogamedb.canonical_baseline import (
     resolve_canonical_db as resolve_shared_canonical_db,
 )
 from octogamedb.itemcache_campaign import (

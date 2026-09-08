@@ -8,8 +8,8 @@ from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
 from typing import Any
 
-from octogamedb.zone_recipe_projection import project_zone_recipes
 from octogamedb.world_entity_search import query_world_entities, world_entity_query_page_to_dict
+from octogamedb.zone_recipe_projection import project_zone_recipes
 
 MATCH_KNOWN = "known_match"
 NON_MATCH_KNOWN = "known_non_match"

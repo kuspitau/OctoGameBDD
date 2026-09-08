@@ -11,8 +11,8 @@ from typing import Any
 
 from octogamedb.quest_search import (
     MATCH_KNOWN,
-    quest_query_page_to_dict,
     query_quests,
+    quest_query_page_to_dict,
     traverse_quest_progression,
 )
 

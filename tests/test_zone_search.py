@@ -4,7 +4,6 @@ import hashlib
 import json
 import sqlite3
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 
@@ -349,7 +348,7 @@ def _world_payload() -> dict[str, object]:
 def test_zone_detail_composes_independent_world_item_quest_vendor_and_trainer_roles(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    import octogamedb.zone_search as zone_search
+    from octogamedb import zone_search
 
     connection = _connection()
     world_payload = _world_payload()
@@ -434,7 +433,7 @@ def test_zone_detail_composes_independent_world_item_quest_vendor_and_trainer_ro
     assert detail["coverage"]["unresolved_trainer_relation_count"] == 1
 
 def test_zone_detail_reports_entity_projection_truncation(monkeypatch: pytest.MonkeyPatch) -> None:
-    import octogamedb.zone_search as zone_search
+    from octogamedb import zone_search
 
     connection = _connection()
     payload = _world_payload()

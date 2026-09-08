@@ -443,18 +443,24 @@ def validate(
         for role, sql in (
             (
                 "giver",
-                "SELECT quest_id, creature_id AS entity_id FROM quest_creature_endpoints "
-                "WHERE endpoint_kind = 'giver' ORDER BY quest_id, creature_id LIMIT 1",
+                (
+                    "SELECT quest_id, creature_id AS entity_id FROM quest_creature_endpoints "
+                    "WHERE endpoint_kind = 'giver' ORDER BY quest_id, creature_id LIMIT 1"
+                ),
             ),
             (
                 "finisher",
-                "SELECT quest_id, creature_id AS entity_id FROM quest_creature_endpoints "
-                "WHERE endpoint_kind = 'finisher' ORDER BY quest_id, creature_id LIMIT 1",
+                (
+                    "SELECT quest_id, creature_id AS entity_id FROM quest_creature_endpoints "
+                    "WHERE endpoint_kind = 'finisher' ORDER BY quest_id, creature_id LIMIT 1"
+                ),
             ),
             (
                 "objective",
-                "SELECT quest_id, creature_id AS entity_id FROM quest_creature_objectives "
-                "ORDER BY quest_id, creature_id LIMIT 1",
+                (
+                    "SELECT quest_id, creature_id AS entity_id FROM quest_creature_objectives "
+                    "ORDER BY quest_id, creature_id LIMIT 1"
+                ),
             ),
         ):
             sample = _one(connection, sql)

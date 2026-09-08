@@ -1,5 +1,55 @@
 # Changelog
 
+## 2026-09-03 — P7-T07 validated closure and P8-T01 routing
+
+- Human final post-hotfix repository lint gate passed: `python -m ruff check src tests scripts` ->
+  `All checks passed!`.
+- Closed P7-T07 as `VALIDATED` together with the already recorded `357`-test snapshot gate, compileall,
+  accepted-canonical P7-T06 semantic rerun, byte-identical schema-14 SHA and optimized profiling.
+- Retained measured result: every representative optimized cold zone call is below 10 seconds;
+  no-recipe median improves `4.37x` and the recipe sample median improves `3.57x`.
+- No persistent cache, migration, canonical write or new architecture decision is required for P7-T07.
+- Advanced the normal router to P8-T01: first bounded local/browser UI foundation and zone-centric
+  vertical slice over the validated P7 query contracts. Framework choice remains evidence-driven;
+  NiceGUI is a candidate rather than a predetermined decision.
+
+## 2026-09-03 — P7-T07 post-optimization full-data performance validation
+
+- Reran the P7-T06 accepted-canonical semantic validator after the P7-T07 optimization; it passes
+  with schema version `14`, `1,480` zone identities, clean FK/integrity checks and byte-identical
+  canonical SHA-256 `60aeb4093fa68e6b3a7a8c513e5a127862d88db8bc9aab4f6f3e4a0f4c0d5a23`.
+- Measured cold no-recipe improvements: zone `1` `29.056 -> 6.650 s`, zone `12`
+  `25.231 -> 5.451 s`, and zone `14` `38.401 -> 7.484 s`; representative median improves `4.37x`.
+- Measured cold recipe-sample improvements: zone `1` `32.664 -> 6.733 s` and zone `3`
+  `19.344 -> 7.845 s`; sample median improves `3.57x`.
+- Confirmed every optimized cold/repeated run performs one request-local selected quest relation batch
+  and zero legacy `_selected_relation_rows()` calls; batch cost is roughly `0.15-0.21 s`.
+- The task performance target is met: every representative optimized cold call is below 10 seconds.
+- Agent rerun on the fully stacked supplied snapshot passes `357` pytest tests and `compileall` after
+  the Ruff hotfix. P7-T07 remains `IMPLEMENTED_AWAITING_LOCAL_VALIDATION` only because the human log
+  does not yet contain a post-hotfix `python -m ruff check src tests scripts` success marker.
+
+## 2026-09-02 — P7-T07 measured zone-query N+1 optimization
+
+- Completed accepted-canonical profiling with the DB byte-identical at schema version `14`; cold
+  representative calls remained roughly `19.34-38.40 s`.
+- Measured `_selected_relation_rows()` inside P7-T05 quest-role hydration as the dominant cost: exactly
+  two calls per returned entity and roughly `75-78%` of total no-recipe latency for zones `1`, `12`,
+  and `14`.
+- Confirmed repeated calls are not materially faster and existing SQLite plans already use the
+  available canonical indexes; the debt is primarily N+1 query shape rather than first-read I/O.
+- Replaced per-entity selected quest endpoint/objective scans with one request-local batch/index per
+  `query_world_entities()` call while retaining the legacy lookup fallback and identical provenance,
+  ordering, role validation, unknown behavior, and detail ownership.
+- Added P7-T07 equivalence/regression tests and extended the profiler to time the batch loader and
+  record legacy/batched relation query plans.
+- Agent validation on the previously supplied real P7-T06 snapshot: focused suite `21 passed`, full
+  suite `357 passed`, and `compileall` passed. Ruff remains required locally because it is unavailable
+  in the agent environment.
+- No migration, persistent cache, canonical write, or architecture decision was introduced; D-008
+  remains unchanged. P7-T07 stays `IMPLEMENTED_AWAITING_LOCAL_VALIDATION` pending full-data semantic
+  validation and measured post-optimization timings.
+
 ## 2026-09-01 — P7-T06 validated zone exploration and P7-T07 performance routing
 
 - Closed P7-T06 as `VALIDATED` after the human confirmed the complete repository pytest gate, Ruff and
