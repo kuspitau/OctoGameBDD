@@ -107,16 +107,15 @@ Later P6 ingestion remains consumer-driven; another acquisition tranche is not a
 Status: `VALIDATED` through P7-T07. Later P7 feature tasks are consumer-driven and deferred until a
 concrete need emerges.
 
-P7 builds richer provenance-aware cross-domain exploration while exposing partial/unknown coverage
-instead of presenting absent projections as negative game facts.
+P7 builds provenance-aware cross-domain exploration while exposing partial/unknown coverage instead of
+presenting absent projections as negative game facts.
 
 ### P7-T01 — provenance-aware item query/filter contract
 
 Status: `VALIDATED`.
 
-Delivered the first stable item identity/template/stat consumer contract over migration 14 with
-explicit three-state evaluation, selected provenance, deterministic bounded output and strict
-read-only validation.
+Delivered stable item identity/template/stat predicates with explicit three-state evaluation,
+provenance, deterministic sorting and bounded results.
 
 Contract: `docs/project/P7_ITEM_QUERY_CONTRACT.md`.
 
@@ -151,9 +150,8 @@ Contract: `docs/project/P7_RECIPE_QUERY_CONTRACT.md`.
 
 Status: `VALIDATED`.
 
-Keeps template/spawn identity separate and composes P2 item/vendor, P3 quest-role/objective and P4
-trainer evidence. Its validated D-026 coverage logic preserves raw duplicate selected `spawn_set`
-multiplicity while comparing canonical membership by distinct `spawn_key`.
+Keeps template/spawn identity separate and composes item/vendor, quest-role/objective and trainer
+evidence while preserving D-026 complete-set semantics.
 
 Contract: `docs/project/P7_WORLD_ENTITY_QUERY_CONTRACT.md`.
 
@@ -161,9 +159,8 @@ Contract: `docs/project/P7_WORLD_ENTITY_QUERY_CONTRACT.md`.
 
 Status: `VALIDATED`.
 
-Delivers canonical zone/map search and a positive-evidence zone detail projection over world entities,
-item acquisition, independent quest roles, vendors/trainers and compact recipe-learning evidence. Its
-coverage explicitly remains partial/unknown rather than a universal `zone -> everything` truth.
+Delivers canonical zone/map search and positive-evidence zone detail over world entities, item
+acquisition, independent quest roles, vendors/trainers and compact recipe-learning evidence.
 
 Contract: `docs/project/P7_ZONE_QUERY_CONTRACT.md`.
 
@@ -171,11 +168,9 @@ Contract: `docs/project/P7_ZONE_QUERY_CONTRACT.md`.
 
 Status: `VALIDATED` on 2026-09-03.
 
-Accepted-canonical profiling identified a retained-entity quest-relation N+1 responsible for roughly
-75-78% of representative no-recipe zone latency. The request-local selected-quest-relation batch
-removes it without schema change or persistent cache. Full-data reruns now pass: representative cold
-latency is `5.45-7.84 s`, no-recipe median improves `4.37x`, recipe-sample median improves `3.57x`,
-and P7-T06 semantic/integrity validation remains clean.
+Removed the dominant retained-entity quest-relation N+1 with request-local batching and no persistent
+cache/schema change. Representative cold zone detail is `5.45-7.84 s`; no-recipe median improves
+`4.37x` and recipe-sample median improves `3.57x`.
 
 Task: `docs/project/tasks/P7-T07.md`.
 
@@ -188,7 +183,8 @@ rather than silent fallback logic.
 
 ## P8 — UI/application workflow
 
-Status: `IN_PROGRESS`; P8-T01 is `VALIDATED` and P8-T02 is `READY_FOR_IMPLEMENTATION`.
+Status: `IN_PROGRESS`; P8-T01 and P8-T02 are `VALIDATED`; P8-T03 is
+`READY_FOR_IMPLEMENTATION`.
 
 P8 is a thin user-facing consumer of the validated P7 query layer. It must not create parallel
 canonical SQL truth or hide unknown/truncated evidence.
@@ -197,55 +193,61 @@ canonical SQL truth or hide unknown/truncated evidence.
 
 Status: `VALIDATED` on 2026-09-09.
 
-Implementation base:
+Selected NiceGUI 3.x under D-038 and delivered the read-only zone explorer foundation with stable
+startup paths, P7-owned zone query semantics, list/detail views, explicit coverage guards,
+`run.io_bound()` for slow reads and strict `mode=ro` / `query_only=ON` SQLite access.
 
-```text
-0f48746fb2ce6cf6b2666f162851b9076f849ce5
-```
-
-The task selected NiceGUI 3.x under D-038 and delivered a local read-only zone explorer with:
-
-- an obvious `octogamedb-ui` / module startup path;
-- zone ID/name/map search and P7-owned deterministic sorting/state selection;
-- list-to-detail navigation;
-- entity/item/quest/vendor/trainer/recipe evidence sections;
-- explicit unknown, truncation, unresolved-relation and negative-claim guards;
-- `run.io_bound()` for multi-second detail reads;
-- URI `mode=ro` + `query_only=ON` SQLite access;
-- Python-level NiceGUI navigation tests and pure presentation/read-only tests.
-
-Local validation passed after one P8 test/UX correction. Real-browser validation confirmed the list,
-filters, sorting, detail loading and evidence sections. The final canonical DB SHA after UI use remained
-exactly:
+The canonical DB remained exactly:
 
 ```text
 60aeb4093fa68e6b3a7a8c513e5a127862d88db8bc9aab4f6f3e4a0f4c0d5a23
 ```
 
-No migration, API split, persistent state, map, dungeon-specific UX, inventory or economics work was
-introduced.
-
 Task: `docs/project/tasks/P8-T01.md`.
 
 ### P8-T02 — zone explorer interaction polish
 
-Status: `READY_FOR_IMPLEMENTATION`.
+Status: `VALIDATED` on 2026-09-09.
 
-The first real browser session exposed a small set of concrete UX problems without revealing a domain
-or canonical-model defect:
+Validated interaction improvements:
 
-- Enter in search fields does not submit;
-- sort/state changes require a separate `SEARCH` click and therefore initially look inert;
-- the separate wall of zone-opening links is less usable than table-native navigation.
+- Enter submits all zone/map search fields through one shared search action;
+- sort/direction and inclusion-state controls apply automatically;
+- table-native Open navigation replaces the separate link wall;
+- stable markers make NiceGUI simulation deterministic;
+- detail loading/coverage feedback remains explicit.
 
-P8-T02 should correct those interaction issues while retaining P7 as the owner of query semantics and
-keeping SQLite access strictly read-only. Multi-second detail latency may receive clearer loading UX,
-but no new cache/persistence/query architecture is authorized by this task.
+Validation closure:
+
+```text
+pytest: all 367 tests pass
+Ruff: All checks passed!
+compileall: passed
+browser acceptance: passed
+canonical DB before/after equality: True
+canonical SHA-256: 60aeb4093fa68e6b3a7a8c513e5a127862d88db8bc9aab4f6f3e4a0f4c0d5a23
+```
+
+No P7 contract, migration, canonical write, cache or new architecture decision was introduced.
 
 Task: `docs/project/tasks/P8-T02.md`.
 
+### P8-T03 — item explorer vertical slice
+
+Status: `READY_FOR_IMPLEMENTATION`.
+
+Expose the validated P7-T01/P7-T02 item and acquisition query contracts through the existing NiceGUI
+application. The first slice should provide a bounded item search/list/detail workflow with explicit
+partial-template/unknown semantics and direct/reference/vendor acquisition geography while retaining
+strict read-only access.
+
+Do not broaden P8-T03 into saved searches, weighted scores, item comparisons, tooltip/icon work,
+inventory ownership, crafting economics, new P6 acquisition, schema changes or canonical writes.
+
+Task: `docs/project/tasks/P8-T03.md`.
+
 ### Later P8 tasks
 
-After P8-T02, route the next graphical capability from observed consumer needs. Generalized
-dungeon/raid classification, maps, saved searches, ownership/inventory and craft-economics UX remain
-deferred until explicitly routed.
+After P8-T03, route later graphical capabilities from observed consumer needs. Quest, world-entity,
+recipe, dungeon/instance, maps/spawn overlays, saved searches/comparisons, ownership/inventory and
+craft-economics UX remain separate bounded tasks unless explicitly routed.

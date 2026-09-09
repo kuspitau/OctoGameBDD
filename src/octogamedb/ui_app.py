@@ -86,7 +86,8 @@ def _render_zone_list(view: Mapping[str, Any], container: Any) -> None:
         if not rows:
             ui.label("No rows matched the selected query states.").classes("text-body2")
             return
-        ui.table(
+
+        table = ui.table(
             columns=_columns(
                 ("zone_id", "Zone ID"),
                 ("name", "Zone"),
@@ -94,18 +95,20 @@ def _render_zone_list(view: Mapping[str, Any], container: Any) -> None:
                 ("map_name", "Map"),
                 ("parent_zone_name", "Parent zone"),
                 ("match_state", "State"),
+                ("action", "Open"),
             ),
             rows=[dict(row) for row in rows],
             row_key="zone_id",
             pagination={"rowsPerPage": 25},
         ).classes("w-full")
-        with ui.row().classes("gap-3 flex-wrap"):
-            for row in rows:
-                zone_id = int(row["zone_id"])
-                ui.link(
-                    f"Open {row['name']} ({zone_id})",
-                    f"/zone/{zone_id}",
-                ).mark(f"open-zone-{zone_id}")
+        with table.add_slot("body-cell-action"), table.cell("action"):
+            ui.button("Open", icon="open_in_new").props("flat dense").mark(
+                "open-zone-action"
+            ).on(
+                "click",
+                js_handler="() => emit(props.row.zone_id)",
+                handler=lambda event: ui.navigate.to(f"/zone/{int(event.args)}"),
+            )
 
 
 def _render_coverage(view: Mapping[str, Any]) -> None:
@@ -287,7 +290,7 @@ def _render_zone_detail(view: Mapping[str, Any], container: Any) -> None:
 
 
 def register_pages(config: ZoneUiConfig, service: ZoneUiService | None = None) -> None:
-    """Register the bounded P8-T01 pages; useful both for runtime and user-simulation tests."""
+    """Register the bounded P8 zone-explorer pages for runtime and UI simulation tests."""
 
     zone_service = service or ZoneUiService(config)
 
@@ -299,10 +302,10 @@ def register_pages(config: ZoneUiConfig, service: ZoneUiService | None = None) -
         with ui.card().classes("w-full"):
             ui.label("Zone search").classes("text-h6")
             with ui.row().classes("gap-3 flex-wrap items-end"):
-                zone_id = ui.number("Zone ID", min=0, step=1)
-                name = ui.input("Zone name contains")
-                map_id = ui.number("Map ID", min=0, step=1)
-                map_name = ui.input("Map name contains")
+                zone_id = ui.number("Zone ID", min=0, step=1).mark("zone-id-input")
+                name = ui.input("Zone name contains").mark("zone-name-input")
+                map_id = ui.number("Map ID", min=0, step=1).mark("map-id-input")
+                map_name = ui.input("Map name contains").mark("map-name-input")
                 sort_by = ui.select(
                     {
                         "zone_id": "Zone ID",
@@ -312,12 +315,18 @@ def register_pages(config: ZoneUiConfig, service: ZoneUiService | None = None) -
                     },
                     value="zone_id",
                     label="Sort by",
+                ).mark("sort-by-control")
+                descending = ui.switch("Descending").mark("descending-control")
+                include_unknown = ui.switch("Include unknown").mark("include-unknown-control")
+                include_non_matches = ui.switch("Include known non-matches").mark(
+                    "include-non-matches-control"
                 )
-                descending = ui.switch("Descending")
-                include_unknown = ui.switch("Include unknown")
-                include_non_matches = ui.switch("Include known non-matches")
                 limit = ui.number("Limit", value=100, min=1, max=1000, step=1)
 
+            ui.label(
+                "Search fields and limit apply with Enter/Search; sort and state controls apply "
+                "immediately."
+            ).classes("text-caption text-grey-7")
             status = ui.row().classes("items-center gap-2")
             results = ui.column().classes("w-full")
 
@@ -348,6 +357,11 @@ def register_pages(config: ZoneUiConfig, service: ZoneUiService | None = None) -
                 finally:
                     status.clear()
 
+            for field in (zone_id, name, map_id, map_name):
+                field.on("keydown.enter", search)
+            for control in (sort_by, descending, include_unknown, include_non_matches):
+                control.on_value_change(search)
+
             ui.button("Search", icon="search", on_click=search).mark("zone-search")
             await search()
 
@@ -361,6 +375,9 @@ def register_pages(config: ZoneUiConfig, service: ZoneUiService | None = None) -
         with loading:
             ui.spinner(size="lg")
             ui.label("Loading zone detail…").mark("zone-detail-loading")
+            ui.label("The validated P7 detail read can take several seconds.").classes(
+                "text-caption text-grey-7"
+            )
 
         async def load_detail() -> None:
             try:

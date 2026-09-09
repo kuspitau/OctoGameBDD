@@ -1,24 +1,25 @@
 # Current project state
 
-Updated for P8-T01 validation and P8-T02 routing on 2026-09-09.
+Updated for P8-T02 validated closure and P8-T03 routing on 2026-09-09.
 
-## Source-of-truth
+## Source-of-truth / integration state
 
-GitHub `main` still resolves to the pre-P8 integration revision:
+The visible GitHub `main` revision at P8-T02 implementation start and throughout this unpushed local
+handoff was:
 
 ```text
-0f48746fb2ce6cf6b2666f162851b9076f849ce5
-Validate P7-T07 read-path optimization and route P8-T01
+8b129c7401a253a46312c8d6aebb03291994b851
+Validate P8-T01 NiceGUI zone explorer and route P8-T02
 ```
 
-The P8-T01 implementation/validation delta is intentionally stacked on the user's local working tree
-and has not yet been pushed to GitHub at the time of this handoff. Do not apply this finalization delta
-to a clean `0f48746...` checkout by itself: first apply the earlier P8-T01 implementation delta and
-its validation correction, or reconcile manually.
+P8-T02 implementation, its first local-gate correction, and this validation closure are intentionally
+stacked on the user's local working tree and are not yet represented by that visible GitHub revision.
+The human should commit/push the complete local P8-T02 state before the next coding conversation treats
+GitHub `main` as containing P8-T02.
 
 ## Accepted canonical local database
 
-The accepted cumulative local database remains unchanged:
+The accepted cumulative local database remains:
 
 ```text
 data/generated/octogamedb.sqlite3
@@ -34,7 +35,7 @@ data/generated/octogamedb_bak.sqlite3
 SHA-256 = d57e0c79ac44d4fa0436b8c25e854a1d2b579d72dea1c327b23e9fe0fc4d1a8b
 ```
 
-P8-T01 was strictly read-only and introduced no migration or canonical mutation.
+P8-T01/P8-T02 are strictly read-only and introduced no migration or canonical mutation.
 
 ## Phase status
 
@@ -54,110 +55,110 @@ P7-T05: VALIDATED
 P7-T06: VALIDATED
 P7-T07: VALIDATED
 P8-T01: VALIDATED
-P8-T02: READY_FOR_IMPLEMENTATION
+P8-T02: VALIDATED
+P8-T03: READY_FOR_IMPLEMENTATION
 ```
 
-## P7 baseline consumed by P8
+## P7/P8 semantic baseline
 
-P7-T06/P7-T07 remain the validated semantic and performance owners for the first UI vertical slice.
-Representative full-data P7-T07 cold zone-detail calls are approximately `5.45-7.84 s`, all below the
-10-second target recorded in `docs/project/tasks/P7-T07.md`. P8 does not replace or bypass those query
-contracts.
+P7 remains the owner of consumer/query semantics. P8 is a thin NiceGUI presentation layer and must not
+create parallel canonical SQL truth or silently collapse unknown coverage.
 
-Authoritative consumer contracts:
+Validated contracts relevant to the current UI work include:
 
 ```text
 docs/project/P7_ZONE_QUERY_CONTRACT.md
 docs/project/P7_WORLD_ENTITY_QUERY_CONTRACT.md
+docs/project/P7_ITEM_QUERY_CONTRACT.md
+docs/project/P7_ITEM_ACQUISITION_QUERY_CONTRACT.md
 ```
 
-## P8-T01 validated result
+P7-T07 representative full-data cold zone-detail calls remain approximately `5.45-7.84 s`, below its
+10-second target. P8 may clarify loading behavior but must not introduce persistence/caching merely to
+hide that validated read cost.
+
+## P8-T01 validated foundation
+
+P8-T01 established the application baseline under D-038:
+
+- NiceGUI 3.x (`nicegui>=3.16,<4`);
+- `octogamedb-ui` / `python -m octogamedb.ui_app` startup paths;
+- `src/octogamedb/ui_read.py` as a thin read-only adapter over P7 queries;
+- SQLite URI `mode=ro` plus `PRAGMA query_only=ON`;
+- no canonical-domain SQL in the UI;
+- explicit unknown/truncation/unresolved/negative-claim rendering;
+- `run.io_bound()` for multi-second read paths;
+- stable NiceGUI user-simulation coverage.
+
+## P8-T02 validated result
 
 Task record:
 
 ```text
-docs/project/tasks/P8-T01.md
+docs/project/tasks/P8-T02.md
 ```
 
-P8-T01 established:
+P8-T02 validated the zone-explorer interaction polish:
 
-- NiceGUI 3.x as the local/browser UI framework under D-038;
-- `nicegui>=3.16,<4` as a runtime dependency;
-- `octogamedb-ui` and `python -m octogamedb.ui_app` as startup paths;
-- `src/octogamedb/ui_read.py` as a thin read-only adapter over P7 `query_zones()` and `inspect_zone()`;
-- SQLite URI `mode=ro` plus `PRAGMA query_only=ON`; missing DB paths are never created;
-- zone search by ID/name/map with query-layer sorting/state selection;
-- zone-detail sections for world entities, item-acquisition evidence, quest roles, vendors, resolved
-  and unresolved trainers, and five independent recipe-learning evidence views;
-- explicit rendering of `unknown`, truncation, unresolved trainer relations, recipe unknown counts and
-  `negative_claim_authorized=False` semantics;
-- visible detail loading while the multi-second P7 call runs through NiceGUI `run.io_bound()`;
-- Python-level navigation coverage through NiceGUI `user_simulation`.
+- Enter submits Zone ID, zone name, Map ID and map-name searches through the same shared search action;
+- sort field/direction and inclusion-state switches apply automatically;
+- the interaction model is explicit in the search card;
+- the old post-table wall of `Open <zone> (...)` links is removed;
+- zone navigation is table-native through an `Open` action column;
+- Python owns route navigation after the scoped table action emits only `zone_id`;
+- stable markers make NiceGUI simulation tests deterministic;
+- visible detail-loading feedback remains for the validated multi-second P7 read path.
 
-The UI contains no canonical-domain SQL. Its only SQL-adjacent operations are SQLite connection safety
-PRAGMAs; all zone/domain reads remain owned by P7.
+`src/octogamedb/ui_read.py`, P7 semantics, schema, migrations and canonical selection are unchanged.
 
-## P8-T01 validation evidence
+### Automated validation
 
-The first local gate exposed one P8 test/UX issue plus two unrelated P4 fixture failures caused by
-placing pytest `--basetemp` inside the parent Git checkout. The P8 correction changed only the P8 UI
-and tests; P4 production/test semantics were not weakened.
+The first local gate collected 367 tests and exposed only two test-simulation assumptions plus one Ruff
+SIM117 finding. After the focused correction, the user confirmed the complete gate passes:
 
-After the correction, the user reported that the automated test gate passes. The validated manual
-browser checks on the real canonical DB confirmed:
+```powershell
+pytest --basetemp="$env:TEMP\OctoGameDB_pytest"
+python -m ruff check src tests
+python -m compileall -q src tests
+```
 
-- the zone list renders correctly;
-- zone ID, zone name, map ID and map-name searches work when `SEARCH` is applied;
-- deterministic ascending/descending sorting works when `SEARCH` is applied;
-- zone detail navigation works, including representative zones and a visible
-  `Loading zone detail…` state;
-- world entity, item, quest, vendor, trainer and recipe sections render as expandable sections when
-  evidence exists;
-- coverage remains explicit rather than silently negative. Example observed on Blasted Lands:
-  `Negative claim authorized: False`, `Unknown entity geography: 0`, `Known non-matches: 34490`,
-  `Returned entities: 319`, with recipe-geography unknown counts still shown;
-- truncation/unresolved semantics are not hidden.
-
-The machine was restarted before the originally captured `$before` PowerShell variable could be
-compared, so an intra-session before/after equality check was no longer possible. This does not block
-validation because after running and stopping the UI the canonical DB hash was explicitly recomputed
-as:
+Validated result:
 
 ```text
-60aeb4093fa68e6b3a7a8c513e5a127862d88db8bc9aab4f6f3e4a0f4c0d5a23
+pytest: all 367 tests pass
+Ruff: All checks passed!
+compileall: passed
 ```
 
-which is exactly the accepted D-029 canonical baseline recorded before P8-T01. Therefore the read-only
-UI did not advance or mutate the canonical database.
+### Browser / canonical validation
 
-On Windows/Python 3.13, stopping NiceGUI/Uvicorn with `Ctrl+C` emitted a `CancelledError` followed by
-`KeyboardInterrupt`. This is shutdown noise from the interrupted server loop, not a validation or DB
-integrity failure.
+The user confirmed all P8-T02 browser checks behave correctly, including Enter submission, immediate
+sort/state application, table-native navigation, loading feedback and preserved coverage semantics.
 
-## Observed UX follow-up from real use
+After stopping the UI:
 
-P8-T01 is functionally validated, but the first real browser session identified concrete interaction
-friction:
+```text
+$after = 60aeb4093fa68e6b3a7a8c513e5a127862d88db8bc9aab4f6f3e4a0f4c0d5a23
+$before -eq $after = True
+```
 
-- pressing Enter in zone/map search fields does not submit the search;
-- changing sort/state controls does not refresh results until `SEARCH` is clicked;
-- the separate wall of `Open <zone> (...)` links below the table is functional but poor navigation UX;
-- detail loading remains visibly multi-second because it inherits the validated P7 read-path cost.
-
-These are routed to P8-T02 as UI interaction work. P8-T02 must not reinterpret P7 query semantics or
-silently turn the observed latency into a new persistence/cache architecture.
+Therefore the UI preserved the accepted canonical DB byte-for-byte.
 
 ## Current task / next-conversation router
 
-Current task:
+Next task:
 
 ```text
-P8-T02 — zone explorer interaction polish
+P8-T03 — item explorer vertical slice
 Status: READY_FOR_IMPLEMENTATION
-Task file: docs/project/tasks/P8-T02.md
+Task file: docs/project/tasks/P8-T03.md
 ```
 
-P8-T02 is deliberately bounded to interaction ergonomics around the already validated zone explorer:
-form submission, control-application behavior and table-based navigation. It should preserve the P7
-read-only/coverage contracts and avoid unrelated domain, ingestion, map, inventory, economics or
-canonical-DB work.
+P8-T03 should expose the already validated P7-T01/P7-T02 item and acquisition contracts through the
+existing NiceGUI/read-only architecture. It must not broaden into saved searches, weighted scores,
+item comparison, tooltip/icon work, inventory ownership, crafting economics, P6 acquisition or schema
+mutation in the same task.
+
+Before implementing P8-T03, the next conversation must read fresh GitHub `main`. If the human has not
+yet pushed the validated P8-T02 local state, do not assume these files/code exist on GitHub; reconcile
+that integration state first.
