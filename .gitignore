@@ -70,3 +70,8 @@ P*_T*_level2_validation.bat
 p*_t*_base.json
 p*_t*_first.json
 p*_t*_second.json
+
+# Other
+p8_zone_1_reference.json
+p8_zone_12_reference.json
+p8_zone_14_reference.json

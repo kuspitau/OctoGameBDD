@@ -104,7 +104,8 @@ Later P6 ingestion remains consumer-driven; another acquisition tranche is not a
 
 ## P7 — query/exploration layer
 
-Status: `VALIDATED` through P7-T07. Later P7 feature tasks are consumer-driven and deferred until a concrete need emerges.
+Status: `VALIDATED` through P7-T07. Later P7 feature tasks are consumer-driven and deferred until a
+concrete need emerges.
 
 P7 builds richer provenance-aware cross-domain exploration while exposing partial/unknown coverage
 instead of presenting absent projections as negative game facts.
@@ -144,19 +145,11 @@ Status: `VALIDATED`.
 Composes P4 recipe semantics with item acquisition, trainer geography and quest exploration while
 keeping teaching-item, trainer and quest-learning paths separate.
 
-Human repository and accepted-canonical closure completed on 2026-08-31 with clean FK/integrity and
-byte-identical preservation of the accepted schema-14 SHA.
-
 Contract: `docs/project/P7_RECIPE_QUERY_CONTRACT.md`.
 
 ### P7-T05 — provenance-aware creature/gameobject exploration and role/geography query
 
-Status: `VALIDATED` and integrated on GitHub `main` at:
-
-```text
-97625087922318bde253657856bae97d6383116c
-Validate P7-T05 world entity exploration and route P7-T06
-```
+Status: `VALIDATED`.
 
 Keeps template/spawn identity separate and composes P2 item/vendor, P3 quest-role/objective and P4
 trainer evidence. Its validated D-026 coverage logic preserves raw duplicate selected `spawn_set`
@@ -166,45 +159,13 @@ Contract: `docs/project/P7_WORLD_ENTITY_QUERY_CONTRACT.md`.
 
 ### P7-T06 — provenance-aware zone-centric exploration
 
-Status: `VALIDATED` on 2026-09-01; local closure ready to commit/push.
+Status: `VALIDATED`.
 
-P7-T06 delivers the missing first-class zone consumer surface over existing validated contracts:
+Delivers canonical zone/map search and a positive-evidence zone detail projection over world entities,
+item acquisition, independent quest roles, vendors/trainers and compact recipe-learning evidence. Its
+coverage explicitly remains partial/unknown rather than a universal `zone -> everything` truth.
 
-- canonical zone/map search with selected identity provenance;
-- concrete creature/gameobject spawn projection;
-- independent item direct/reference/vendor acquisition paths;
-- giver/finisher/creature-gameobject objective quest roles;
-- vendors and resolved/unresolved trainers;
-- compact positive recipe-learning evidence for teaching item, trainer and independent quest roles;
-- explicit unknown/truncation coverage with no universal `zone -> everything` truth.
-
-The first Level-2 attempt exposed a pathological repeated full P7-T04 recipe scan. The final validated
-implementation replaces it with `zone_recipe_projection.py`, which inverts the zone-scoped positive
-item/trainer/quest evidence while leaving full recipe detail owned by P7-T04.
-
-Human repository gates all passed. Accepted-canonical Level 2 completed with:
-
-```text
-P7_T06_LOCAL_VALIDATION_OK
-canonical_sha256=60aeb4093fa68e6b3a7a8c513e5a127862d88db8bc9aab4f6f3e4a0f4c0d5a23
-schema_version=14
-zone_identities=1480
-validated_zone_detail_count=5
-foreign_key_check=[]
-integrity_check=ok
-canonical_db_unchanged=True
-```
-
-Representative successful-run timings remain approximately 20-40 seconds per zone detail. Because
-recipe/no-recipe timings are similar after the correction, the residual bottleneck is primarily in the
-P7-T05 world-entity/role/provenance path.
-
-Contract/task:
-
-```text
-docs/project/P7_ZONE_QUERY_CONTRACT.md
-docs/project/tasks/P7-T06.md
-```
+Contract: `docs/project/P7_ZONE_QUERY_CONTRACT.md`.
 
 ### P7-T07 — profile and optimize zone-centric query latency
 
@@ -214,42 +175,77 @@ Accepted-canonical profiling identified a retained-entity quest-relation N+1 res
 75-78% of representative no-recipe zone latency. The request-local selected-quest-relation batch
 removes it without schema change or persistent cache. Full-data reruns now pass: representative cold
 latency is `5.45-7.84 s`, no-recipe median improves `4.37x`, recipe-sample median improves `3.57x`,
-and P7-T06 semantic/integrity validation remains clean. The final human `ruff check src tests scripts` gate also passes.
+and P7-T06 semantic/integrity validation remains clean.
 
-Task:
-
-```text
-docs/project/tasks/P7-T07.md
-```
+Task: `docs/project/tasks/P7-T07.md`.
 
 ### Later P7 tasks
 
-After P7-T07, later bounded tasks may add dungeon/instance views, richer item field families, weighted
-scoring, saved queries/comparisons, ownership/inventory integration, craft economics, recursive BOM
-analysis and other consumer capabilities as concrete needs emerge. Coverage gaps should drive explicit
-P6 work rather than silent fallback logic.
-
-General dungeon/raid classification, instance grouping and dungeon-specific quest-chain UX remain
-deferred. P8 graphical UI remains planned after the query/data semantics and the measured hot paths
-are sufficiently reliable for interactive use.
+Later bounded tasks may add dungeon/instance views, richer item field families, weighted scoring,
+saved queries/comparisons, ownership/inventory integration, craft economics, recursive BOM analysis
+and other consumer capabilities as concrete needs emerge. Coverage gaps should drive explicit P6 work
+rather than silent fallback logic.
 
 ## P8 — UI/application workflow
 
-Status: `IN_PROGRESS`; P8-T01 is `READY_FOR_IMPLEMENTATION`.
+Status: `IN_PROGRESS`; P8-T01 is `VALIDATED` and P8-T02 is `READY_FOR_IMPLEMENTATION`.
 
-The validated P7 query layer and P7-T07 latency correction are now sufficient to begin a bounded
-user-facing local/browser vertical slice. P8 must remain a consumer of validated query semantics rather
-than creating parallel SQL truth.
+P8 is a thin user-facing consumer of the validated P7 query layer. It must not create parallel
+canonical SQL truth or hide unknown/truncated evidence.
 
 ### P8-T01 — local/browser UI foundation and zone explorer vertical slice
 
-Status: `READY_FOR_IMPLEMENTATION`.
+Status: `VALIDATED` on 2026-09-09.
 
-Select the UI framework from current primary evidence, establish a local read-only application shell,
-and expose a bounded zone search/detail flow backed by the validated P7-T06/P7-T07 query path.
-
-Task:
+Implementation base:
 
 ```text
-docs/project/tasks/P8-T01.md
+0f48746fb2ce6cf6b2666f162851b9076f849ce5
 ```
+
+The task selected NiceGUI 3.x under D-038 and delivered a local read-only zone explorer with:
+
+- an obvious `octogamedb-ui` / module startup path;
+- zone ID/name/map search and P7-owned deterministic sorting/state selection;
+- list-to-detail navigation;
+- entity/item/quest/vendor/trainer/recipe evidence sections;
+- explicit unknown, truncation, unresolved-relation and negative-claim guards;
+- `run.io_bound()` for multi-second detail reads;
+- URI `mode=ro` + `query_only=ON` SQLite access;
+- Python-level NiceGUI navigation tests and pure presentation/read-only tests.
+
+Local validation passed after one P8 test/UX correction. Real-browser validation confirmed the list,
+filters, sorting, detail loading and evidence sections. The final canonical DB SHA after UI use remained
+exactly:
+
+```text
+60aeb4093fa68e6b3a7a8c513e5a127862d88db8bc9aab4f6f3e4a0f4c0d5a23
+```
+
+No migration, API split, persistent state, map, dungeon-specific UX, inventory or economics work was
+introduced.
+
+Task: `docs/project/tasks/P8-T01.md`.
+
+### P8-T02 — zone explorer interaction polish
+
+Status: `READY_FOR_IMPLEMENTATION`.
+
+The first real browser session exposed a small set of concrete UX problems without revealing a domain
+or canonical-model defect:
+
+- Enter in search fields does not submit;
+- sort/state changes require a separate `SEARCH` click and therefore initially look inert;
+- the separate wall of zone-opening links is less usable than table-native navigation.
+
+P8-T02 should correct those interaction issues while retaining P7 as the owner of query semantics and
+keeping SQLite access strictly read-only. Multi-second detail latency may receive clearer loading UX,
+but no new cache/persistence/query architecture is authorized by this task.
+
+Task: `docs/project/tasks/P8-T02.md`.
+
+### Later P8 tasks
+
+After P8-T02, route the next graphical capability from observed consumer needs. Generalized
+dungeon/raid classification, maps, saved searches, ownership/inventory and craft-economics UX remain
+deferred until explicitly routed.

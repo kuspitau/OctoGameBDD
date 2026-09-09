@@ -814,3 +814,50 @@ Consequences:
 - the next bounded step is a resumable acquisition campaign over known canonical cache-missing IDs,
   preserving one-outstanding-query behavior and the validated rate/timeout constraints before any
   broad canonical promotion.
+
+## D-038 — NiceGUI 3.x is the first local/browser UI framework
+
+**Status:** accepted
+
+P8-T01 supersedes D-020's framework deferral. The validated P7 zone/query layer now demonstrates the
+requirements that D-020 intentionally waited for: Python-first reuse of existing query modules,
+multi-second read operations, table/detail navigation, explicit partial/unknown coverage, and local
+read-only operation.
+
+Current primary documentation was reviewed on 2026-09-08 for NiceGUI, Streamlit and Reflex. NiceGUI
+3.x is selected for the first graphical consumer because:
+
+```text
+NiceGUI release/API evidence: https://github.com/zauberzeug/nicegui/releases/tag/v3.16.0
+NiceGUI documentation/source: https://nicegui.io/documentation/
+Streamlit threading: https://docs.streamlit.io/develop/concepts/design/multithreading
+Reflex background events: https://reflex.dev/docs/events/background-events/
+```
+
+- its backend-first model runs a local browser application directly from Python without introducing a
+  separate frontend build or API service;
+- `ui.table` provides the tabular display primitives needed by the explorer while query sorting and
+  filtering can remain owned by P7;
+- `run.io_bound()` explicitly runs I/O-bound functions in a separate thread, matching the measured
+  multi-second SQLite read path without blocking the NiceGUI event loop;
+- `nicegui.testing.user_simulation` supports fast Python-level interaction tests without Selenium;
+- pages/routing and richer future components can evolve without changing the canonical/query layers.
+
+Streamlit remains capable for data applications, but its documented rerun/threading model is less
+direct for this first long-running in-process query workflow; custom app multithreading is explicitly
+not officially supported. Reflex provides Python-first tables and background tasks, but its broader
+state/frontend build architecture is unnecessary for this bounded local in-process slice.
+
+The runtime dependency is bounded to:
+
+```text
+nicegui>=3.16,<4
+```
+
+P8-T01 uses a thin presentation adapter over validated P7 public query functions. The UI may not add
+canonical-domain SQL, mutate the accepted DB, collapse P7 `known_match` / `known_non_match` / `unknown`
+semantics, or reinterpret missing positive evidence as universal absence. SQLite is opened through URI
+`mode=ro` with `query_only=ON`; each worker call owns its own connection.
+
+No frontend/API split is introduced by this decision. Such a split remains possible only through a
+later explicit decision justified by measured deployment, concurrency or client requirements.

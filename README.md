@@ -2,7 +2,7 @@
 
 **Working project name.**
 
-OctoGameDB is an external local tool for building, auditing, querying, and later visually exploring an interconnected database of OctoWoW game data.
+OctoGameDB is an external local tool for building, auditing, querying, and visually exploring an interconnected database of OctoWoW game data.
 
 The data model is **not item-centric**. Items, quests, creatures, game objects, recipes, spells, zones, and maps are first-class entities connected by explicit relations. The UI may present an item-centric view, a zone-centric view, a creature-centric view, etc., without changing the underlying model.
 
@@ -17,12 +17,39 @@ The data model is **not item-centric**. Items, quests, creatures, game objects, 
   - quest → giver / finisher / objectives / prerequisites / rewards;
   - recipe → result / reagents / learning source / availability;
   - creature / game object → spawns / loot / quest relations.
-- Provide strong audit and coverage tooling before investing in the graphical UI.
-- Eventually provide a local web UI with sortable/filterable grids, WoW-like item tooltips, maps, saved searches, comparisons, and weighted stat scores.
+- Provide strong audit and coverage tooling before investing in broader graphical UX.
+- Grow the local web UI toward richer tables, tooltips, maps, saved searches, comparisons, and weighted stat scores only through bounded validated tasks.
 
-## Current foundation CLI
+## Local zone explorer
 
-The audit foundation currently exposes:
+P8-T01 introduces the first graphical consumer as a read-only NiceGUI application over the validated
+P7 zone query contract.
+
+Install/update the project environment after pulling a UI-enabled revision:
+
+```bash
+python -m pip install -e ".[dev]"
+```
+
+Run against the canonical local database:
+
+```bash
+octogamedb-ui --db data/generated/octogamedb.sqlite3
+```
+
+Equivalent module form:
+
+```bash
+python -m octogamedb.ui_app --db data/generated/octogamedb.sqlite3
+```
+
+The application opens SQLite with URI `mode=ro` plus `query_only=ON`. A missing database is reported
+as an error and is not created. Search/detail semantics remain owned by P7; the UI only reshapes those
+results for display and explicitly surfaces unknown/truncated coverage.
+
+## Foundation CLI
+
+The audit foundation exposes:
 
 ```bash
 python -m octogamedb status

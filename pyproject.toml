@@ -7,13 +7,19 @@ name = "octogamedb"
 version = "0.0.0"
 description = "Local multi-source OctoWoW game database, audit, query and exploration toolkit."
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+  "nicegui>=3.16,<4",
+]
 
 [project.optional-dependencies]
 dev = [
   "pytest>=8",
+  "pytest-asyncio>=0.23",
   "ruff>=0.6",
 ]
+
+[project.scripts]
+octogamedb-ui = "octogamedb.ui_app:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -24,6 +30,7 @@ octogamedb = ["db/migrations/*.sql"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
+asyncio_mode = "auto"
 
 [tool.ruff]
 target-version = "py311"

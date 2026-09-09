@@ -233,8 +233,33 @@ Do **not** adopt an external project's final SQLite schema as OctoGameDB's core 
 
 ## Query/UI direction
 
-The first user-facing tool should be a CLI/audit surface.
+The CLI/audit surface remains the lower-level diagnostic interface. P8-T01 establishes NiceGUI 3.x as
+the first local/browser application framework under D-038.
 
-The later graphical application is expected to be local/browser-based. NiceGUI is a strong candidate because the project is Python-first and needs rich tables/tooltips, but the final UI framework is deliberately deferred until the data layer is reliable.
+The P8 UI architecture is deliberately thin:
 
-A future split frontend/API remains possible without changing the canonical database design.
+```text
+NiceGUI pages/components
+        |
+        v
+presentation-only projection (`ui_read.py`)
+        |
+        v
+validated P7 query contracts
+        |
+        v
+SQLite opened in URI `mode=ro` + `query_only=ON`
+```
+
+The UI must not duplicate canonical SQL or invent a parallel interpretation of P7 semantics. Search
+predicates, three-state evaluation, deterministic sorting, truncation, provenance ownership and
+positive-evidence coverage remain owned by the P7 query layer. UI projection may only reshape already
+validated results into scalar display rows and explicitly surface unknown/incomplete states.
+
+Potentially multi-second SQLite reads run through NiceGUI `run.io_bound()` so the event loop remains
+responsive and a visible loading state can be rendered. Each service call opens its own read-only
+SQLite connection, which also avoids sharing a SQLite connection across worker threads.
+
+The first P8 slice remains local and in-process; no frontend/API split is introduced. A later explicit
+architecture decision may add an API boundary if a measured deployment, concurrency or client need
+justifies it without changing the canonical database design.
